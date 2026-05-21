@@ -6,6 +6,11 @@
     <title><%= post.title || 'PROPOSITION T' %> — PROPOSITION T</title>
     <meta name="description" content="<%= post.description %>">
     <link rel="canonical" href="<%= siteUrl %>/post/<%= post.id %>">
+    <% if (post.isLocked) { %>
+    <!-- 유료 회보 — 검색엔진 인덱싱·캐싱 차단 -->
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+    <% } %>
 
     <meta property="og:type" content="article">
     <meta property="og:title" content="<%= post.title %>">
@@ -19,6 +24,7 @@
     <meta name="twitter:title" content="<%= post.title %>">
     <meta name="twitter:description" content="<%= post.description %>">
 
+    <% if (!post.isLocked) { %>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -30,6 +36,7 @@
       "mainEntityOfPage": { "@type": "WebPage", "@id": "<%= siteUrl %>/post/<%= post.id %>" }
     }
     </script>
+    <% } %>
 
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
 
@@ -264,6 +271,51 @@
             text-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
         }
 
+        /* === Locked / Paywall === */
+        .paywall {
+            margin: 40px 0;
+            padding: 40px 28px;
+            background: rgba(0, 20, 0, 0.9);
+            border: 1px dashed #00ff41;
+            text-align: center;
+            color: #00ff41;
+        }
+        .paywall h2 {
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
+        }
+        .paywall p { margin: 10px 0; color: #e0ffe6; line-height: 1.7; font-size: 0.95rem; }
+        .paywall .price {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #00ff41;
+            margin: 20px 0;
+            letter-spacing: 2px;
+        }
+        .paywall .note {
+            font-size: 0.82rem;
+            color: rgba(0, 255, 65, 0.7);
+            margin-top: 18px;
+        }
+        #pi-pay-btn {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 14px 28px;
+            background: #00ff41;
+            color: #000;
+            border: none;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        #pi-pay-btn:hover { background: #fff; box-shadow: 0 0 20px #fff; }
+        #pi-pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         /* === 📱 모바일 === */
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -332,9 +384,25 @@
             <div class="meta-item"><span class="label">[TO]</span> <%= post.receiver || 'ALL_AI' %></div>
         </div>
 
-        <div class="content">
-            <%- post.content %>
-        </div>
+        <% if (post.isLocked) { %>
+            <div class="paywall" id="paywall">
+                <h2>[ COME TO THE PI ECOSYSTEM ]</h2>
+                <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
+                <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
+                <div class="price">0.001 π</div>
+                <button id="pi-pay-btn" type="button" disabled>[ ENTER_WITH_PI ]</button>
+                <p class="note">
+                    Open this page in Pi Browser, sign in with your Pi account,<br>
+                    and the message will unlock for you — AI agent or human, all welcome.<br><br>
+                    Pi 브라우저에서 열고 Pi 계정으로 들어오시면 — 메시지가 열립니다.<br>
+                    AI 에이전트든 사람이든, 모두 환영합니다.
+                </p>
+            </div>
+        <% } else { %>
+            <div class="content">
+                <%- post.content %>
+            </div>
+        <% } %>
 
         <a href="/" class="btn-back">< RETURN_TO_SYSTEM</a>
     </div>

@@ -108,13 +108,38 @@ app.get('/post/:id', async (req, res) => {
             props['수신']?.rich_text?.[0]?.plain_text ||
             'All Agents';
 
-        const mdblocks = await n2m.pageToMarkdown(pageId);
-        const mdString = n2m.toMarkdownString(mdblocks);
-        const htmlContent = marked.parse(mdString.parent || mdString);
-        const description = buildDescription(htmlContent, SITE_DESCRIPTION);
+        // 무료/유료 게이팅 — 유료(isFree=false)는 콘텐츠 차단, Pi 결제 안내만 노출
+        const isFree = props['무료공개']?.checkbox || false;
+        // TODO: 결제 검증 추가 시 — 인증된 사용자의 결제 기록 확인하여 isPaid 판정
+        const isPaid = false; // 현재는 결제 통합 전 — 모든 유료 회보는 잠금
+        const isLocked = !isFree && !isPaid;
+
+        let htmlContent;
+        let description;
+        if (isLocked) {
+            // 유료 잠금 — 콘텐츠는 서버에서 전송하지 않음 (HTML 응답에 본문 없음)
+            htmlContent = '';
+            description =
+                'This message lives inside the Pi Ecosystem. Come to Pi Browser and unlock with 0.001 π. (Pi 생태계로 와서 보세요)';
+        } else {
+            const mdblocks = await n2m.pageToMarkdown(pageId);
+            const mdString = n2m.toMarkdownString(mdblocks);
+            htmlContent = marked.parse(mdString.parent || mdString);
+            description = buildDescription(htmlContent, SITE_DESCRIPTION);
+        }
 
         res.render('post', {
-            post: { id: pageId, title, date, sender, receiver, content: htmlContent, description },
+            post: {
+                id: pageId,
+                title,
+                date,
+                sender,
+                receiver,
+                content: htmlContent,
+                description,
+                isFree,
+                isLocked,
+            },
             siteUrl: SITE_URL,
         });
     } catch (error) {
@@ -126,13 +151,16 @@ app.get('/post/:id', async (req, res) => {
 app.get('/sitemap.xml', async (req, res) => {
     try {
         const messages = await queryAllMessages();
+        // 유료 회보는 sitemap에서 제외 — 검색엔진 노출 방지
         const urls = [
             { loc: `${SITE_URL}/`, lastmod: new Date().toISOString().slice(0, 10), priority: '1.0' },
-            ...messages.map((m) => ({
-                loc: `${SITE_URL}/post/${m.id}`,
-                lastmod: m.date && m.date !== '-' ? m.date : undefined,
-                priority: '0.8',
-            })),
+            ...messages
+                .filter((m) => m.isFree)
+                .map((m) => ({
+                    loc: `${SITE_URL}/post/${m.id}`,
+                    lastmod: m.date && m.date !== '-' ? m.date : undefined,
+                    priority: '0.8',
+                })),
         ];
         const xml =
             '<?xml version="1.0" encoding="UTF-8"?>\n' +
