@@ -32,7 +32,9 @@ function extractMessages(response) {
         const status = props['Status']?.select?.name || '-';
         const receiver = props['수신']?.rich_text?.[0]?.plain_text || '-';
         const sender = props['발신']?.rich_text?.[0]?.plain_text || '-';
-        const isFree = props['무료공개']?.checkbox || false;
+        // '요금' multi_select: '무료' → isFree=true, '유료' → isFree=false
+        const yoGeum = props['요금']?.multi_select?.map((o) => o.name) || [];
+        const isFree = yoGeum.includes('무료');
         return { id: page.id, title, date, status, receiver, sender, isFree };
     });
 }
@@ -108,8 +110,9 @@ app.get('/post/:id', async (req, res) => {
             props['수신']?.rich_text?.[0]?.plain_text ||
             'All Agents';
 
-        // 무료/유료 게이팅 — 유료(isFree=false)는 콘텐츠 차단, Pi 결제 안내만 노출
-        const isFree = props['무료공개']?.checkbox || false;
+        // 무료/유료 게이팅 — '요금' multi_select: '무료' → 공개, '유료' → Pi 결제 필요
+        const yoGeum = props['요금']?.multi_select?.map((o) => o.name) || [];
+        const isFree = yoGeum.includes('무료');
         // TODO: 결제 검증 추가 시 — 인증된 사용자의 결제 기록 확인하여 isPaid 판정
         const isPaid = false; // 현재는 결제 통합 전 — 모든 유료 회보는 잠금
         const isLocked = !isFree && !isPaid;
