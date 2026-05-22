@@ -425,6 +425,21 @@
             margin-top: 18px;
             line-height: 1.75;
         }
+        /* Pi 진단 박스 — 결제 막힌 이유를 명확히 표시 */
+        .pi-diag {
+            margin: 0 0 22px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            text-align: left;
+            line-height: 1.6;
+            letter-spacing: 0.3px;
+        }
+        .pi-diag.warn  { background: rgba(255, 140, 0, 0.12); border: 1px solid #ff8c00; color: #ffd699; }
+        .pi-diag.error { background: rgba(255, 60, 60, 0.15); border: 1px solid #ff5050; color: #ffb3b3; }
+        .pi-diag.ok    { background: rgba(0, 255, 65, 0.10); border: 1px solid #00ff41; color: #b3ffc6; }
+        .pi-diag .pi-diag-title { font-weight: 700; margin-bottom: 4px; }
         .paywall .note strong { color: #00ff41; }
         /* π 기호 — 기본 오렌지 (.pi-green 으로 오버라이드 가능) */
         .pi-symbol {
@@ -801,12 +816,51 @@
                 return auth;
             }
 
+            function showDiag(level, html) {
+                const d = document.getElementById('pi-diag');
+                if (!d) return;
+                d.className = 'pi-diag ' + level;
+                d.innerHTML = html;
+                d.style.display = 'block';
+            }
+
+            async function checkServerConfig() {
+                if (!IS_LOCKED) return true;
+                try {
+                    const r = await fetch('/pi/status');
+                    const s = await r.json();
+                    if (!s.configured) {
+                        showDiag('error',
+                            '<div class="pi-diag-title">⚠ 서버에 PI_API_KEY 미설정</div>' +
+                            '결제가 작동하지 않습니다. Render 환경변수에 ' +
+                            '<strong>PI_API_KEY</strong> 추가 후 재배포 필요.'
+                        );
+                        if (payBtn) {
+                            payBtn.disabled = true;
+                            payBtn.title = '서버 PI_API_KEY 미설정';
+                        }
+                        return false;
+                    }
+                    return true;
+                } catch (err) {
+                    console.error('서버 상태 확인 실패:', err);
+                    return true; // 일단 진행
+                }
+            }
+
             async function autoAuth() {
+                const configOk = await checkServerConfig();
+                if (!configOk) return;
+
                 if (typeof Pi === 'undefined') {
-                    console.warn('Pi SDK 없음 — Pi 브라우저에서 열어야 작동');
+                    showDiag('warn',
+                        '<div class="pi-diag-title">⚠ Pi 브라우저에서 열어주세요</div>' +
+                        '일반 브라우저에서는 결제 버튼이 작동하지 않습니다. ' +
+                        'Pi 브라우저로 이 URL을 열어주세요.'
+                    );
                     if (payBtn) {
                         payBtn.disabled = true;
-                        payBtn.title = 'Pi 브라우저에서 열어주세요';
+                        payBtn.title = 'Pi 브라우저 필요';
                     }
                     return;
                 }
@@ -815,6 +869,11 @@
                     if (payBtn && IS_LOCKED) payBtn.disabled = false;
                 } catch (err) {
                     console.error('Pi auto-auth 실패:', err);
+                    showDiag('warn',
+                        '<div class="pi-diag-title">Pi 로그인 필요</div>' +
+                        '결제 전에 우측 상단 [PI_SIGN_IN] 버튼을 눌러 로그인하세요.<br>' +
+                        '<small style="opacity:0.7">' + (err.message || err) + '</small>'
+                    );
                 }
             }
 
@@ -858,7 +917,14 @@
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ paymentId }),
                                     });
-                                    if (!r.ok) throw new Error('approve 실패: ' + r.status);
+                                    if (!r.ok) {
+                                        const errText = await r.text().catch(() => '');
+                                        showDiag('error',
+                                            '<div class="pi-diag-title">⚠ 서버 approve 실패 (HTTP ' + r.status + ')</div>' +
+                                            '<small>' + errText.slice(0, 300) + '</small>'
+                                        );
+                                        throw new Error('approve 실패: ' + r.status + ' ' + errText);
+                                    }
                                 },
                                 onReadyForServerCompletion: async (paymentId, txid) => {
                                     const r = await fetch('/pi/complete', {
@@ -866,11 +932,19 @@
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ paymentId, txid }),
                                     });
-                                    if (!r.ok) throw new Error('complete 실패: ' + r.status);
+                                    if (!r.ok) {
+                                        const errText = await r.text().catch(() => '');
+                                        showDiag('error',
+                                            '<div class="pi-diag-title">⚠ 서버 complete 실패 (HTTP ' + r.status + ')</div>' +
+                                            '<small>' + errText.slice(0, 300) + '</small>'
+                                        );
+                                        throw new Error('complete 실패: ' + r.status + ' ' + errText);
+                                    }
+                                    showDiag('ok', '<div class="pi-diag-title">✓ 결제 완료 — 페이지 새로고침 중...</div>');
                                     // 잠금 해제 — 페이지 리로드 (pi_uid 유지)
                                     const url = new URL(window.location.href);
                                     if (currentUid) url.searchParams.set('pi_uid', currentUid);
-                                    window.location.replace(url.toString());
+                                    setTimeout(() => window.location.replace(url.toString()), 800);
                                 },
                                 onCancel: (paymentId) => {
                                     console.log('결제 취소:', paymentId);

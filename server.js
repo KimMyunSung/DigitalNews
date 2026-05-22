@@ -203,6 +203,15 @@ app.get('/pi/paid', (req, res) => {
     res.json({ paid: userHasPaid(uid, postId) });
 });
 
+// 서버 측 Pi 설정 상태 진단용
+app.get('/pi/status', (req, res) => {
+    res.json({
+        configured: !!PI_API_KEY,
+        sandbox: PI_SANDBOX,
+        ledgerSize: paidLedger.size,
+    });
+});
+
 app.get('/post/:id', async (req, res) => {
     const pageId = req.params.id;
     const piUid = (req.query.pi_uid || '').toString().slice(0, 80);
