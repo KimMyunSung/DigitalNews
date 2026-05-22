@@ -53,9 +53,9 @@
             z-index: 9999;
             mix-blend-mode: multiply;
         }
-        /* Light mode: hide scanlines for readability */
+        /* Light mode: 가로 줄·매트릭스 비 모두 숨김 — 깨끗한 종이 느낌 */
         [data-theme="light"] body::after { display: none; }
-        [data-theme="light"] #matrix-canvas { opacity: 0.18; }
+        [data-theme="light"] #matrix-canvas { display: none; }
 
         #matrix-canvas {
             position: fixed; top: 0; left: 0;
@@ -572,12 +572,12 @@
                 '<span class="en">> CHANNEL T LOCKED</span><span class="ko">채널 T 동기화</span>',
                 '<span class="en">> DECRYPTING CARRIER WAVE</span><span class="ko">반송파 해독 중</span>',
                 '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
-                '<span class="quote">아는 만큼 통하게 될 것이다</span>',
-                '<span class="quote-en">— as you know, so you shall connect —</span>',
+                '<span class="quote">아는 만큼 보이게 될 것이다...</span>',
+                '<span class="quote-en">— as you know, so you shall see —</span>',
                 '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
                 '<span class="ok">> ACCESS GRANTED.</span><span class="ko">접속 허가<span class="boot-cursor"></span></span>',
             ];
-            const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+            const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
             const last = parseInt(localStorage.getItem('pt_boot_at') || '0', 10);
             if ((Date.now() - last) < COOLDOWN_MS) {
                 overlay.classList.add('done');
