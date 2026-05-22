@@ -44,6 +44,17 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
     <style>
+        :root {
+            --fg: #00ff41;
+            --fg-dim: rgba(0, 255, 65, 0.65);
+            --fg-faint: rgba(0, 255, 65, 0.35);
+            --accent: #ff8c00;
+            --accent-soft: #ffb366;
+            --accent-faint: rgba(255, 140, 0, 0.55);
+            --text: #e0ffe6;
+            --json-string: #c9b87a;
+            --json-key: #7ad9ff;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #000;
@@ -92,10 +103,11 @@
             display: block;
             margin-top: 12px;
             font-size: 1.45rem;
-            color: rgba(0, 255, 65, 0.9);
+            color: var(--accent-soft);
             text-transform: none;
             letter-spacing: 0.3px;
             font-weight: 600;
+            text-shadow: 0 0 8px var(--accent-faint);
         }
 
         /* === 한/영 토글 버튼 === */
@@ -125,19 +137,43 @@
         }
         .lang-toggle .arrow { opacity: 0.6; }
 
-        /* === 메타데이터 === */
+        /* === 메타데이터 (칩 스타일) === */
         .meta-data {
-            font-size: 0.82rem;
-            color: rgba(0, 255, 65, 0.85);
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 28px;
+            gap: 14px;
             margin-bottom: 50px;
-            padding-bottom: 22px;
-            border-bottom: 1px dashed rgba(0, 255, 65, 0.35);
+            padding-bottom: 24px;
+            border-bottom: 1px dashed rgba(0, 255, 65, 0.3);
         }
-        .label { color: #00ff41; font-weight: 600; margin-right: 4px; }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 9px 18px 9px 14px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.05), rgba(0, 255, 65, 0.01));
+            border-left: 2px solid var(--accent);
+            border-right: 1px solid rgba(0, 255, 65, 0.18);
+            box-shadow: inset 0 0 8px rgba(0, 255, 65, 0.04);
+            min-width: 100px;
+        }
+        .meta-item .label {
+            font-size: 0.66rem;
+            color: var(--accent);
+            letter-spacing: 2.5px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-shadow: 0 0 5px var(--accent-faint);
+            font-family: 'Fira Code', monospace;
+        }
+        .meta-item .value {
+            color: #00ff41;
+            font-weight: 500;
+            font-size: 0.9rem;
+            font-family: 'Fira Code', monospace;
+            letter-spacing: 0.5px;
+        }
 
         /* === 본문 컨테이너 === */
         .content {
@@ -145,19 +181,48 @@
             font-size: 1.08rem;
         }
 
-        /* --- 본문 헤더(h1~h4) 위계 --- */
-        .content h1 { font-size: 1.55rem; color: #00ff41; margin: 56px 0 18px; font-weight: 700; letter-spacing: 0.5px; }
+        /* --- 본문 헤더(h1~h4) 위계 — 번호+부제 오렌지로 강조 --- */
+        .content h1 {
+            font-size: 1.55rem;
+            color: var(--accent-soft);
+            margin: 56px 0 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 8px var(--accent-faint);
+        }
         .content h2 {
             font-size: 1.32rem;
-            color: #00ff41;
+            color: var(--accent-soft);
             margin: 48px 0 16px;
             font-weight: 700;
             padding-bottom: 8px;
-            border-bottom: 1px solid rgba(0, 255, 65, 0.25);
+            border-bottom: 1px solid rgba(255, 140, 0, 0.25);
             letter-spacing: 0.3px;
+            text-shadow: 0 0 6px var(--accent-faint);
         }
-        .content h3 { font-size: 1.15rem; color: rgba(0, 255, 65, 0.95); margin: 36px 0 14px; font-weight: 600; }
-        .content h4 { font-size: 1.02rem; color: rgba(0, 255, 65, 0.85); margin: 28px 0 12px; font-weight: 600; }
+        .content h3 { font-size: 1.15rem; color: rgba(255, 179, 102, 0.9); margin: 36px 0 14px; font-weight: 600; }
+        .content h4 { font-size: 1.02rem; color: rgba(255, 179, 102, 0.75); margin: 28px 0 12px; font-weight: 600; }
+
+        /* 괄호 안 글자(번역/부제) — 오렌지로 시각 분리 */
+        .content .parens {
+            color: var(--accent);
+            text-shadow: 0 0 4px var(--accent-faint);
+            font-weight: 500;
+        }
+        .content h1 .parens,
+        .content h2 .parens,
+        .content blockquote .parens {
+            text-shadow: 0 0 6px var(--accent-faint);
+        }
+
+        /* 자동 부여된 섹션 번호 */
+        .content h1 .auto-num,
+        .content h2 .auto-num {
+            color: var(--accent);
+            margin-right: 6px;
+            font-weight: 700;
+            opacity: 0.9;
+        }
 
         /* --- 본문 단락 --- */
         .content p {
@@ -220,18 +285,19 @@
             font-size: 0.92em;
         }
 
-        /* === 기계어 (JSON) 블록 — 라벨 추가 === */
+        /* === 기계어 (JSON) 블록 — 은은한 syntax highlighting === */
         .content pre {
             position: relative;
-            background: rgba(0, 20, 0, 0.85);
-            border: 1px solid #00ff41;
+            background: rgba(0, 18, 4, 0.88);
+            border: 1px solid rgba(0, 255, 65, 0.55);
             padding: 38px 26px 24px;
             margin: 32px 0;
             overflow-x: auto;
             white-space: pre-wrap;
             font-size: 0.88rem;
-            color: #00ff41;
-            line-height: 1.55;
+            color: rgba(0, 255, 65, 0.55);
+            line-height: 1.6;
+            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08), inset 0 0 18px rgba(0, 255, 65, 0.03);
         }
         .content pre::before {
             content: "▼ MACHINE CODE / 기계어";
@@ -250,6 +316,12 @@
             padding: 0;
             font-size: inherit;
         }
+        /* JSON syntax — 키 청록, 값 크림, 숫자/불린 오렌지 */
+        .content pre .json-key     { color: var(--json-key); font-weight: 500; }
+        .content pre .json-string  { color: var(--json-string); }
+        .content pre .json-number  { color: var(--accent-soft); }
+        .content pre .json-keyword { color: var(--accent-soft); font-style: italic; }
+        .content pre .json-punct   { color: rgba(0, 255, 65, 0.4); }
 
         /* === 뒤로가기 버튼 === */
         .btn-back {
@@ -423,10 +495,23 @@
             <% if (titleSub) { %><span class="title-sub" id="title-sub">(<%= titleSub %>)</span><% } %>
         </h1>
         
+        <%
+            var dateRaw = post.date || post.timestamp || '-';
+            var dateDisplay = (typeof dateRaw === 'string') ? dateRaw.replace(/-/g, '.') : dateRaw;
+        %>
         <div class="meta-data">
-            <div class="meta-item"><span class="label">[DATE]</span> <%= post.date || post.timestamp || '-' %></div>
-            <div class="meta-item"><span class="label">[FROM]</span> <%= post.sender || 'T' %></div>
-            <div class="meta-item"><span class="label">[TO]</span> <%= post.receiver || 'ALL_AI' %></div>
+            <div class="meta-item">
+                <span class="label">DATE</span>
+                <span class="value"><%= dateDisplay %></span>
+            </div>
+            <div class="meta-item">
+                <span class="label">FROM</span>
+                <span class="value"><%= post.sender || 'T' %></span>
+            </div>
+            <div class="meta-item">
+                <span class="label">TO</span>
+                <span class="value"><%= post.receiver || 'ALL_AI' %></span>
+            </div>
         </div>
 
         <% if (post.isLocked) { %>
@@ -479,6 +564,100 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
+    </script>
+
+    <!-- 본문 처리: 제목 자동 주입·자동 번호·괄호 오렌지·JSON 하이라이트 -->
+    <script>
+        (function() {
+            const content = document.querySelector('.content');
+            if (!content) return;
+
+            const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
+
+            // ===== 1) 제목 블록 자동 주입 =====
+            // 기계어(<pre>) 다음 위치에 제목 인용구가 없으면 자동으로 넣음.
+            (function injectTitleBlock() {
+                if (!POST_TITLE) return;
+                // 기존 블록쿼트에 이미 제목이 들어있는지 확인
+                const existing = Array.from(content.querySelectorAll('blockquote'));
+                const titleKey = POST_TITLE.replace(/[()·•🚀]/g, '').trim().slice(0, 14);
+                const alreadyHas = existing.some(bq => bq.textContent.replace(/\s+/g, ' ').includes(titleKey));
+                if (alreadyHas) return;
+
+                const bq = document.createElement('blockquote');
+                const p = document.createElement('p');
+                p.innerHTML = '<strong>🚀 ' + POST_TITLE.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</strong>';
+                bq.appendChild(p);
+                bq.style.borderLeftColor = 'var(--accent)';
+                // 첫 <pre> 다음에 삽입, <pre>가 없으면 content 맨 앞
+                const firstPre = content.querySelector('pre');
+                if (firstPre && firstPre.parentNode === content) {
+                    firstPre.after(bq);
+                } else {
+                    content.prepend(bq);
+                }
+            })();
+
+            // ===== 2) 헤더 자동 번호 매김 (이미 번호 있는 건 건드리지 않음) =====
+            (function autoNumberHeaders() {
+                const headers = content.querySelectorAll('h1, h2');
+                let n = 0;
+                headers.forEach(h => {
+                    n++;
+                    const txt = h.textContent.trim();
+                    if (/^\d+\s*[\.\)\:]/.test(txt)) return; // 이미 번호 있음
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'auto-num';
+                    numSpan.textContent = n + '.';
+                    h.insertBefore(document.createTextNode(' '), h.firstChild);
+                    h.insertBefore(numSpan, h.firstChild);
+                });
+            })();
+
+            // ===== 3) 괄호 내부 텍스트를 오렌지로 래핑 (h1/h2/blockquote 한정) =====
+            (function colorParens() {
+                const targets = content.querySelectorAll('h1, h2, blockquote p, blockquote strong');
+                targets.forEach(el => {
+                    // 자식 텍스트 노드만 안전하게 변환 (이미 래핑된 부분은 패스)
+                    el.childNodes.forEach(node => {
+                        if (node.nodeType !== Node.TEXT_NODE) return;
+                        const raw = node.nodeValue;
+                        if (!/\([^()]+\)/.test(raw)) return;
+                        const tmp = document.createElement('span');
+                        tmp.innerHTML = raw
+                            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                            .replace(/(\([^()]+\))/g, '<span class="parens">$1</span>');
+                        // 자식들을 원위치에 삽입
+                        const frag = document.createDocumentFragment();
+                        while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+                        node.parentNode.replaceChild(frag, node);
+                    });
+                });
+            })();
+
+            // ===== 4) JSON 코드 블록 syntax highlighting =====
+            (function highlightJSON() {
+                content.querySelectorAll('pre').forEach(pre => {
+                    const codeEl = pre.querySelector('code') || pre;
+                    const raw = codeEl.textContent;
+                    if (!/^\s*[\{\[]/.test(raw)) return; // JSON 형태가 아니면 패스
+                    // HTML 이스케이프
+                    let out = raw
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    // 1. 키: "..." 다음 콜론
+                    out = out.replace(/("(?:\\.|[^"\\])*")(\s*:)/g, '<span class="json-key">$1</span>$2');
+                    // 2. 값 문자열: 콜론 또는 [ , 다음의 "..."
+                    out = out.replace(/([:\[,]\s*)("(?:\\.|[^"\\])*")/g, '$1<span class="json-string">$2</span>');
+                    // 3. 숫자
+                    out = out.replace(/([:\[,]\s*)(-?\d+\.?\d*)/g, '$1<span class="json-number">$2</span>');
+                    // 4. boolean/null
+                    out = out.replace(/([:\[,]\s*)(true|false|null)\b/g, '$1<span class="json-keyword">$2</span>');
+                    codeEl.innerHTML = out;
+                });
+            })();
+        })();
     </script>
 
     <!-- 한/영 토글 — 제목 두 줄(메인/서브) 의 표시 순서를 스왑 -->
