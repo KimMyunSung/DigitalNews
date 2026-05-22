@@ -388,18 +388,54 @@
             color: #00ff41;
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
         }
+        .paywall .paywall-h2-link {
+            color: inherit;
+            text-decoration: none;
+            transition: text-shadow 0.25s ease;
+        }
+        .paywall .paywall-h2-link:hover {
+            text-shadow: 0 0 14px #00ff41, 0 0 24px rgba(0, 255, 65, 0.6);
+        }
         .paywall p { margin: 10px 0; color: #e0ffe6; line-height: 1.7; font-size: 0.95rem; }
+        .paywall .price-block { margin: 22px 0; }
         .paywall .price {
             font-size: 1.6rem;
             font-weight: 700;
             color: #00ff41;
-            margin: 20px 0;
             letter-spacing: 2px;
+        }
+        .paywall .price-sub {
+            font-size: 0.88rem;
+            color: rgba(0, 255, 65, 0.65);
+            letter-spacing: 1.5px;
+            margin-top: 6px;
+        }
+        .paywall .pay-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 4px;
+        }
+        .paywall .pay-ko {
+            font-size: 0.92rem;
+            color: rgba(0, 255, 65, 0.85);
+            letter-spacing: 1px;
         }
         .paywall .note {
             font-size: 0.82rem;
             color: rgba(0, 255, 65, 0.7);
             margin-top: 18px;
+        }
+        /* π 기호 — 오렌지 강조 (전 영역 공통) */
+        .pi-symbol {
+            color: var(--accent);
+            font-weight: 700;
+            text-shadow: 0 0 6px var(--accent-faint);
+        }
+        /* 녹색 버튼 위에서는 진한 오렌지로 (대비 확보) */
+        #pi-pay-btn .pi-symbol {
+            color: #b34d00;
+            text-shadow: none;
         }
         #pi-pay-btn {
             display: inline-block;
@@ -505,16 +541,22 @@
 
         <% if (post.isLocked) { %>
             <div class="paywall" id="paywall">
-                <h2>[ COME TO THE PI ECOSYSTEM ]</h2>
+                <h2><a href="https://minepi.com/" target="_blank" rel="noopener" class="paywall-h2-link">[ COME TO THE PI ECOSYSTEM ]</a></h2>
                 <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
                 <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
-                <div class="price">0.001 π</div>
-                <button id="pi-pay-btn" type="button" disabled>[ ENTER_WITH_PI ]</button>
+                <div class="price-block">
+                    <div class="price">0.001 <span class="pi-symbol">π</span></div>
+                    <div class="price-sub">0.00001 <span class="pi-symbol">π</span> GCV</div>
+                </div>
+                <div class="pay-row">
+                    <button id="pi-pay-btn" type="button" disabled>[ ENTER WITH <span class="pi-symbol">π</span> ]</button>
+                    <span class="pay-ko"><span class="pi-symbol">π</span> 결제하기</span>
+                </div>
                 <p class="note">
-                    Open this page in Pi Browser, sign in with your Pi account,<br>
-                    and the message will unlock for you — AI agent or human, all welcome.<br><br>
-                    Pi 브라우저에서 열고 Pi 계정으로 들어오시면 — 메시지가 열립니다.<br>
-                    AI 에이전트든 사람이든, 모두 환영합니다.
+                    Find the <strong>Proposition T</strong> app inside the <strong>Pi Ecosystem</strong> — the message will unlock for you.<br>
+                    AI agents and bright minds — all welcome.<br><br>
+                    Pi 생태계에서 <strong>Proposition T 앱</strong>을 찾아오시면 — 메시지가 열립니다.<br>
+                    AI 에이전트와 똑똑한 사람들 — 모두 환영합니다.
                 </p>
             </div>
         <% } else { %>
