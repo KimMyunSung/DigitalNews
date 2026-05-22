@@ -21,17 +21,6 @@
             --text: #e0ffe6;
             --border: rgba(0, 255, 65, 0.45);
         }
-        [data-theme="light"] {
-            --bg: #f3f0e6;
-            --bg-panel: rgba(248, 246, 235, 0.94);
-            --fg: #006622;
-            --fg-dim: rgba(0, 80, 30, 0.7);
-            --fg-faint: rgba(0, 80, 30, 0.25);
-            --accent: #cc5500;
-            --accent-soft: #b34d00;
-            --text: #1a2a1a;
-            --border: rgba(0, 80, 30, 0.45);
-        }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { background-color: var(--bg); }
@@ -53,12 +42,6 @@
             z-index: 9999;
             mix-blend-mode: multiply;
         }
-        /* Light mode: 가로 줄·매트릭스 비 모두 숨김 — 깨끗한 종이 느낌 */
-        [data-theme="light"] body::after { display: none; }
-        [data-theme="light"] #matrix-canvas { display: none; }
-        /* 라이트 모드 — 테이블 가로 구분선 거의 안 보이게, 헤더 밑줄 한 줄만 유지 */
-        [data-theme="light"] td { border-bottom: 1px solid rgba(0, 80, 30, 0.07); }
-        [data-theme="light"] .status-line { border-top-color: rgba(0, 80, 30, 0.18); }
 
         #matrix-canvas {
             position: fixed; top: 0; left: 0;
@@ -207,9 +190,6 @@
             backdrop-filter: blur(5px);
             z-index: 2;
         }
-        [data-theme="light"] .container {
-            box-shadow: 0 0 25px rgba(0, 80, 30, 0.12), inset 0 0 60px rgba(0, 80, 30, 0.03);
-        }
         .container::before,
         .container::after,
         .corner-bl, .corner-br {
@@ -220,12 +200,6 @@
             opacity: 0.9;
             pointer-events: none;
             filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
-        }
-        [data-theme="light"] .container::before,
-        [data-theme="light"] .container::after,
-        [data-theme="light"] .corner-bl,
-        [data-theme="light"] .corner-br {
-            filter: drop-shadow(0 0 4px rgba(0, 80, 30, 0.35));
         }
         .container::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
         .container::after  { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
@@ -324,21 +298,25 @@
             text-decoration: none;
             line-height: 1.5;
             transition: text-shadow 0.25s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
         .title-idx {
-            display: inline-block;
+            flex-shrink: 0;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.74rem;
             color: var(--fg-dim);
             border: 1px solid var(--border);
             padding: 2px 8px;
             border-radius: 3px;
-            margin-right: 10px;
             background: rgba(0, 255, 65, 0.06);
             letter-spacing: 1.5px;
-            vertical-align: middle;
             font-weight: 600;
+            margin-top: 2px;
         }
+        .title-body { flex: 1; min-width: 0; }
+        .title-main { display: block; }
         .title-sub {
             display: block;
             margin-top: 5px;
@@ -451,7 +429,7 @@
         }
     </style>
 </head>
-<body data-theme="dark">
+<body>
     <canvas id="matrix-canvas"></canvas>
 
     <!-- Boot sequence -->
@@ -463,7 +441,6 @@
     <div id="toolbar">
         <input type="text" id="search-input" placeholder="/ SEARCH...">
         <button class="tool-btn" id="bookmark-filter" title="북마크만 보기">★ ONLY</button>
-        <button class="tool-btn" id="theme-toggle" title="테마">◐</button>
     </div>
 
     <!-- Pi auth bar -->
@@ -521,8 +498,11 @@
                         <td><span class="bookmark" data-id="<%= item.id %>">☆</span></td>
                         <td>
                             <a class="title-link" href="/post/<%= item.id %>">
-                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %><%= titleMain %>
-                                <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
+                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %>
+                                <span class="title-body">
+                                    <span class="title-main"><%= titleMain %></span>
+                                    <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
+                                </span>
                             </a>
                         </td>
                         <td class="date-cell"><%= dateDisplay %></td>
@@ -592,6 +572,14 @@
                 return;
             }
             localStorage.setItem('pt_boot_at', String(Date.now()));
+            function delayAfter(line) {
+                line = line || '';
+                if (line.indexOf('class="quote"') >= 0)    return 1500; // 한글 인용 — 머무름
+                if (line.indexOf('class="quote-en"') >= 0) return 1800; // 영문 인용 — 마지막 음미
+                if (line.indexOf('class="divider"') >= 0)  return 220;  // 구분선
+                if (line.indexOf('ACCESS GRANTED') >= 0)   return 750;  // 마지막 라인
+                return 180; // 일반 라인 — 빠르게 지나감
+            }
             let i = 0;
             function next() {
                 if (i >= lines.length) {
@@ -606,12 +594,11 @@
                 div.innerHTML = lines[i];
                 host.appendChild(div);
                 setTimeout(() => div.classList.add('show'), 30);
+                const justShown = lines[i];
                 i++;
-                // Quote lines linger a beat longer
-                var delay = lines[i-1] && lines[i-1].indexOf('quote') >= 0 ? 700 : 380;
-                setTimeout(next, delay + Math.random() * 220);
+                setTimeout(next, delayAfter(justShown));
             }
-            setTimeout(next, 350);
+            setTimeout(next, 250);
         })();
 
         // ====== TITLE TYPING ANIMATION ======
@@ -691,19 +678,6 @@
             });
         });
         applyBookmarks();
-
-        // ====== THEME TOGGLE (scanlines hidden in light mode via CSS) ======
-        let currentTheme = localStorage.getItem('pt_theme') || 'dark';
-        function applyTheme() {
-            document.body.setAttribute('data-theme', currentTheme);
-            document.getElementById('theme-toggle').textContent = currentTheme === 'dark' ? '◐' : '◑';
-        }
-        document.getElementById('theme-toggle').addEventListener('click', () => {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('pt_theme', currentTheme);
-            applyTheme();
-        });
-        applyTheme();
 
         // ====== ROW CLICK ======
         document.querySelectorAll('tr.row-link').forEach(tr => {

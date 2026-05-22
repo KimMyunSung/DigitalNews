@@ -161,21 +161,25 @@
             text-decoration: none;
             line-height: 1.5;
             transition: text-shadow 0.25s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
         .title-idx {
-            display: inline-block;
+            flex-shrink: 0;
             font-family: 'Fira Code', monospace;
             font-size: 0.74rem;
             color: rgba(0, 255, 65, 0.7);
             border: 1px solid rgba(0, 255, 65, 0.45);
             padding: 2px 8px;
             border-radius: 3px;
-            margin-right: 10px;
             background: rgba(0, 255, 65, 0.06);
             letter-spacing: 1.5px;
-            vertical-align: middle;
             font-weight: 600;
+            margin-top: 2px;
         }
+        .title-body { flex: 1; min-width: 0; }
+        .title-main { display: block; }
         .title-sub {
             display: block;
             margin-top: 5px;
@@ -362,8 +366,11 @@
                     <tr class="row-link" data-href="/post/<%= item.id %>">
                         <td>
                             <a class="title-link" href="/post/<%= item.id %>">
-                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %><%= titleMain %>
-                                <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
+                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %>
+                                <span class="title-body">
+                                    <span class="title-main"><%= titleMain %></span>
+                                    <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
+                                </span>
                             </a>
                         </td>
                         <td class="date-cell"><%= dateDisplay %></td>
