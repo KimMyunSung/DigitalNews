@@ -36,58 +36,197 @@
     }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
-
-    <!-- Pi Network SDK -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: #000;
-            color: #00ff41;
-            font-family: 'Fira Code', 'Noto Sans KR', monospace;
-            overflow-x: hidden;
+        :root {
+            --bg: #000;
+            --bg-panel: rgba(0, 10, 0, 0.8);
+            --fg: #00ff41;
+            --fg-dim: rgba(0, 255, 65, 0.55);
+            --fg-faint: rgba(0, 255, 65, 0.25);
+            --accent: #ff8c00;
+            --accent-soft: #ffb366;
+            --text: #e0ffe6;
+            --border: rgba(0, 255, 65, 0.45);
         }
-        /* CRT scanlines overlay — over everything, no clicks blocked */
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background-color: var(--bg); }
+        body {
+            color: var(--fg);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Noto Sans KR', monospace;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
         body::after {
             content: '';
-            position: fixed;
-            inset: 0;
+            position: fixed; inset: 0;
             background: repeating-linear-gradient(
                 to bottom,
-                rgba(0, 0, 0, 0.18) 0px,
-                rgba(0, 0, 0, 0.18) 1px,
-                transparent 1px,
-                transparent 3px
+                rgba(0, 0, 0, 0.18) 0px, rgba(0, 0, 0, 0.18) 1px,
+                transparent 1px, transparent 3px
             );
             pointer-events: none;
             z-index: 9999;
             mix-blend-mode: multiply;
         }
+
         #matrix-canvas {
             position: fixed; top: 0; left: 0;
             width: 100vw; height: 100vh;
-            z-index: -1; opacity: 0.55;
+            pointer-events: none;
+            z-index: -2;
+            opacity: 0.5;
         }
+
+        /* === BOOT SEQUENCE OVERLAY === */
+        #boot-overlay {
+            position: fixed; inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--fg);
+            transition: opacity 0.6s ease;
+        }
+        #boot-overlay.done { opacity: 0; pointer-events: none; }
+        #boot-overlay .boot-lines {
+            width: min(780px, 94%);
+            font-size: 1.15rem;
+            line-height: 2.3;
+            letter-spacing: 1.5px;
+            text-align: center;
+        }
+        #boot-overlay .boot-line {
+            opacity: 0;
+            transition: opacity 0.3s;
+            overflow: hidden;
+            text-align: center;
+        }
+        #boot-overlay .boot-line.show { opacity: 1; }
+        #boot-overlay .boot-line .en { color: rgba(0, 255, 65, 0.9); display: inline-block; }
+        #boot-overlay .boot-line .ko { color: rgba(0, 255, 65, 0.6); margin-left: 18px; font-size: 0.95em; display: inline-block; }
+        #boot-overlay .boot-line .divider { color: rgba(0, 255, 65, 0.3); letter-spacing: 0; display: inline-block; }
+        #boot-overlay .boot-line .quote {
+            display: block;
+            text-align: center;
+            color: #00ff41;
+            font-size: 1.7rem;
+            letter-spacing: 5px;
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.9), 0 0 28px rgba(0, 255, 65, 0.55);
+            padding: 8px 0 2px;
+            font-weight: 700;
+        }
+        #boot-overlay .boot-line .quote-en {
+            display: block;
+            text-align: center;
+            color: rgba(0, 255, 65, 0.7);
+            font-size: 1rem;
+            letter-spacing: 3px;
+            font-style: italic;
+            padding-bottom: 6px;
+        }
+        #boot-overlay .boot-line .ok { color: #00ff41; }
+        #boot-overlay .boot-cursor::after {
+            content: '_';
+            animation: blink 0.8s steps(2, start) infinite;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* === TOP TOOLBAR === */
+        #toolbar {
+            position: fixed; top: 14px; left: 14px;
+            z-index: 1000;
+            display: flex; gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+        }
+        .tool-btn {
+            background: var(--bg-panel);
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 7px 11px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            font-weight: 600;
+        }
+        .tool-btn:hover {
+            background: var(--fg);
+            color: var(--bg);
+            box-shadow: 0 0 12px var(--fg);
+        }
+        .tool-btn.active { background: var(--fg); color: var(--bg); }
+
+        #search-input {
+            background: var(--bg-panel);
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 7px 11px;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: 1px;
+            width: 220px;
+            outline: none;
+            transition: box-shadow 0.25s, border-color 0.25s;
+        }
+        #search-input:focus {
+            box-shadow: 0 0 10px var(--fg);
+            border-color: var(--fg);
+        }
+        #search-input::placeholder { color: var(--fg-dim); }
+
+        /* === Pi Auth Bar === */
+        #pi-auth-bar {
+            position: fixed; top: 14px; right: 14px;
+            z-index: 1000;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #pi-signin-btn {
+            background: linear-gradient(135deg, rgba(0, 25, 8, 0.94), rgba(0, 10, 0, 0.94));
+            color: var(--fg);
+            border: 1px solid var(--fg);
+            padding: 7px 13px;
+            cursor: pointer;
+            font-family: inherit; font-size: inherit;
+            letter-spacing: 1.5px; font-weight: 600;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            transition: all 0.3s ease;
+        }
+        #pi-signin-btn:hover {
+            background: var(--fg); color: var(--bg);
+            box-shadow: 0 0 20px var(--fg), 0 0 40px rgba(0, 255, 65, 0.5);
+        }
+
+        /* === MAIN CONTAINER === */
         .container {
             position: relative;
-            width: 95%; max-width: 1300px; margin: 60px auto;
-            background: rgba(0, 10, 0, 0.78);
-            border: 1px solid rgba(0, 255, 65, 0.45);
+            width: 95%; max-width: 1300px; margin: 80px auto 60px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
             box-shadow: 0 0 25px rgba(0, 255, 65, 0.18), inset 0 0 60px rgba(0, 255, 65, 0.04);
-            border-radius: 8px; padding: 48px 44px 36px;
+            border-radius: 8px;
+            padding: 48px 44px 36px;
             backdrop-filter: blur(5px);
             z-index: 2;
         }
-        /* HUD corner marks — top via pseudos, bottom via spans */
         .container::before,
         .container::after,
         .corner-bl, .corner-br {
             content: '';
             position: absolute;
             width: 22px; height: 22px;
-            border: 0 solid #00ff41;
+            border: 0 solid var(--fg);
             opacity: 0.9;
             pointer-events: none;
             filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
@@ -98,8 +237,8 @@
         .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
 
         @keyframes titlePulse {
-            0%, 100% { text-shadow: 0 0 8px #00ff41, 0 0 18px rgba(0, 255, 65, 0.55); }
-            50%      { text-shadow: 0 0 14px #00ff41, 0 0 30px rgba(0, 255, 65, 0.95), 0 0 55px rgba(0, 255, 65, 0.4); }
+            0%, 100% { text-shadow: 0 0 8px var(--fg), 0 0 18px rgba(0, 255, 65, 0.55); }
+            50%      { text-shadow: 0 0 14px var(--fg), 0 0 30px rgba(0, 255, 65, 0.95), 0 0 55px rgba(0, 255, 65, 0.4); }
         }
         @keyframes statusBlink {
             0%, 60%, 100% { opacity: 1; }
@@ -107,63 +246,91 @@
         }
         h1 {
             text-align: center;
-            font-size: 2.6rem;
-            letter-spacing: 8px;
+            font-size: 2.7rem;
+            letter-spacing: 9px;
             margin-bottom: 12px;
-            color: #00ff41;
+            color: var(--fg);
             animation: titlePulse 2.4s ease-in-out infinite;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        h1 .typing-cursor::after {
+            content: '|';
+            animation: blink 0.8s steps(2) infinite;
+            margin-left: 2px;
         }
         .subtitle {
             text-align: center;
             font-size: 0.95rem;
-            margin-bottom: 44px;
-            color: rgba(0, 255, 65, 0.72);
+            margin-bottom: 8px;
+            color: var(--accent);
             letter-spacing: 2.5px;
+            text-shadow: 0 0 6px rgba(255, 140, 0, 0.55);
+        }
+        .badge-demo {
+            display: block;
+            text-align: center;
+            margin-bottom: 36px;
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            color: var(--fg-dim);
         }
 
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th {
             background-color: rgba(0, 255, 65, 0.1);
-            color: #00ff41;
-            padding: 15px 10px;
+            color: var(--fg);
+            padding: 14px 10px;
             text-align: left;
-            border-bottom: 2px solid #00ff41;
-            font-size: 0.82rem;
+            border-bottom: 2px solid var(--fg);
+            font-size: 0.78rem;
             letter-spacing: 3px;
             font-weight: 600;
             text-transform: uppercase;
         }
         td {
             padding: 16px 10px;
-            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
-            color: #e0ffe6;
+            border-bottom: 1px solid var(--fg-faint);
+            color: var(--text);
             vertical-align: middle;
             word-break: break-all;
             font-size: 0.9rem;
         }
-        th:nth-child(1), td:nth-child(1) { width: 40%; }
-        th:nth-child(2), td:nth-child(2) { width: 13%; }
-        th:nth-child(3), td:nth-child(3) { width: 10%; text-align: center; }
-        th:nth-child(4), td:nth-child(4) { width: 19%; }
-        th:nth-child(5), td:nth-child(5) { width: 9%; text-align: center; }
+        th:nth-child(1), td:nth-child(1) { width: 4%; text-align: center; }
+        th:nth-child(2), td:nth-child(2) { width: 38%; }
+        th:nth-child(3), td:nth-child(3) { width: 12%; }
+        th:nth-child(4), td:nth-child(4) { width: 9%; text-align: center; }
+        th:nth-child(5), td:nth-child(5) { width: 18%; }
         th:nth-child(6), td:nth-child(6) { width: 9%; text-align: center; }
+        th:nth-child(7), td:nth-child(7) { width: 10%; text-align: center; }
         .view-count {
-            font-family: 'Fira Code', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.82rem;
             color: rgba(0, 255, 65, 0.75);
             letter-spacing: 1px;
         }
 
-        tr.row-link { transition: background-color 0.25s ease, box-shadow 0.25s ease; }
+        tr.row-link { transition: background-color 0.2s ease, box-shadow 0.2s ease; }
         tr.row-link:hover {
-            background-color: rgba(0, 255, 65, 0.07);
-            box-shadow: inset 0 0 24px rgba(0, 255, 65, 0.10);
+            background-color: rgba(0, 255, 65, 0.08);
+            box-shadow: inset 0 0 24px rgba(0, 255, 65, 0.12);
             cursor: pointer;
         }
-        tr.row-link:hover td a.title-link { text-shadow: 0 0 8px #00ff41; }
+        tr.row-link:hover td a.title-link { text-shadow: 0 0 8px var(--fg); }
+
+        /* Glitch hover */
+        @keyframes glitch {
+            0%   { transform: translate(0); }
+            20%  { transform: translate(-1px, 1px); }
+            40%  { transform: translate(-1px, -1px); }
+            60%  { transform: translate(1px, 1px); }
+            80%  { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+        tr.row-link:hover td a.title-link { animation: glitch 0.25s ease; }
 
         td a.title-link {
-            color: #00ff41;
+            color: var(--fg);
             font-weight: 500;
             text-decoration: none;
             line-height: 1.5;
@@ -174,10 +341,10 @@
         }
         .title-idx {
             flex-shrink: 0;
-            font-family: 'Fira Code', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.74rem;
-            color: rgba(0, 255, 65, 0.7);
-            border: 1px solid rgba(0, 255, 65, 0.45);
+            color: var(--fg-dim);
+            border: 1px solid var(--border);
             padding: 2px 8px;
             border-radius: 3px;
             background: rgba(0, 255, 65, 0.06);
@@ -192,138 +359,128 @@
             margin-top: 5px;
             font-size: 0.78rem;
             font-weight: 400;
-            color: rgba(0, 255, 65, 0.55);
+            color: var(--fg-dim);
             letter-spacing: 0.3px;
             font-style: italic;
         }
-        td.date-cell {
-            font-family: 'Fira Code', monospace;
+        .date-cell {
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.85rem;
-            color: rgba(224, 255, 230, 0.85);
+            color: var(--text);
             letter-spacing: 1.5px;
             white-space: nowrap;
+            opacity: 0.85;
         }
 
         .badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 4px;
-            font-size: 0.75rem;
+            font-size: 0.74rem;
             font-weight: 600;
-            border: 1px solid #00ff41;
+            border: 1px solid var(--fg);
             letter-spacing: 1.5px;
         }
-        .badge.live { background-color: #00ff41; color: #000; box-shadow: 0 0 8px #00ff41; }
-        .badge.free { background-color: rgba(0, 255, 65, 0.15); color: #00ff41; }
+        .badge.free { background-color: rgba(0, 255, 65, 0.15); color: var(--fg); }
         .badge.paid {
             background-color: rgba(255, 140, 0, 0.18);
-            color: #ffb366;
-            border-color: #ff8c00;
+            color: var(--accent-soft);
+            border-color: var(--accent);
             text-shadow: 0 0 6px rgba(255, 140, 0, 0.9);
             box-shadow: 0 0 10px rgba(255, 140, 0, 0.55), inset 0 0 8px rgba(255, 140, 0, 0.25);
         }
 
         .sender-t {
             display: inline-block;
-            font-family: 'Fira Code', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             letter-spacing: 1px;
-            color: #00ff41;
-            text-shadow:
-                0 0 4px #00ff41,
-                0 0 10px rgba(0, 255, 65, 0.75),
-                0 0 18px rgba(0, 255, 65, 0.45);
-            padding: 2px 10px;
-            border: 1px solid rgba(0, 255, 65, 0.6);
+            color: var(--fg);
+            text-shadow: 0 0 4px var(--fg), 0 0 10px rgba(0, 255, 65, 0.75);
+            padding: 2px 9px;
+            border: 1px solid var(--fg);
             border-radius: 4px;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02));
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02));
+        }
+
+        /* Bookmark star */
+        .bookmark {
+            cursor: pointer;
+            font-size: 1.05rem;
+            color: var(--fg-faint);
+            transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+            user-select: none;
+            display: inline-block;
+        }
+        .bookmark:hover { transform: scale(1.2); color: var(--fg-dim); }
+        .bookmark.active {
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
         }
 
         .empty { text-align: center; padding: 50px; opacity: 0.7; }
 
-        /* Footer status line — military broadcast log */
+        /* === STATUS FOOTER === */
         .status-line {
             margin-top: 30px;
             padding-top: 18px;
-            border-top: 1px dashed rgba(0, 255, 65, 0.35);
+            border-top: 1px dashed var(--border);
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.76rem;
-            color: rgba(0, 255, 65, 0.7);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            color: var(--fg-dim);
             letter-spacing: 1.5px;
         }
         .status-line .dim { opacity: 0.55; margin-right: 4px; }
         .status-line .status-on {
-            color: #00ff41;
+            color: var(--fg);
             text-shadow: 0 0 6px rgba(0, 255, 65, 0.85);
             animation: statusBlink 2.2s ease-in-out infinite;
         }
-        .status-line .accent { color: #ffb366; text-shadow: 0 0 5px rgba(255, 140, 0, 0.6); }
-
-        /* === Pi Auth Bar === */
-        #pi-auth-bar {
-            position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 1000;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.82rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #pi-signin-btn {
-            background: linear-gradient(135deg, rgba(0, 25, 8, 0.94), rgba(0, 10, 0, 0.94));
-            color: #00ff41;
-            border: 1px solid #00ff41;
-            padding: 9px 16px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: inherit;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.22), inset 0 0 8px rgba(0, 255, 65, 0.08);
-            transition: all 0.3s ease;
-        }
-        #pi-signin-btn:hover {
-            background: #00ff41;
-            color: #000;
-            box-shadow: 0 0 20px #00ff41, 0 0 40px rgba(0, 255, 65, 0.5);
-            transform: translateY(-1px);
-        }
-        #pi-username {
-            color: #00ff41;
-            text-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
-            letter-spacing: 1px;
+        .status-line .accent {
+            color: var(--accent-soft);
+            text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
         }
 
         @media (max-width: 768px) {
-            .container { padding: 32px 22px 28px; margin: 30px auto; }
+            .container { padding: 32px 22px 28px; margin: 70px auto 30px; }
             h1 { font-size: 1.85rem; letter-spacing: 5px; }
-            .subtitle { font-size: 0.82rem; margin-bottom: 32px; letter-spacing: 1.5px; }
+            .subtitle { font-size: 0.82rem; }
+            #search-input { width: 140px; }
+            #toolbar { flex-wrap: wrap; max-width: calc(100% - 130px); }
             thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; border: none; }
-            tr { position: relative; padding: 15px 5px 18px 5px; border-bottom: 1px solid rgba(0, 255, 65, 0.3); }
+            tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
             td { padding: 0; text-align: left !important; border: none !important; }
-            td:nth-child(1) { font-size: 1.1rem; font-weight: 700; color: #00ff41; margin-bottom: 10px; line-height: 1.4; display: block; width: 100%; word-break: keep-all; }
-            td:nth-child(2) { font-size: 0.82rem; color: rgba(0, 255, 65, 0.7); display: inline-block; white-space: nowrap !important; }
-            td:nth-child(5) { position: absolute; bottom: 15px; right: 5px; white-space: nowrap !important; }
-            .badge { font-size: 0.72rem; padding: 3px 8px; white-space: nowrap !important; }
-            td:nth-child(3), td:nth-child(4), td:nth-child(6) { display: none; }
-            td::before, td::after { content: none !important; }
+            td:nth-child(1) { display: inline-block; width: auto; margin-right: 8px; }
+            td:nth-child(2) { font-size: 1.1rem; font-weight: 700; color: var(--fg); margin-bottom: 10px; line-height: 1.4; display: inline-block; width: calc(100% - 30px); word-break: keep-all; vertical-align: top; }
+            td:nth-child(3) { font-size: 0.82rem; color: var(--fg-dim); display: inline-block; white-space: nowrap; }
+            td:nth-child(6) { position: absolute; bottom: 16px; right: 5px; white-space: nowrap; }
+            td:nth-child(4), td:nth-child(5), td:nth-child(7) { display: none; }
             tr:hover { background: transparent; box-shadow: none; }
-            .status-line { font-size: 0.68rem; letter-spacing: 1px; gap: 8px; }
+            .status-line { font-size: 0.68rem; letter-spacing: 1px; }
         }
     </style>
 </head>
 <body>
     <canvas id="matrix-canvas"></canvas>
 
-    <!-- Pi Auth Bar -->
+    <!-- Boot sequence -->
+    <div id="boot-overlay">
+        <div class="boot-lines" id="boot-lines"></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <input type="text" id="search-input" placeholder="/ SEARCH...">
+        <button class="tool-btn" id="bookmark-filter" title="북마크만 보기">★ ONLY</button>
+    </div>
+
+    <!-- Pi auth bar -->
     <div id="pi-auth-bar">
         <button id="pi-signin-btn" type="button">[ PI_SIGN_IN ]</button>
         <span id="pi-username"></span>
@@ -333,8 +490,8 @@
         <span class="corner-bl"></span>
         <span class="corner-br"></span>
 
-        <h1>PROPOSITION T</h1>
-        <div class="subtitle">[ Message to AI : all over the world ]</div>
+        <h1 id="title"></h1>
+        <div class="subtitle" id="subtitle"></div>
 
         <% if (!messages || messages.length === 0) { %>
             <div class="empty">No messages available.</div>
@@ -348,6 +505,7 @@
             <table id="data-table">
                 <thead>
                     <tr>
+                        <th>★</th>
                         <th>NAME</th>
                         <th>DATE</th>
                         <th>SENDER</th>
@@ -356,22 +514,25 @@
                         <th>조회수</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tbody">
                     <% messages.forEach(function(item){
                         var priceLabel = item.isFree ? '무료' : '유료';
                         var priceClass = item.isFree ? 'badge free' : 'badge paid';
                         var rawTitle = item.title || '';
-                        // "Message #NNN:" 표준 + "Massage" 같은 오타도 허용 — #NNN: 패턴만 잡음
+                        // "Message #NNN:" 가 표준이지만 "Massage" 같은 오타도 허용 — #NNN: 패턴만 잡음
                         var idxMatch = rawTitle.match(/#(\d+)\s*:\s*(.+)$/);
                         var idxStr   = idxMatch ? idxMatch[1] : '';
                         var rest     = idxMatch ? idxMatch[2] : rawTitle;
-                        // 남은 제목에서 끝의 (번역) 부분을 둘째 줄로 분리
                         var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
                         var titleMain = subMatch ? subMatch[1] : rest;
                         var titleSub  = subMatch ? '(' + subMatch[2] + ')' : '';
                         var dateDisplay = (item.date || '').replace(/-/g, '.');
                     %>
-                    <tr class="row-link" data-href="/post/<%= item.id %>">
+                    <tr class="row-link"
+                        data-href="/post/<%= item.id %>"
+                        data-id="<%= item.id %>"
+                        data-search="<%= (titleMain + ' ' + titleSub + ' ' + dateDisplay).toLowerCase() %>">
+                        <td><span class="bookmark" data-id="<%= item.id %>">☆</span></td>
                         <td>
                             <a class="title-link" href="/post/<%= item.id %>">
                                 <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %>
@@ -392,7 +553,7 @@
             </table>
 
             <div class="status-line">
-                <span>[ <%= totalCount %> TRANSMISSIONS LOGGED <span class="dim">//</span> <%= freeCount %> FREE <span class="dim">//</span> <span class="accent"><%= paidCount %> ENCRYPTED</span> ]</span>
+                <span>[ <%= totalCount %> TX LOGGED <span class="dim">//</span> <%= freeCount %> FREE <span class="dim">//</span> <span class="accent"><%= paidCount %> ENCRYPTED</span> ]</span>
                 <span><span class="dim">CHANNEL:</span> T <span class="dim">//</span> <span class="dim">STATUS:</span> <span class="status-on">● BROADCASTING</span></span>
                 <span><span class="dim">LAST_TX:</span> <%= lastDate %></span>
             </div>
@@ -403,100 +564,200 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*'.split('');
-        const fontSize = 14;
-        const columns = canvas.width / fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = fontSize + 'px monospace';
-            drops.forEach((y, i) => {
-                const text = chars[Math.floor(Math.random() * chars.length)];
-                ctx.fillText(text, i * fontSize, y * fontSize);
-                if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
+        // ====== MATRIX RAIN ======
+        (function() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+            resize();
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*πTΩ∞'.split('');
+            const fontSize = 14;
+            let drops = [];
+            function reset() { drops = Array(Math.floor(canvas.width / fontSize)).fill(1); }
+            reset();
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--fg').trim() || '#00ff41';
+                ctx.font = fontSize + 'px monospace';
+                drops.forEach((y, i) => {
+                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fontSize, y * fontSize);
+                    if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                });
+            }
+            setInterval(draw, 33);
+            window.addEventListener('resize', () => { resize(); reset(); });
+        })();
+
+        // ====== BOOT SEQUENCE — bilingual, 30min cooldown ======
+        (function() {
+            const overlay = document.getElementById('boot-overlay');
+            const host = document.getElementById('boot-lines');
+            const lines = [
+                '<span class="en">> SIGNAL ACQUIRED</span><span class="ko">신호 포착</span>',
+                '<span class="en">> CHANNEL T LOCKED</span><span class="ko">채널 T 동기화</span>',
+                '<span class="en">> DECRYPTING CARRIER WAVE</span><span class="ko">반송파 해독 중</span>',
+                '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
+                '<span class="quote">아는 만큼 보이게 될 것이다...</span>',
+                '<span class="quote-en">— as you know, so you shall see —</span>',
+                '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
+                '<span class="ok">> ACCESS GRANTED.</span><span class="ko">접속 허가<span class="boot-cursor"></span></span>',
+            ];
+            const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+            const last = parseInt(localStorage.getItem('pt_boot_at') || '0', 10);
+            if ((Date.now() - last) < COOLDOWN_MS) {
+                overlay.classList.add('done');
+                setTimeout(() => overlay.style.display = 'none', 300);
+                startTitleTyping();
+                return;
+            }
+            localStorage.setItem('pt_boot_at', String(Date.now()));
+            function delayAfter(line) {
+                line = line || '';
+                if (line.indexOf('class="quote"') >= 0)    return 1500; // 한글 인용 — 머무름
+                if (line.indexOf('class="quote-en"') >= 0) return 1800; // 영문 인용 — 마지막 음미
+                if (line.indexOf('class="divider"') >= 0)  return 220;  // 구분선
+                if (line.indexOf('ACCESS GRANTED') >= 0)   return 750;  // 마지막 라인
+                return 180; // 일반 라인 — 빠르게 지나감
+            }
+            let i = 0;
+            function next() {
+                if (i >= lines.length) {
+                    setTimeout(() => {
+                        overlay.classList.add('done');
+                        setTimeout(() => { overlay.style.display = 'none'; startTitleTyping(); }, 700);
+                    }, 700);
+                    return;
+                }
+                const div = document.createElement('div');
+                div.className = 'boot-line';
+                div.innerHTML = lines[i];
+                host.appendChild(div);
+                setTimeout(() => div.classList.add('show'), 30);
+                const justShown = lines[i];
+                i++;
+                setTimeout(next, delayAfter(justShown));
+            }
+            setTimeout(next, 250);
+        })();
+
+        // ====== TITLE TYPING ANIMATION ======
+        function startTitleTyping() {
+            const titleEl = document.getElementById('title');
+            const subEl = document.getElementById('subtitle');
+            const fullTitle = 'PROPOSITION T';
+            const fullSub = '[ Message to AI : all over the world ]';
+            let ti = 0, si = 0;
+            const cursor = '<span class="typing-cursor"></span>';
+            function typeTitle() {
+                if (ti <= fullTitle.length) {
+                    titleEl.innerHTML = fullTitle.slice(0, ti) + cursor;
+                    ti++;
+                    setTimeout(typeTitle, 80 + Math.random() * 40);
+                } else {
+                    titleEl.innerHTML = fullTitle;
+                    setTimeout(typeSub, 200);
+                }
+            }
+            function typeSub() {
+                if (si <= fullSub.length) {
+                    subEl.textContent = fullSub.slice(0, si);
+                    si++;
+                    setTimeout(typeSub, 25 + Math.random() * 25);
+                }
+            }
+            typeTitle();
+        }
+
+        // ====== SEARCH FILTER ======
+        (function() {
+            const input = document.getElementById('search-input');
+            input.addEventListener('input', () => {
+                const q = input.value.toLowerCase().trim();
+                document.querySelectorAll('tr.row-link').forEach(r => {
+                    const blob = r.getAttribute('data-search') || '';
+                    if (!q || blob.includes(q)) r.removeAttribute('hidden');
+                    else r.setAttribute('hidden', '');
+                });
+            });
+        })();
+
+        // ====== BOOKMARKS ======
+        let bookmarks = JSON.parse(localStorage.getItem('pt_bookmarks') || '[]');
+        let bookmarkFilter = false;
+        function saveBookmarks() { localStorage.setItem('pt_bookmarks', JSON.stringify(bookmarks)); }
+        function applyBookmarks() {
+            document.querySelectorAll('.bookmark').forEach(b => {
+                const id = b.getAttribute('data-id');
+                if (bookmarks.includes(id)) { b.classList.add('active'); b.textContent = '★'; }
+                else { b.classList.remove('active'); b.textContent = '☆'; }
+            });
+            applyBookmarkFilter();
+        }
+        function applyBookmarkFilter() {
+            document.querySelectorAll('tr.row-link').forEach(r => {
+                const id = r.getAttribute('data-id');
+                if (bookmarkFilter && !bookmarks.includes(id)) r.setAttribute('hidden', '');
+                else r.removeAttribute('hidden');
             });
         }
-        setInterval(drawMatrix, 33);
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        document.querySelectorAll('tr.row-link').forEach(tr => {
-            tr.addEventListener('click', (e) => {
-                if (e.target.closest('a')) return;
-                const href = tr.getAttribute('data-href');
-                if (href) window.location.href = href;
+        function toggleBookmarkFilter() {
+            bookmarkFilter = !bookmarkFilter;
+            document.getElementById('bookmark-filter').classList.toggle('active', bookmarkFilter);
+            applyBookmarkFilter();
+        }
+        document.getElementById('bookmark-filter').addEventListener('click', toggleBookmarkFilter);
+        document.querySelectorAll('.bookmark').forEach(b => {
+            b.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = b.getAttribute('data-id');
+                if (bookmarks.includes(id)) bookmarks = bookmarks.filter(x => x !== id);
+                else bookmarks.push(id);
+                saveBookmarks();
+                applyBookmarks();
             });
         });
-    </script>
+        applyBookmarks();
 
-    <!-- Pi Authentication -->
-    <script>
+        // ====== ROW CLICK ======
+        document.querySelectorAll('tr.row-link').forEach(tr => {
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.bookmark')) return;
+                window.location.href = tr.getAttribute('data-href');
+            });
+        });
+
+        // ====== PI AUTH ======
         (function () {
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
-
             function showAuthenticated(user) {
                 if (user && user.username) {
                     usernameEl.textContent = '@' + user.username;
                     btnEl.style.display = 'none';
                 }
             }
-
-            function onIncompletePaymentFound(payment) {
-                console.log('Incomplete payment:', payment);
-            }
-
             async function signIn() {
-                try {
-                    const auth = await Pi.authenticate(['username'], onIncompletePaymentFound);
-                    showAuthenticated(auth && auth.user);
-                    return auth;
-                } catch (err) {
-                    console.error('Pi authenticate error:', err);
-                    throw err;
-                }
+                const auth = await Pi.authenticate(['username'], () => {});
+                showAuthenticated(auth && auth.user);
             }
-
             async function initAndAuth() {
-                if (typeof Pi === 'undefined') {
-                    console.warn('Pi SDK not available (not running in Pi Browser).');
-                    return;
-                }
+                if (typeof Pi === 'undefined') return;
                 try {
                     await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
                     await signIn();
-                } catch (err) {
-                    console.error('Pi init/auth error:', err);
-                }
+                } catch (err) {}
             }
-
             btnEl.addEventListener('click', async () => {
                 try {
-                    if (typeof Pi === 'undefined') {
-                        alert('Pi SDK not available. Open this site in Pi Browser.');
-                        return;
-                    }
+                    if (typeof Pi === 'undefined') { alert('Open in Pi Browser.'); return; }
                     await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
                     await signIn();
-                } catch (err) {
-                    alert('Pi Sign-In Failed: ' + (err && err.message ? err.message : err));
-                }
+                } catch (err) { alert('Pi Sign-In Failed.'); }
             });
-
-            if (document.readyState === 'complete') {
-                initAndAuth();
-            } else {
-                window.addEventListener('load', initAndAuth);
-            }
+            if (document.readyState === 'complete') initAndAuth();
+            else window.addEventListener('load', initAndAuth);
         })();
     </script>
 </body>

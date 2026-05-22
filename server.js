@@ -118,28 +118,6 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.get('/demo', async (req, res) => {
-    try {
-        const { messages, statsPage } = await queryAll();
-        const totalVisits = (statsPage?.viewCount || 0) + 1;
-        if (statsPage) incrementViewsAsync(statsPage.id);
-        res.render('demo', {
-            messages,
-            totalVisits,
-            siteUrl: SITE_URL,
-            siteDescription: SITE_DESCRIPTION,
-        });
-    } catch (error) {
-        console.error('데모 페이지 로드 오류:', error.message);
-        res.status(500).render('demo', {
-            messages: [],
-            totalVisits: 0,
-            siteUrl: SITE_URL,
-            siteDescription: SITE_DESCRIPTION,
-        });
-    }
-});
-
 app.get('/api/notion', async (req, res) => {
     try {
         const messages = await queryAllMessages();
