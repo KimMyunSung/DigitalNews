@@ -730,6 +730,7 @@
 
         // ====== PI AUTH ======
         (function () {
+            const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
             function showAuthenticated(user) {
@@ -745,16 +746,16 @@
             async function initAndAuth() {
                 if (typeof Pi === 'undefined') return;
                 try {
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
+                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
                     await signIn();
                 } catch (err) {}
             }
             btnEl.addEventListener('click', async () => {
                 try {
-                    if (typeof Pi === 'undefined') { alert('Open in Pi Browser.'); return; }
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
+                    if (typeof Pi === 'undefined') { alert('Pi 브라우저에서 열어주세요.'); return; }
+                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
                     await signIn();
-                } catch (err) { alert('Pi Sign-In Failed.'); }
+                } catch (err) { alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err)); }
             });
             if (document.readyState === 'complete') initAndAuth();
             else window.addEventListener('load', initAndAuth);

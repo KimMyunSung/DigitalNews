@@ -722,65 +722,161 @@
         })();
     </script>
 
-    <!-- Pi Authentication -->
+    <!-- Pi Authentication + Payment -->
     <script>
         (function () {
+            const PI_SANDBOX = true;
+            const POST_ID    = "m010";
+            const POST_TITLE = "250년의 부조리와 유일한 탈출구 (The 250-Year Absurdity and the Only Escape)";
+            const IS_LOCKED  = true;
+
             const usernameEl = document.getElementById('pi-username');
-            const btnEl = document.getElementById('pi-signin-btn');
+            const signinBtn  = document.getElementById('pi-signin-btn');
+            const payBtn     = document.getElementById('pi-pay-btn');
+
+            let currentUid = null;
+            let piInitialized = false;
+            let authPromise = null;
 
             function showAuthenticated(user) {
                 if (user && user.username) {
                     usernameEl.textContent = '@' + user.username;
-                    btnEl.style.display = 'none';
+                    signinBtn.style.display = 'none';
+                    currentUid = user.uid;
+                    // 결제 잠금 해제용 — URL에 pi_uid 없으면 추가하고 리로드
+                    if (IS_LOCKED) {
+                        const url = new URL(window.location.href);
+                        if (!url.searchParams.get('pi_uid')) {
+                            url.searchParams.set('pi_uid', user.uid);
+                            window.location.replace(url.toString());
+                        }
+                    }
                 }
             }
 
             function onIncompletePaymentFound(payment) {
+                // 미완료 결제 발견 시 자동 완료 시도
                 console.log('Incomplete payment:', payment);
-            }
-
-            async function signIn() {
-                try {
-                    const auth = await Pi.authenticate(['username'], onIncompletePaymentFound);
-                    showAuthenticated(auth && auth.user);
-                    return auth;
-                } catch (err) {
-                    console.error('Pi authenticate error:', err);
-                    throw err;
+                if (payment && payment.identifier && payment.transaction && payment.transaction.txid) {
+                    fetch('/pi/complete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid }),
+                    }).catch(console.error);
                 }
             }
 
-            async function initAndAuth() {
+            async function ensureInit() {
+                if (piInitialized) return;
+                await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
+                piInitialized = true;
+            }
+
+            async function authenticate(scopes) {
+                await ensureInit();
+                if (!authPromise) {
+                    authPromise = Pi.authenticate(scopes || ['username'], onIncompletePaymentFound);
+                }
+                const auth = await authPromise;
+                showAuthenticated(auth && auth.user);
+                return auth;
+            }
+
+            async function autoAuth() {
                 if (typeof Pi === 'undefined') {
-                    console.warn('Pi SDK not available (not running in Pi Browser).');
+                    console.warn('Pi SDK 없음 — Pi 브라우저에서 열어야 작동');
+                    if (payBtn) {
+                        payBtn.disabled = true;
+                        payBtn.title = 'Pi 브라우저에서 열어주세요';
+                    }
                     return;
                 }
                 try {
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
-                    await signIn();
+                    await authenticate(['username']);
+                    if (payBtn && IS_LOCKED) payBtn.disabled = false;
                 } catch (err) {
-                    console.error('Pi init/auth error:', err);
+                    console.error('Pi auto-auth 실패:', err);
                 }
             }
 
-            btnEl.addEventListener('click', async () => {
+            signinBtn.addEventListener('click', async () => {
                 try {
                     if (typeof Pi === 'undefined') {
-                        alert('Pi SDK not available. Open this site in Pi Browser.');
+                        alert('Pi 브라우저에서 열어주세요.');
                         return;
                     }
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
-                    await signIn();
+                    authPromise = null; // force fresh auth
+                    await authenticate(['username']);
                 } catch (err) {
-                    alert('Pi Sign-In Failed: ' + (err && err.message ? err.message : err));
+                    alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
                 }
             });
 
-            if (document.readyState === 'complete') {
-                initAndAuth();
-            } else {
-                window.addEventListener('load', initAndAuth);
+            // ====== 결제 버튼 ======
+            if (payBtn && IS_LOCKED) {
+                payBtn.addEventListener('click', async () => {
+                    if (typeof Pi === 'undefined') {
+                        alert('Pi 브라우저에서 열어주세요.');
+                        return;
+                    }
+                    try {
+                        payBtn.disabled = true;
+                        payBtn.textContent = '⌛ 결제 진행 중...';
+                        // payments 스코프로 재인증
+                        authPromise = null;
+                        await authenticate(['username', 'payments']);
+
+                        await Pi.createPayment(
+                            {
+                                amount: 0.00001,
+                                memo: 'Proposition T — ' + POST_TITLE,
+                                metadata: { postId: POST_ID },
+                            },
+                            {
+                                onReadyForServerApproval: async (paymentId) => {
+                                    const r = await fetch('/pi/approve', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ paymentId }),
+                                    });
+                                    if (!r.ok) throw new Error('approve 실패: ' + r.status);
+                                },
+                                onReadyForServerCompletion: async (paymentId, txid) => {
+                                    const r = await fetch('/pi/complete', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ paymentId, txid }),
+                                    });
+                                    if (!r.ok) throw new Error('complete 실패: ' + r.status);
+                                    // 잠금 해제 — 페이지 리로드 (pi_uid 유지)
+                                    const url = new URL(window.location.href);
+                                    if (currentUid) url.searchParams.set('pi_uid', currentUid);
+                                    window.location.replace(url.toString());
+                                },
+                                onCancel: (paymentId) => {
+                                    console.log('결제 취소:', paymentId);
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = '<span class="pi-symbol">π</span> 결제하기';
+                                },
+                                onError: (error) => {
+                                    console.error('결제 오류:', error);
+                                    alert('결제 오류: ' + (error && error.message ? error.message : error));
+                                    payBtn.disabled = false;
+                                    payBtn.innerHTML = '<span class="pi-symbol">π</span> 결제하기';
+                                },
+                            }
+                        );
+                    } catch (err) {
+                        console.error('결제 실패:', err);
+                        alert('결제 실패: ' + (err && err.message ? err.message : err));
+                        payBtn.disabled = false;
+                        payBtn.innerHTML = '<span class="pi-symbol">π</span> 결제하기';
+                    }
+                });
             }
+
+            if (document.readyState === 'complete') autoAuth();
+            else window.addEventListener('load', autoAuth);
         })();
     </script>
 </body>
