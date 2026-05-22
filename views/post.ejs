@@ -144,12 +144,19 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
             gap: 28px;
             margin-bottom: 50px;
             padding-bottom: 22px;
             border-bottom: 1px dashed rgba(0, 255, 65, 0.35);
         }
-        .label { color: #00ff41; font-weight: 600; margin-right: 4px; }
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1;
+        }
+        .label { color: #00ff41; font-weight: 600; }
 
         /* 메인 페이지와 동일한 발광 T 엠블럼 */
         .sender-t {
@@ -256,12 +263,12 @@
         .content blockquote p {
             margin: 0;
             font-size: 1.18rem;
-            color: var(--accent-soft);
+            color: #00ff41;
             line-height: 1.55;
             word-break: keep-all;
-            text-shadow: 0 0 6px var(--accent-faint);
+            text-shadow: 0 0 6px rgba(0, 255, 65, 0.45);
         }
-        .content blockquote strong { color: var(--accent-soft); }
+        .content blockquote strong { color: #00ff41; }
 
         /* --- 수평선 (섹션 구분선) --- */
         .content hr {
