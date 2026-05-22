@@ -53,6 +53,8 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* hidden 속성은 모바일에서 tr { display: block } 와 충돌 — 명시적으로 강제 */
+        [hidden] { display: none !important; }
         html, body { background-color: var(--bg); }
         body {
             color: var(--fg);
@@ -412,11 +414,15 @@
         /* Bookmark star */
         .bookmark {
             cursor: pointer;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             color: var(--fg-faint);
             transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
             user-select: none;
+            -webkit-user-select: none;
             display: inline-block;
+            padding: 6px 4px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(0, 255, 65, 0.3);
         }
         .bookmark:hover { transform: scale(1.2); color: var(--fg-dim); }
         .bookmark.active {
@@ -461,8 +467,9 @@
             table, tbody, tr, td { display: block; width: 100%; border: none; }
             tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
             td { padding: 0; text-align: left !important; border: none !important; }
-            td:nth-child(1) { display: inline-block; width: auto; margin-right: 8px; }
-            td:nth-child(2) { font-size: 1.1rem; font-weight: 700; color: var(--fg); margin-bottom: 10px; line-height: 1.4; display: inline-block; width: calc(100% - 30px); word-break: keep-all; vertical-align: top; }
+            td:nth-child(1) { display: inline-block; width: auto; margin-right: 4px; vertical-align: top; }
+            .bookmark { font-size: 1.4rem; padding: 8px 6px; }
+            td:nth-child(2) { font-size: 1.1rem; font-weight: 700; color: var(--fg); margin-bottom: 10px; line-height: 1.4; display: inline-block; width: calc(100% - 50px); word-break: keep-all; vertical-align: top; }
             td:nth-child(3) { font-size: 0.82rem; color: var(--fg-dim); display: inline-block; white-space: nowrap; }
             td:nth-child(6) { position: absolute; bottom: 16px; right: 5px; white-space: nowrap; }
             td:nth-child(4), td:nth-child(5), td:nth-child(7) { display: none; }
