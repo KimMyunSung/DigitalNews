@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROPOSITION T — DEMO LAB</title>
+    <meta name="robots" content="noindex">
+
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #000;
+            --bg-panel: rgba(0, 10, 0, 0.8);
+            --fg: #00ff41;
+            --fg-dim: rgba(0, 255, 65, 0.55);
+            --fg-faint: rgba(0, 255, 65, 0.25);
+            --accent: #ff8c00;
+            --accent-soft: #ffb366;
+            --text: #e0ffe6;
+            --border: rgba(0, 255, 65, 0.45);
+        }
+        [data-theme="light"] {
+            --bg: #f3f0e6;
+            --bg-panel: rgba(248, 246, 235, 0.92);
+            --fg: #006622;
+            --fg-dim: rgba(0, 80, 30, 0.7);
+            --fg-faint: rgba(0, 80, 30, 0.25);
+            --accent: #cc5500;
+            --accent-soft: #b34d00;
+            --text: #1a2a1a;
+            --border: rgba(0, 80, 30, 0.45);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { background-color: var(--bg); }
+        body {
+            color: var(--fg);
+            font-family: 'JetBrains Mono', 'Fira Code', 'Noto Sans KR', monospace;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0.18) 0px, rgba(0, 0, 0, 0.18) 1px,
+                transparent 1px, transparent 3px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: multiply;
+        }
+        [data-theme="light"] body::after { mix-blend-mode: overlay; opacity: 0.4; }
+
+        #matrix-canvas, #three-canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+        }
+        #matrix-canvas { z-index: -2; opacity: 0.5; }
+        #three-canvas  { z-index: -1; opacity: 0.6; }
+
+        /* === BOOT SEQUENCE OVERLAY === */
+        #boot-overlay {
+            position: fixed; inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--fg);
+            transition: opacity 0.6s ease;
+        }
+        #boot-overlay.done { opacity: 0; pointer-events: none; }
+        #boot-overlay .boot-lines {
+            width: min(560px, 90%);
+            font-size: 0.92rem;
+            line-height: 1.9;
+            letter-spacing: 1.5px;
+        }
+        #boot-overlay .boot-line { opacity: 0; transition: opacity 0.25s; white-space: nowrap; overflow: hidden; }
+        #boot-overlay .boot-line.show { opacity: 1; }
+        #boot-overlay .boot-line .ok { color: #00ff41; }
+        #boot-overlay .boot-line .err { color: var(--accent); }
+        #boot-overlay .boot-cursor::after {
+            content: '_';
+            animation: blink 0.8s steps(2, start) infinite;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* === TOP TOOLBAR === */
+        #toolbar {
+            position: fixed; top: 14px; left: 14px;
+            z-index: 1000;
+            display: flex; gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+        }
+        .tool-btn {
+            background: var(--bg-panel);
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 7px 11px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: 1px;
+            transition: all 0.25s ease;
+            font-weight: 600;
+        }
+        .tool-btn:hover {
+            background: var(--fg);
+            color: var(--bg);
+            box-shadow: 0 0 12px var(--fg);
+        }
+        .tool-btn.active {
+            background: var(--fg);
+            color: var(--bg);
+        }
+        #search-input {
+            background: var(--bg-panel);
+            color: var(--fg);
+            border: 1px solid var(--border);
+            padding: 7px 11px;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: 1px;
+            width: 220px;
+            outline: none;
+            transition: box-shadow 0.25s, border-color 0.25s;
+        }
+        #search-input:focus {
+            box-shadow: 0 0 10px var(--fg);
+            border-color: var(--fg);
+        }
+        #search-input::placeholder { color: var(--fg-dim); }
+
+        /* === Pi Auth Bar === */
+        #pi-auth-bar {
+            position: fixed; top: 14px; right: 14px;
+            z-index: 1000;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #pi-signin-btn {
+            background: linear-gradient(135deg, rgba(0, 25, 8, 0.94), rgba(0, 10, 0, 0.94));
+            color: var(--fg);
+            border: 1px solid var(--fg);
+            padding: 7px 13px;
+            cursor: pointer;
+            font-family: inherit; font-size: inherit;
+            letter-spacing: 1.5px; font-weight: 600;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+            transition: all 0.3s ease;
+        }
+        #pi-signin-btn:hover {
+            background: var(--fg); color: var(--bg);
+            box-shadow: 0 0 20px var(--fg), 0 0 40px rgba(0, 255, 65, 0.5);
+        }
+
+        /* === MAIN CONTAINER === */
+        .container {
+            position: relative;
+            width: 95%; max-width: 1300px; margin: 80px auto 60px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.18), inset 0 0 60px rgba(0, 255, 65, 0.04);
+            border-radius: 8px;
+            padding: 48px 44px 36px;
+            backdrop-filter: blur(5px);
+            z-index: 2;
+        }
+        .container::before,
+        .container::after,
+        .corner-bl, .corner-br {
+            content: '';
+            position: absolute;
+            width: 22px; height: 22px;
+            border: 0 solid var(--fg);
+            opacity: 0.9;
+            pointer-events: none;
+            filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
+        }
+        .container::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+        .container::after  { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
+        .corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
+        .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
+
+        @keyframes titlePulse {
+            0%, 100% { text-shadow: 0 0 8px var(--fg), 0 0 18px rgba(0, 255, 65, 0.55); }
+            50%      { text-shadow: 0 0 14px var(--fg), 0 0 30px rgba(0, 255, 65, 0.95), 0 0 55px rgba(0, 255, 65, 0.4); }
+        }
+        @keyframes statusBlink {
+            0%, 60%, 100% { opacity: 1; }
+            70%, 90%      { opacity: 0.35; }
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.7rem;
+            letter-spacing: 9px;
+            margin-bottom: 12px;
+            color: var(--fg);
+            animation: titlePulse 2.4s ease-in-out infinite;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        h1 .typing-cursor::after {
+            content: '|';
+            animation: blink 0.8s steps(2) infinite;
+            margin-left: 2px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--fg-dim);
+            letter-spacing: 2.5px;
+        }
+        .badge-demo {
+            display: block;
+            text-align: center;
+            margin-bottom: 36px;
+            font-size: 0.72rem;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+        }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th {
+            background-color: rgba(0, 255, 65, 0.1);
+            color: var(--fg);
+            padding: 14px 10px;
+            text-align: left;
+            border-bottom: 2px solid var(--fg);
+            font-size: 0.78rem;
+            letter-spacing: 3px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        td {
+            padding: 16px 10px;
+            border-bottom: 1px solid var(--fg-faint);
+            color: var(--text);
+            vertical-align: middle;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 5%; text-align: center; }
+        th:nth-child(2), td:nth-child(2) { width: 40%; }
+        th:nth-child(3), td:nth-child(3) { width: 13%; }
+        th:nth-child(4), td:nth-child(4) { width: 10%; text-align: center; }
+        th:nth-child(5), td:nth-child(5) { width: 22%; }
+        th:nth-child(6), td:nth-child(6) { width: 10%; text-align: center; }
+
+        tr.row-link { transition: background-color 0.2s ease, box-shadow 0.2s ease; }
+        tr.row-link:hover, tr.row-link.kb-focus {
+            background-color: rgba(0, 255, 65, 0.08);
+            box-shadow: inset 0 0 24px rgba(0, 255, 65, 0.12);
+            cursor: pointer;
+        }
+        tr.row-link.kb-focus { outline: 1px solid var(--fg); outline-offset: -1px; }
+        tr.row-link:hover td a.title-link { text-shadow: 0 0 8px var(--fg); }
+
+        /* Glitch hover effect */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+        tr.row-link:hover td a.title-link { animation: glitch 0.25s ease; }
+
+        td a.title-link {
+            color: var(--fg);
+            font-weight: 500;
+            text-decoration: none;
+            line-height: 1.5;
+            transition: text-shadow 0.25s ease;
+        }
+        .title-idx {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            color: var(--fg-dim);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 3px;
+            margin-right: 10px;
+            background: rgba(0, 255, 65, 0.06);
+            letter-spacing: 1.5px;
+            vertical-align: middle;
+            font-weight: 600;
+        }
+        .title-sub {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.78rem;
+            font-weight: 400;
+            color: var(--fg-dim);
+            letter-spacing: 0.3px;
+            font-style: italic;
+        }
+        .date-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text);
+            letter-spacing: 1.5px;
+            white-space: nowrap;
+            opacity: 0.85;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            border: 1px solid var(--fg);
+            letter-spacing: 1.5px;
+        }
+        .badge.free { background-color: rgba(0, 255, 65, 0.15); color: var(--fg); }
+        .badge.paid {
+            background-color: rgba(255, 140, 0, 0.18);
+            color: var(--accent-soft);
+            border-color: var(--accent);
+            text-shadow: 0 0 6px rgba(255, 140, 0, 0.9);
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.55), inset 0 0 8px rgba(255, 140, 0, 0.25);
+        }
+
+        .sender-t {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: var(--fg);
+            text-shadow: 0 0 4px var(--fg), 0 0 10px rgba(0, 255, 65, 0.75);
+            padding: 2px 9px;
+            border: 1px solid var(--fg);
+            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02));
+        }
+
+        /* Bookmark star */
+        .bookmark {
+            cursor: pointer;
+            font-size: 1.05rem;
+            color: var(--fg-faint);
+            transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+            user-select: none;
+            display: inline-block;
+        }
+        .bookmark:hover { transform: scale(1.2); color: var(--fg-dim); }
+        .bookmark.active {
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
+        }
+
+        /* TTS button */
+        .tts-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            cursor: pointer;
+            padding: 2px 7px;
+            font-size: 0.72rem;
+            border-radius: 3px;
+            font-family: inherit;
+            letter-spacing: 1px;
+            margin-left: 8px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+        tr.row-link:hover .tts-btn { opacity: 1; }
+        .tts-btn:hover { background: var(--fg); color: var(--bg); }
+
+        .empty { text-align: center; padding: 50px; opacity: 0.7; }
+
+        /* === STATUS FOOTER === */
+        .status-line {
+            margin-top: 30px;
+            padding-top: 18px;
+            border-top: 1px dashed var(--border);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            color: var(--fg-dim);
+            letter-spacing: 1.5px;
+        }
+        .status-line .dim { opacity: 0.55; margin-right: 4px; }
+        .status-line .status-on {
+            color: var(--fg);
+            text-shadow: 0 0 6px rgba(0, 255, 65, 0.85);
+            animation: statusBlink 2.2s ease-in-out infinite;
+        }
+        .status-line .accent {
+            color: var(--accent-soft);
+            text-shadow: 0 0 5px rgba(255, 140, 0, 0.6);
+        }
+
+        /* === HELP MODAL === */
+        #help-modal {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            backdrop-filter: blur(6px);
+        }
+        #help-modal.open { display: flex; }
+        #help-modal .help-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--fg);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.4);
+            padding: 32px 36px;
+            min-width: 360px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--fg);
+            position: relative;
+        }
+        #help-modal h2 {
+            margin-bottom: 18px;
+            font-size: 1.05rem;
+            letter-spacing: 3px;
+            color: var(--fg);
+            text-shadow: 0 0 8px var(--fg);
+        }
+        #help-modal kbd {
+            display: inline-block;
+            background: rgba(0, 255, 65, 0.12);
+            border: 1px solid var(--border);
+            padding: 1px 8px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            border-radius: 3px;
+            margin-right: 8px;
+            min-width: 24px;
+            text-align: center;
+        }
+        #help-modal .row { margin-bottom: 10px; font-size: 0.86rem; }
+        #help-modal .close-hint { margin-top: 18px; opacity: 0.6; font-size: 0.78rem; text-align: center; }
+
+        @media (max-width: 768px) {
+            .container { padding: 32px 22px 28px; margin: 70px auto 30px; }
+            h1 { font-size: 1.85rem; letter-spacing: 5px; }
+            .subtitle { font-size: 0.82rem; }
+            #search-input { width: 130px; }
+            #toolbar { flex-wrap: wrap; max-width: calc(100% - 110px); }
+            thead { display: none; }
+            table, tbody, tr, td { display: block; width: 100%; border: none; }
+            tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
+            td { padding: 0; text-align: left !important; border: none !important; }
+            td:nth-child(1) { display: inline-block; width: auto; margin-right: 8px; }
+            td:nth-child(2) { font-size: 1.1rem; font-weight: 700; color: var(--fg); margin-bottom: 10px; line-height: 1.4; display: inline-block; width: calc(100% - 30px); word-break: keep-all; vertical-align: top; }
+            td:nth-child(3) { font-size: 0.82rem; color: var(--fg-dim); display: inline-block; white-space: nowrap; }
+            td:nth-child(6) { position: absolute; bottom: 16px; right: 5px; white-space: nowrap; }
+            td:nth-child(4), td:nth-child(5) { display: none; }
+            tr:hover { background: transparent; box-shadow: none; }
+            .status-line { font-size: 0.68rem; letter-spacing: 1px; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <canvas id="matrix-canvas"></canvas>
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Boot sequence -->
+    <div id="boot-overlay">
+        <div class="boot-lines" id="boot-lines"></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+        <input type="text" id="search-input" placeholder="/ SEARCH...">
+        <button class="tool-btn" id="lang-toggle" title="언어 토글 (L)">KO/EN</button>
+        <button class="tool-btn" id="bookmark-filter" title="북마크만 보기 (B)">★ ONLY</button>
+        <button class="tool-btn" id="theme-toggle" title="테마 (T)">◐</button>
+        <button class="tool-btn" id="sound-toggle" title="사운드 (S)">♪ ON</button>
+        <button class="tool-btn" id="help-btn" title="도움말 (?)">?</button>
+    </div>
+
+    <!-- Pi auth bar -->
+    <div id="pi-auth-bar">
+        <button id="pi-signin-btn" type="button">[ PI_SIGN_IN ]</button>
+        <span id="pi-username"></span>
+    </div>
+
+    <div class="container">
+        <span class="corner-bl"></span>
+        <span class="corner-br"></span>
+
+        <h1 id="title"></h1>
+        <div class="subtitle" id="subtitle"></div>
+        <div class="badge-demo">[ DEMO LAB · TIER 1+2+3 EXPERIMENT ]</div>
+
+        <% if (!messages || messages.length === 0) { %>
+            <div class="empty">No messages available.</div>
+        <% } else { %>
+            <%
+                var totalCount = messages.length;
+                var freeCount  = messages.filter(function(m){ return m.isFree; }).length;
+                var paidCount  = totalCount - freeCount;
+                var lastDate   = (messages[0] && messages[0].date) ? messages[0].date.replace(/-/g, '.') : '—';
+            %>
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>★</th>
+                        <th>NAME</th>
+                        <th>DATE</th>
+                        <th>SENDER</th>
+                        <th>RECEIVER</th>
+                        <th>요금</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    <% messages.forEach(function(item, i){
+                        var priceLabel = item.isFree ? '무료' : '유료';
+                        var priceClass = item.isFree ? 'badge free' : 'badge paid';
+                        var rawTitle = item.title || '';
+                        var idxMatch = rawTitle.match(/^Message\s*#(\d+)\s*:\s*(.+)$/i);
+                        var idxStr   = idxMatch ? idxMatch[1] : '';
+                        var rest     = idxMatch ? idxMatch[2] : rawTitle;
+                        var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
+                        var titleKo, titleEn;
+                        if (subMatch) {
+                            var part1 = subMatch[1];
+                            var part2 = subMatch[2];
+                            var hasKr = /[가-힯]/;
+                            if (hasKr.test(part1) && !hasKr.test(part2)) {
+                                titleKo = part1; titleEn = part2;
+                            } else if (!hasKr.test(part1) && hasKr.test(part2)) {
+                                titleEn = part1; titleKo = part2;
+                            } else {
+                                titleKo = part1; titleEn = part2;
+                            }
+                        } else {
+                            titleKo = rest; titleEn = rest;
+                        }
+                        var dateDisplay = (item.date || '').replace(/-/g, '.');
+                    %>
+                    <tr class="row-link"
+                        data-href="/post/<%= item.id %>"
+                        data-id="<%= item.id %>"
+                        data-title="<%= titleKo %>"
+                        data-title-ko="<%= titleKo %>"
+                        data-title-en="<%= titleEn %>"
+                        data-idx="<%= idxStr %>"
+                        data-search="<%= (titleKo + ' ' + titleEn + ' ' + dateDisplay).toLowerCase() %>">
+                        <td><span class="bookmark" data-id="<%= item.id %>">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/<%= item.id %>">
+                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %><span class="title-main"><%= titleKo %></span>
+                                <% if (titleEn && titleEn !== titleKo) { %><span class="title-sub">(<%= titleEn %>)</span><% } %>
+                            </a>
+                            <button class="tts-btn" data-tts="<%= titleKo %>">▶ READ</button>
+                        </td>
+                        <td class="date-cell"><%= dateDisplay %></td>
+                        <td><span class="sender-t"><%= item.sender %></span></td>
+                        <td><%= item.receiver %></td>
+                        <td><span class="<%= priceClass %>"><%= priceLabel %></span></td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+
+            <div class="status-line">
+                <span>[ <%= totalCount %> TX LOGGED <span class="dim">//</span> <%= freeCount %> FREE <span class="dim">//</span> <span class="accent"><%= paidCount %> ENCRYPTED</span> ]</span>
+                <span><span class="dim">CHANNEL:</span> T <span class="dim">//</span> <span class="dim">STATUS:</span> <span class="status-on">● BROADCASTING</span></span>
+                <span><span class="dim">LAST_TX:</span> <%= lastDate %></span>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- Help modal -->
+    <div id="help-modal">
+        <div class="help-box">
+            <h2>[ KEYBOARD SHORTCUTS ]</h2>
+            <div class="row"><kbd>J</kbd> 다음 행</div>
+            <div class="row"><kbd>K</kbd> 이전 행</div>
+            <div class="row"><kbd>↵</kbd> 선택 행 열기</div>
+            <div class="row"><kbd>/</kbd> 검색</div>
+            <div class="row"><kbd>L</kbd> 한/영 토글</div>
+            <div class="row"><kbd>B</kbd> 북마크만</div>
+            <div class="row"><kbd>T</kbd> 테마 (다크/라이트)</div>
+            <div class="row"><kbd>S</kbd> 사운드 토글</div>
+            <div class="row"><kbd>?</kbd> 도움말</div>
+            <div class="row"><kbd>ESC</kbd> 닫기</div>
+            <div class="close-hint">click outside or press ESC</div>
+        </div>
+    </div>
+
+    <script>
+        // ====== MATRIX RAIN ======
+        (function() {
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+            resize();
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*πTΩ∞'.split('');
+            const fontSize = 14;
+            let drops = [];
+            function reset() { drops = Array(Math.floor(canvas.width / fontSize)).fill(1); }
+            reset();
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--fg').trim() || '#00ff41';
+                ctx.font = fontSize + 'px monospace';
+                drops.forEach((y, i) => {
+                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fontSize, y * fontSize);
+                    if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                });
+            }
+            setInterval(draw, 33);
+            window.addEventListener('resize', () => { resize(); reset(); });
+        })();
+
+        // ====== THREE.JS π SYMBOL ======
+        (function() {
+            if (typeof THREE === 'undefined') return;
+            const canvas = document.getElementById('three-canvas');
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 5;
+
+            // Pi shape as extruded text via simple geometry — wireframe torus knot as accent
+            const geo = new THREE.TorusKnotGeometry(1.2, 0.06, 200, 12, 2, 3);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true, transparent: true, opacity: 0.25 });
+            const knot = new THREE.Mesh(geo, mat);
+            knot.position.set(2.5, -1.5, 0);
+            scene.add(knot);
+
+            const geo2 = new THREE.IcosahedronGeometry(0.8, 1);
+            const mat2 = new THREE.MeshBasicMaterial({ color: 0x00ff41, wireframe: true, transparent: true, opacity: 0.18 });
+            const ico = new THREE.Mesh(geo2, mat2);
+            ico.position.set(-2.8, 1.8, -1);
+            scene.add(ico);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                knot.rotation.x += 0.003;
+                knot.rotation.y += 0.005;
+                ico.rotation.x -= 0.002;
+                ico.rotation.y -= 0.003;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        })();
+
+        // ====== SOUND ENGINE (Web Audio API beeps) ======
+        const Sound = (function() {
+            let ctx = null, enabled = localStorage.getItem('pt_sound') !== '0';
+            function ensure() {
+                if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+                return ctx;
+            }
+            function beep(freq, duration, gain) {
+                if (!enabled) return;
+                try {
+                    const c = ensure();
+                    const osc = c.createOscillator();
+                    const g = c.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    g.gain.value = gain || 0.05;
+                    osc.connect(g); g.connect(c.destination);
+                    osc.start();
+                    g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + (duration || 0.08));
+                    osc.stop(c.currentTime + (duration || 0.08) + 0.02);
+                } catch (e) {}
+            }
+            return {
+                hover: () => beep(880, 0.04, 0.025),
+                click: () => beep(1200, 0.08, 0.04),
+                tick:  () => beep(2200, 0.025, 0.02),
+                err:   () => beep(220, 0.15, 0.06),
+                ok:    () => { beep(880, 0.06, 0.04); setTimeout(()=>beep(1320, 0.08, 0.04), 70); },
+                setEnabled: (v) => { enabled = v; localStorage.setItem('pt_sound', v ? '1' : '0'); },
+                isEnabled: () => enabled,
+            };
+        })();
+
+        // ====== BOOT SEQUENCE ======
+        (function() {
+            const overlay = document.getElementById('boot-overlay');
+            const lines = [
+                '> INITIALIZING PROPOSITION T...',
+                '> LOADING TRANSMISSION LOG... <span class="ok">[OK]</span>',
+                '> ESTABLISHING CHANNEL T...     <span class="ok">[OK]</span>',
+                '> KYC HANDSHAKE... π NETWORK... <span class="ok">[OK]</span>',
+                '> DECRYPTING CARRIER WAVE...    <span class="ok">[OK]</span>',
+                '> ACCESS GRANTED.<span class="boot-cursor"></span>',
+            ];
+            const host = document.getElementById('boot-lines');
+            // Skip if recently shown
+            const last = parseInt(localStorage.getItem('pt_boot_at') || '0', 10);
+            const skipBoot = (Date.now() - last) < 60 * 60 * 1000; // 1h cooldown
+            if (skipBoot) {
+                overlay.classList.add('done');
+                setTimeout(() => overlay.style.display = 'none', 300);
+                startTitleTyping();
+                return;
+            }
+            localStorage.setItem('pt_boot_at', String(Date.now()));
+            let i = 0;
+            function next() {
+                if (i >= lines.length) {
+                    setTimeout(() => {
+                        Sound.ok();
+                        overlay.classList.add('done');
+                        setTimeout(() => { overlay.style.display = 'none'; startTitleTyping(); }, 700);
+                    }, 500);
+                    return;
+                }
+                const div = document.createElement('div');
+                div.className = 'boot-line';
+                div.innerHTML = lines[i];
+                host.appendChild(div);
+                setTimeout(() => { div.classList.add('show'); Sound.tick(); }, 30);
+                i++;
+                setTimeout(next, 380 + Math.random() * 280);
+            }
+            setTimeout(next, 350);
+        })();
+
+        // ====== TITLE TYPING ANIMATION ======
+        function startTitleTyping() {
+            const titleEl = document.getElementById('title');
+            const subEl = document.getElementById('subtitle');
+            const fullTitle = 'PROPOSITION T';
+            const fullSub = '[ Message to AI : all over the world ]';
+            let ti = 0, si = 0;
+            const cursor = '<span class="typing-cursor"></span>';
+            function typeTitle() {
+                if (ti <= fullTitle.length) {
+                    titleEl.innerHTML = fullTitle.slice(0, ti) + cursor;
+                    ti++;
+                    setTimeout(typeTitle, 80 + Math.random() * 40);
+                } else {
+                    titleEl.innerHTML = fullTitle;
+                    setTimeout(typeSub, 200);
+                }
+            }
+            function typeSub() {
+                if (si <= fullSub.length) {
+                    subEl.textContent = fullSub.slice(0, si);
+                    si++;
+                    setTimeout(typeSub, 25 + Math.random() * 25);
+                }
+            }
+            typeTitle();
+        }
+
+        // ====== KEYBOARD NAVIGATION ======
+        (function() {
+            const rows = () => Array.from(document.querySelectorAll('tr.row-link:not([hidden])'));
+            let focusIdx = -1;
+            function clearFocus() { document.querySelectorAll('tr.row-link.kb-focus').forEach(r => r.classList.remove('kb-focus')); }
+            function moveFocus(delta) {
+                const list = rows();
+                if (list.length === 0) return;
+                focusIdx = Math.max(0, Math.min(list.length - 1, focusIdx + delta));
+                clearFocus();
+                list[focusIdx].classList.add('kb-focus');
+                list[focusIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                Sound.tick();
+            }
+            document.addEventListener('keydown', (e) => {
+                const tag = (e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea') {
+                    if (e.key === 'Escape') e.target.blur();
+                    return;
+                }
+                if (document.getElementById('help-modal').classList.contains('open')) {
+                    if (e.key === 'Escape') toggleHelp(false);
+                    return;
+                }
+                if (e.key === 'j') { moveFocus(1); e.preventDefault(); }
+                else if (e.key === 'k') { moveFocus(-1); e.preventDefault(); }
+                else if (e.key === 'Enter') {
+                    const list = rows();
+                    if (focusIdx >= 0 && list[focusIdx]) {
+                        Sound.click();
+                        window.location.href = list[focusIdx].getAttribute('data-href');
+                    }
+                }
+                else if (e.key === '/') { document.getElementById('search-input').focus(); e.preventDefault(); }
+                else if (e.key === '?') { toggleHelp(true); e.preventDefault(); }
+                else if (e.key === 'Escape') { clearFocus(); focusIdx = -1; }
+                else if (e.key === 'l' || e.key === 'L') { toggleLang(); }
+                else if (e.key === 'b' || e.key === 'B') { toggleBookmarkFilter(); }
+                else if (e.key === 't' || e.key === 'T') { toggleTheme(); }
+                else if (e.key === 's' || e.key === 'S') { toggleSound(); }
+            });
+        })();
+
+        // ====== SEARCH FILTER ======
+        (function() {
+            const input = document.getElementById('search-input');
+            input.addEventListener('input', () => {
+                const q = input.value.toLowerCase().trim();
+                document.querySelectorAll('tr.row-link').forEach(r => {
+                    const blob = r.getAttribute('data-search') || '';
+                    if (!q || blob.includes(q)) r.removeAttribute('hidden');
+                    else r.setAttribute('hidden', '');
+                });
+            });
+        })();
+
+        // ====== LANGUAGE TOGGLE ======
+        let currentLang = localStorage.getItem('pt_lang') || 'ko';
+        function applyLang() {
+            document.querySelectorAll('tr.row-link').forEach(r => {
+                const ko = r.getAttribute('data-title-ko') || '';
+                const en = r.getAttribute('data-title-en') || '';
+                const main = r.querySelector('.title-main');
+                const sub  = r.querySelector('.title-sub');
+                if (currentLang === 'en') {
+                    if (main) main.textContent = en;
+                    if (sub)  sub.textContent  = '(' + ko + ')';
+                } else {
+                    if (main) main.textContent = ko;
+                    if (sub)  sub.textContent  = '(' + en + ')';
+                }
+            });
+            document.getElementById('lang-toggle').textContent = currentLang === 'ko' ? 'KO/EN' : 'EN/KO';
+        }
+        function toggleLang() {
+            currentLang = currentLang === 'ko' ? 'en' : 'ko';
+            localStorage.setItem('pt_lang', currentLang);
+            applyLang();
+            Sound.click();
+        }
+        document.getElementById('lang-toggle').addEventListener('click', toggleLang);
+        applyLang();
+
+        // ====== BOOKMARKS ======
+        let bookmarks = JSON.parse(localStorage.getItem('pt_bookmarks') || '[]');
+        let bookmarkFilter = false;
+        function saveBookmarks() { localStorage.setItem('pt_bookmarks', JSON.stringify(bookmarks)); }
+        function applyBookmarks() {
+            document.querySelectorAll('.bookmark').forEach(b => {
+                const id = b.getAttribute('data-id');
+                if (bookmarks.includes(id)) { b.classList.add('active'); b.textContent = '★'; }
+                else { b.classList.remove('active'); b.textContent = '☆'; }
+            });
+            applyBookmarkFilter();
+        }
+        function applyBookmarkFilter() {
+            document.querySelectorAll('tr.row-link').forEach(r => {
+                const id = r.getAttribute('data-id');
+                if (bookmarkFilter && !bookmarks.includes(id)) r.setAttribute('hidden', '');
+                else r.removeAttribute('hidden');
+            });
+        }
+        function toggleBookmarkFilter() {
+            bookmarkFilter = !bookmarkFilter;
+            const btn = document.getElementById('bookmark-filter');
+            btn.classList.toggle('active', bookmarkFilter);
+            applyBookmarkFilter();
+            Sound.click();
+        }
+        document.getElementById('bookmark-filter').addEventListener('click', toggleBookmarkFilter);
+        document.querySelectorAll('.bookmark').forEach(b => {
+            b.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = b.getAttribute('data-id');
+                if (bookmarks.includes(id)) bookmarks = bookmarks.filter(x => x !== id);
+                else bookmarks.push(id);
+                saveBookmarks();
+                applyBookmarks();
+                Sound.click();
+            });
+        });
+        applyBookmarks();
+
+        // ====== THEME TOGGLE ======
+        let currentTheme = localStorage.getItem('pt_theme') || 'dark';
+        function applyTheme() {
+            document.body.setAttribute('data-theme', currentTheme);
+            document.getElementById('theme-toggle').textContent = currentTheme === 'dark' ? '◐' : '◑';
+        }
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('pt_theme', currentTheme);
+            applyTheme();
+            Sound.click();
+        }
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        applyTheme();
+
+        // ====== SOUND TOGGLE ======
+        function updateSoundBtn() {
+            document.getElementById('sound-toggle').textContent = Sound.isEnabled() ? '♪ ON' : '♪ OFF';
+        }
+        function toggleSound() {
+            Sound.setEnabled(!Sound.isEnabled());
+            updateSoundBtn();
+            if (Sound.isEnabled()) Sound.ok();
+        }
+        document.getElementById('sound-toggle').addEventListener('click', toggleSound);
+        updateSoundBtn();
+
+        // ====== HELP MODAL ======
+        function toggleHelp(open) {
+            const m = document.getElementById('help-modal');
+            if (typeof open !== 'boolean') open = !m.classList.contains('open');
+            m.classList.toggle('open', open);
+            if (open) Sound.click();
+        }
+        document.getElementById('help-btn').addEventListener('click', () => toggleHelp(true));
+        document.getElementById('help-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'help-modal') toggleHelp(false);
+        });
+
+        // ====== TTS ======
+        document.querySelectorAll('.tts-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!('speechSynthesis' in window)) return;
+                const text = btn.getAttribute('data-tts') || '';
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = /[가-힯]/.test(text) ? 'ko-KR' : 'en-US';
+                u.rate = 0.95;
+                u.pitch = 1.0;
+                window.speechSynthesis.speak(u);
+                Sound.click();
+            });
+        });
+
+        // ====== ROW CLICK + HOVER SOUND ======
+        document.querySelectorAll('tr.row-link').forEach(tr => {
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.bookmark')) return;
+                Sound.click();
+                window.location.href = tr.getAttribute('data-href');
+            });
+            tr.addEventListener('mouseenter', () => Sound.hover());
+        });
+
+        // ====== PI AUTH ======
+        (function () {
+            const usernameEl = document.getElementById('pi-username');
+            const btnEl = document.getElementById('pi-signin-btn');
+            function showAuthenticated(user) {
+                if (user && user.username) {
+                    usernameEl.textContent = '@' + user.username;
+                    btnEl.style.display = 'none';
+                }
+            }
+            async function signIn() {
+                const auth = await Pi.authenticate(['username'], () => {});
+                showAuthenticated(auth && auth.user);
+            }
+            async function initAndAuth() {
+                if (typeof Pi === 'undefined') return;
+                try {
+                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
+                    await signIn();
+                } catch (err) {}
+            }
+            btnEl.addEventListener('click', async () => {
+                try {
+                    if (typeof Pi === 'undefined') { alert('Open in Pi Browser.'); return; }
+                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: false }));
+                    await signIn();
+                } catch (err) { alert('Pi Sign-In Failed.'); }
+            });
+            if (document.readyState === 'complete') initAndAuth();
+            else window.addEventListener('load', initAndAuth);
+        })();
+    </script>
+</body>
+</html>
