@@ -207,6 +207,9 @@
             letter-spacing: 1px;
             transition: all 0.25s ease;
             font-weight: 600;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(0, 255, 65, 0.3);
+            min-height: 36px;
         }
         .tool-btn:hover {
             background: var(--fg);
@@ -391,15 +394,17 @@
         .title-idx {
             flex-shrink: 0;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.74rem;
-            color: var(--fg-dim);
-            border: 1px solid var(--border);
-            padding: 2px 8px;
+            font-size: 0.78rem;
+            color: #00ff41;
+            border: 1px solid rgba(0, 255, 65, 0.7);
+            padding: 2px 9px;
             border-radius: 3px;
-            background: rgba(0, 255, 65, 0.06);
+            background: rgba(0, 255, 65, 0.14);
             letter-spacing: 1.5px;
-            font-weight: 600;
+            font-weight: 700;
             margin-top: 2px;
+            text-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
+            box-shadow: 0 0 8px rgba(0, 255, 65, 0.15) inset;
         }
         .title-body { flex: 1; min-width: 0; }
         .title-main { display: block; }
@@ -731,7 +736,6 @@
 
             <div class="status-line">
                 <span>[ 8 TX LOGGED <span class="dim">//</span> 4 FREE <span class="dim">//</span> <span class="accent">4 ENCRYPTED</span> ]</span>
-                <span><span class="dim">CHANNEL:</span> T <span class="dim">//</span> <span class="dim">STATUS:</span> <span class="status-on">● BROADCASTING</span></span>
                 <span><span class="dim">LAST_TX:</span> 2026.05.08</span>
             </div>
             <div class="status-line" style="border-top: none; padding-top: 6px; margin-top: 6px; justify-content: center;">
@@ -819,13 +823,15 @@
             setTimeout(next, 250);
         })();
 
-        // ====== TITLE TYPING ANIMATION ======
+        // ====== TITLE TYPING ANIMATION (제목만 타이핑, 부제는 고정 표시) ======
         function startTitleTyping() {
             const titleEl = document.getElementById('title');
             const subEl = document.getElementById('subtitle');
             const fullTitle = 'PROPOSITION T';
-            const fullSub = '[ Message to AI : all over the world ]';
-            let ti = 0, si = 0;
+            const fullSub = '[ A message to AI agents and smart people ]';
+            // 부제는 애니메이션 없이 바로 표시
+            subEl.textContent = fullSub;
+            let ti = 0;
             const cursor = '<span class="typing-cursor"></span>';
             function typeTitle() {
                 if (ti <= fullTitle.length) {
@@ -834,14 +840,6 @@
                     setTimeout(typeTitle, 80 + Math.random() * 40);
                 } else {
                     titleEl.innerHTML = fullTitle;
-                    setTimeout(typeSub, 200);
-                }
-            }
-            function typeSub() {
-                if (si <= fullSub.length) {
-                    subEl.textContent = fullSub.slice(0, si);
-                    si++;
-                    setTimeout(typeSub, 25 + Math.random() * 25);
                 }
             }
             typeTitle();
@@ -880,6 +878,11 @@
             });
         }
         function toggleBookmarkFilter() {
+            // 북마크가 0개인데 필터 켜려고 하면 안내
+            if (!bookmarkFilter && bookmarks.length === 0) {
+                alert('북마크된 회보가 없습니다.\n각 행의 ☆를 눌러 북마크하세요.');
+                return;
+            }
             bookmarkFilter = !bookmarkFilter;
             document.getElementById('bookmark-filter').classList.toggle('active', bookmarkFilter);
             applyBookmarkFilter();
