@@ -264,8 +264,10 @@ app.post('/pi/reward', async (req, res) => {
         console.log('[A2U] reward sent:', uid, 'txid:', txid);
         res.json({ ok: true, paymentId, txid, amount: REWARD_AMOUNT });
     } catch (err) {
-        console.error('[A2U reward]', err.message);
-        res.status(500).json({ error: err.message });
+        // pi-backend는 axios 기반 → 실제 Pi API 거절 사유는 err.response.data 에 있음
+        const piDetail = (err && err.response && err.response.data) || null;
+        console.error('[A2U reward]', err.message, JSON.stringify(piDetail));
+        res.status(500).json({ error: err.message, piDetail });
     }
 });
 
