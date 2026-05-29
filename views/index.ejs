@@ -496,6 +496,8 @@
     <div id="pi-auth-bar">
         <button id="pi-signin-btn" type="button">[ PI_SIGN_IN ]</button>
         <span id="pi-username"></span>
+        <button id="pi-reward-btn" type="button" style="display:none;">[ CLAIM_WELCOME_π ]</button>
+        <span id="pi-reward-msg"></span>
     </div>
 
     <div class="container">
@@ -743,15 +745,47 @@
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
+            const rewardBtn = document.getElementById('pi-reward-btn');
+            const rewardMsg = document.getElementById('pi-reward-msg');
+            let currentUid = null;
             function showAuthenticated(user) {
                 if (user && user.username) {
                     usernameEl.textContent = '@' + user.username;
                     btnEl.style.display = 'none';
                 }
+                if (user && user.uid) {
+                    currentUid = user.uid;
+                    if (rewardBtn) rewardBtn.style.display = '';
+                }
             }
             async function signIn() {
                 const auth = await Pi.authenticate(['username'], () => {});
                 showAuthenticated(auth && auth.user);
+            }
+            if (rewardBtn) {
+                rewardBtn.addEventListener('click', async () => {
+                    if (!currentUid) { alert('먼저 로그인해주세요.'); return; }
+                    rewardBtn.disabled = true;
+                    if (rewardMsg) rewardMsg.textContent = ' 송금 중...';
+                    try {
+                        const r = await fetch('/pi/reward', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ uid: currentUid }),
+                        });
+                        const data = await r.json();
+                        if (data.ok) {
+                            if (rewardMsg) rewardMsg.textContent = data.already ? ' 이미 수령함 ✓' : ' 수령 완료 ✓';
+                            rewardBtn.style.display = 'none';
+                        } else {
+                            if (rewardMsg) rewardMsg.textContent = ' 실패: ' + (data.error || 'unknown');
+                            rewardBtn.disabled = false;
+                        }
+                    } catch (e) {
+                        if (rewardMsg) rewardMsg.textContent = ' 오류: ' + (e && e.message ? e.message : e);
+                        rewardBtn.disabled = false;
+                    }
+                });
             }
             async function initAndAuth() {
                 if (typeof Pi === 'undefined') return;

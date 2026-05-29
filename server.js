@@ -212,6 +212,73 @@ app.get('/pi/status', (req, res) => {
     });
 });
 
+// ====== A2U (App-to-User) 송금 인프라 ======
+// 시드는 Render 환경변수 PI_WALLET_SEED 에만 존재 (코드/깃에 절대 없음)
+const PiNetwork = require('pi-backend').default || require('pi-backend');
+const PI_WALLET_SEED = process.env.PI_WALLET_SEED;
+let _piNetwork = null;
+function getPiNetwork() {
+    if (!_piNetwork) {
+        if (!PI_API_KEY) throw new Error('PI_API_KEY 미설정');
+        if (!PI_WALLET_SEED) throw new Error('PI_WALLET_SEED 미설정');
+        _piNetwork = new PiNetwork(PI_API_KEY, PI_WALLET_SEED);
+    }
+    return _piNetwork;
+}
+
+// 보상 수령 기록 (uid) — 중복 송금 방지 + 10 unique 보장
+// 한계: 재배포 시 휘발 (메인넷 검증 10건만 채우면 되므로 충분)
+const rewardClaimed = new Set();
+const REWARD_AMOUNT = Number(process.env.REWARD_AMOUNT || 0.001);
+
+// A2U 보상 송금: 로그인한 사용자가 1회 수령
+app.post('/pi/reward', async (req, res) => {
+    try {
+        const { uid } = req.body || {};
+        if (!uid) return res.status(400).json({ error: 'uid required' });
+        if (rewardClaimed.has(uid)) {
+            return res.json({ ok: true, already: true, message: '이미 수령하셨습니다' });
+        }
+        const pi = getPiNetwork();
+        // 1) 미완료 결제 정리 (Pi 규칙: 동일 사용자 미완료 결제 존재 시 신규 불가)
+        try {
+            const incomplete = await pi.getIncompleteServerPayments();
+            if (incomplete && incomplete.length) {
+                for (const p of incomplete) {
+                    const tx = p.transaction && p.transaction.txid;
+                    if (tx) { await pi.completePayment(p.identifier, tx); }
+                    else { await pi.cancelPayment(p.identifier); }
+                }
+            }
+        } catch (e) { console.warn('[A2U] incomplete cleanup:', e.message); }
+        // 2) A2U 결제 생성 → 서명·제출 → 완료
+        const paymentId = await pi.createPayment({
+            amount: REWARD_AMOUNT,
+            memo: 'Proposition T welcome reward',
+            metadata: { type: 'welcome_reward' },
+            uid: uid,
+        });
+        const txid = await pi.submitPayment(paymentId);
+        await pi.completePayment(paymentId, txid);
+        rewardClaimed.add(uid);
+        console.log('[A2U] reward sent:', uid, 'txid:', txid);
+        res.json({ ok: true, paymentId, txid, amount: REWARD_AMOUNT });
+    } catch (err) {
+        console.error('[A2U reward]', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// A2U 진단 (시드값 노출 없이 설정 여부 + 송금 건수만)
+app.get('/pi/reward/status', (req, res) => {
+    res.json({
+        walletConfigured: !!PI_WALLET_SEED,
+        apiConfigured: !!PI_API_KEY,
+        rewardsSent: rewardClaimed.size,
+        amount: REWARD_AMOUNT,
+    });
+});
+
 // 법적 페이지 공통 레이아웃
 function legalPage(title, bodyHtml) {
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
