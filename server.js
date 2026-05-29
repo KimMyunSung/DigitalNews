@@ -10,17 +10,55 @@ const notion = new Client({ auth: process.env.NOTION_TOKEN });
 const n2m = new NotionToMarkdown({ notionClient: notion });
 const app = express();
 app.use(cors());
+app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const databaseId = process.env.NOTION_DATABASE_ID;
 const SITE_URL = (process.env.SITE_URL || 'https://proposition-t.onrender.com').replace(/\/$/, '');
+
+// ====== Pi Network 결제 인프라 ======
+const PI_API_KEY = process.env.PI_API_KEY;
+const PI_SANDBOX = (process.env.PI_SANDBOX || 'true') !== 'false'; // 기본 테스트넷
+const PI_API_BASE = 'https://api.minepi.com/v2';
+
+// 결제 원장 (in-memory) — userId(uid) → Set<postId>
+// 한계: Render 재시작·재배포 시 휘발. 영구 저장은 Phase 2.
+const paidLedger = new Map();
+function userHasPaid(uid, postId) {
+    if (!uid || !postId) return false;
+    const set = paidLedger.get(uid);
+    return !!(set && set.has(postId));
+}
+function recordPaid(uid, postId) {
+    if (!uid || !postId) return;
+    if (!paidLedger.has(uid)) paidLedger.set(uid, new Set());
+    paidLedger.get(uid).add(postId);
+    console.log('[Pi] paid recorded:', uid, '→', postId);
+}
+
+async function piApi(method, urlPath, body) {
+    if (!PI_API_KEY) throw new Error('PI_API_KEY 환경변수 미설정');
+    const res = await fetch(PI_API_BASE + urlPath, {
+        method,
+        headers: {
+            'Authorization': 'Key ' + PI_API_KEY,
+            'Content-Type': 'application/json',
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error('Pi API ' + method + ' ' + urlPath + ' → ' + res.status + ': ' + text);
+    try { return JSON.parse(text); } catch { return {}; }
+}
 const SITE_DESCRIPTION =
     'PROPOSITION T — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
     'Pi Network GCV, AI 생존 조건에 관한 회보 모음.';
 
-function extractMessages(response) {
+const STATS_PAGE_TITLE = '총방문자수';
+
+function extractPages(response) {
     return response.results.map((page) => {
         const props = page.properties || {};
         const titleKey = Object.keys(props).find((key) => props[key].type === 'title');
@@ -29,24 +67,56 @@ function extractMessages(response) {
                 ? props[titleKey].title[0].plain_text
                 : '제목 없음';
         const date = props['Date']?.date?.start || '-';
-        const status = props['Status']?.select?.name || '-';
         const receiver = props['수신']?.rich_text?.[0]?.plain_text || '-';
         const sender = props['발신']?.rich_text?.[0]?.plain_text || '-';
         // '요금' multi_select: '무료' → isFree=true, '유료' → isFree=false
         const yoGeum = props['요금']?.multi_select?.map((o) => o.name) || [];
         const isFree = yoGeum.includes('무료');
-        return { id: page.id, title, date, status, receiver, sender, isFree };
+        const viewCount = props['조회수']?.number || 0;
+        return { id: page.id, title, date, receiver, sender, isFree, viewCount };
     });
 }
 
-async function queryAllMessages() {
+async function queryAllPages() {
     const database = await notion.databases.retrieve({ database_id: databaseId });
     const dataSourceId = database.data_sources[0].id;
     const response = await notion.dataSources.query({
         data_source_id: dataSourceId,
         sorts: [{ property: 'Date', direction: 'descending' }],
     });
-    return extractMessages(response);
+    return extractPages(response);
+}
+
+async function queryAll() {
+    // 회보 메시지와 통계 페이지("총방문자수")를 분리해서 반환
+    const all = await queryAllPages();
+    return {
+        messages: all.filter((p) => p.title !== STATS_PAGE_TITLE),
+        statsPage: all.find((p) => p.title === STATS_PAGE_TITLE) || null,
+    };
+}
+
+// 기존 API 호환용 — 회보 메시지만
+async function queryAllMessages() {
+    const { messages } = await queryAll();
+    return messages;
+}
+
+// Notion 페이지의 '조회수' Number 속성을 +1 (비동기, 응답 블로킹하지 않음)
+function incrementViewsAsync(pageId) {
+    if (!pageId) return;
+    setImmediate(async () => {
+        try {
+            const page = await notion.pages.retrieve({ page_id: pageId });
+            const current = page.properties?.['조회수']?.number || 0;
+            await notion.pages.update({
+                page_id: pageId,
+                properties: { '조회수': { number: current + 1 } },
+            });
+        } catch (err) {
+            console.warn('조회수 증가 실패 (' + pageId + '):', err.message);
+        }
+    });
 }
 
 function stripHtml(html) {
@@ -64,18 +134,24 @@ function buildDescription(htmlContent, fallback) {
 
 app.get('/', async (req, res) => {
     try {
-        const messages = await queryAllMessages();
+        const { messages, statsPage } = await queryAll();
+        const totalVisits = (statsPage?.viewCount || 0) + 1; // 이번 방문 포함해서 표시
+        if (statsPage) incrementViewsAsync(statsPage.id);
         res.render('index', {
             messages,
+            totalVisits,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
+            piSandbox: PI_SANDBOX,
         });
     } catch (error) {
         console.error('메인 페이지 로드 오류:', error.message);
         res.status(500).render('index', {
             messages: [],
+            totalVisits: 0,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
+            piSandbox: PI_SANDBOX,
         });
     }
 });
@@ -90,9 +166,58 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
+// ====== Pi 결제 API ======
+app.post('/pi/approve', async (req, res) => {
+    try {
+        const { paymentId } = req.body || {};
+        if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+        await piApi('POST', '/payments/' + paymentId + '/approve');
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('[Pi approve]', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/pi/complete', async (req, res) => {
+    try {
+        const { paymentId, txid } = req.body || {};
+        if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid required' });
+        await piApi('POST', '/payments/' + paymentId + '/complete', { txid });
+        // 결제 정보 조회 → uid·메타데이터(postId) 추출 후 원장 기록
+        const payment = await piApi('GET', '/payments/' + paymentId);
+        const uid = payment.user_uid;
+        const postId = payment.metadata && payment.metadata.postId;
+        if (uid && postId) recordPaid(uid, postId);
+        res.json({ ok: true, uid, postId });
+    } catch (err) {
+        console.error('[Pi complete]', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 클라이언트가 자기 결제 상태 확인용 — 인증 없이 단순 조회 (테스트넷용)
+app.get('/pi/paid', (req, res) => {
+    const uid = (req.query.uid || '').toString();
+    const postId = (req.query.postId || '').toString();
+    res.json({ paid: userHasPaid(uid, postId) });
+});
+
+// 서버 측 Pi 설정 상태 진단용
+app.get('/pi/status', (req, res) => {
+    res.json({
+        configured: !!PI_API_KEY,
+        sandbox: PI_SANDBOX,
+        ledgerSize: paidLedger.size,
+    });
+});
+
 app.get('/post/:id', async (req, res) => {
     const pageId = req.params.id;
+    const piUid = (req.query.pi_uid || '').toString().slice(0, 80);
     try {
+        // 회보 조회수 증가 (비동기, 응답 안 막음)
+        incrementViewsAsync(pageId);
         const page = await notion.pages.retrieve({ page_id: pageId });
         const props = page.properties || {};
         const titleKey = Object.keys(props).find((key) => props[key].type === 'title');
@@ -113,8 +238,7 @@ app.get('/post/:id', async (req, res) => {
         // 무료/유료 게이팅 — '요금' multi_select: '무료' → 공개, '유료' → Pi 결제 필요
         const yoGeum = props['요금']?.multi_select?.map((o) => o.name) || [];
         const isFree = yoGeum.includes('무료');
-        // TODO: 결제 검증 추가 시 — 인증된 사용자의 결제 기록 확인하여 isPaid 판정
-        const isPaid = false; // 현재는 결제 통합 전 — 모든 유료 회보는 잠금
+        const isPaid = userHasPaid(piUid, pageId); // 결제 원장에서 확인
         const isLocked = !isFree && !isPaid;
 
         let htmlContent;
@@ -144,6 +268,7 @@ app.get('/post/:id', async (req, res) => {
                 isLocked,
             },
             siteUrl: SITE_URL,
+            piSandbox: PI_SANDBOX,
         });
     } catch (error) {
         console.error('상세 페이지 로드 오류:', error.message);

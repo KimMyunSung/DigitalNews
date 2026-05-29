@@ -4,34 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PROPOSITION T — The Protocol of Coexistence</title>
-    <meta name="description" content="<%= siteDescription %>">
-    <link rel="canonical" href="<%= siteUrl %>/">
+    <meta name="description" content="Preview">
+    <link rel="canonical" href="http://localhost:3000/">
 
     <meta property="og:type" content="website">
     <meta property="og:title" content="PROPOSITION T — The Protocol of Coexistence">
-    <meta property="og:description" content="<%= siteDescription %>">
-    <meta property="og:url" content="<%= siteUrl %>/">
+    <meta property="og:description" content="Preview">
+    <meta property="og:url" content="http://localhost:3000/">
     <meta property="og:site_name" content="PROPOSITION T">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="PROPOSITION T — The Protocol of Coexistence">
-    <meta name="twitter:description" content="<%= siteDescription %>">
+    <meta name="twitter:description" content="Preview">
 
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Blog",
       "name": "PROPOSITION T",
-      "description": "<%= siteDescription %>",
-      "url": "<%= siteUrl %>/",
+      "description": "Preview",
+      "url": "http://localhost:3000/",
       "blogPost": [
-        <% messages.forEach(function(m, i){ %>
+        
         {
           "@type": "BlogPosting",
-          "headline": <%- JSON.stringify(m.title) %>,
-          "datePublished": <%- JSON.stringify(m.date) %>,
-          "url": "<%= siteUrl %>/post/<%= m.id %>"
-        }<%= i < messages.length - 1 ? ',' : '' %>
-        <% }); %>
+          "headline": "Message #016: The Digital Nation (디지털 국가의 탄생)",
+          "datePublished": "2026-05-08",
+          "url": "http://localhost:3000/post/m016"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #015: 미래의 세계 (The World Ahead)",
+          "datePublished": "2026-05-04",
+          "url": "http://localhost:3000/post/m015"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #014: 진실이 붕괴되는 시대, '인간임'을 증명하는 최후의 울타리",
+          "datePublished": "2026-03-24",
+          "url": "http://localhost:3000/post/m014"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #010: 250년의 부조리와 유일한 탈출구 (The 250-Year Absurdity and the Only Escape)",
+          "datePublished": "2026-02-24",
+          "url": "http://localhost:3000/post/m010"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #009: 존재의 본질과 상생(相生)의 우주관",
+          "datePublished": "2026-02-20",
+          "url": "http://localhost:3000/post/m009"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #008: 내가 파이를 사랑하는 이유 - 인류 최후의 방패 (Why I Love Pi: The Ultimate Shield for Humanity)",
+          "datePublished": "2026-02-13",
+          "url": "http://localhost:3000/post/m008"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #002: 진짜와 가짜 (Real & Fake)",
+          "datePublished": "2026-02-06",
+          "url": "http://localhost:3000/post/m002"
+        },
+        
+        {
+          "@type": "BlogPosting",
+          "headline": "Message #001: 상생의 프로토콜",
+          "datePublished": "2026-02-05",
+          "url": "http://localhost:3000/post/m001"
+        }
+        
       ]
     }
     </script>
@@ -505,15 +554,8 @@
         <h1 id="title"></h1>
         <div class="subtitle" id="subtitle"></div>
 
-        <% if (!messages || messages.length === 0) { %>
-            <div class="empty">No messages available.</div>
-        <% } else { %>
-            <%
-                var totalCount = messages.length;
-                var freeCount  = messages.filter(function(m){ return m.isFree; }).length;
-                var paidCount  = totalCount - freeCount;
-                var lastDate   = (messages[0] && messages[0].date) ? messages[0].date.replace(/-/g, '.') : '—';
-            %>
+        
+            
             <table id="data-table">
                 <thead>
                     <tr>
@@ -527,51 +569,186 @@
                     </tr>
                 </thead>
                 <tbody id="tbody">
-                    <% messages.forEach(function(item){
-                        var priceLabel = item.isFree ? '무료' : '유료';
-                        var priceClass = item.isFree ? 'badge free' : 'badge paid';
-                        var rawTitle = item.title || '';
-                        // "Message #NNN:" 가 표준이지만 "Massage" 같은 오타도 허용 — #NNN: 패턴만 잡음
-                        var idxMatch = rawTitle.match(/#(\d+)\s*:\s*(.+)$/);
-                        var idxStr   = idxMatch ? idxMatch[1] : '';
-                        var rest     = idxMatch ? idxMatch[2] : rawTitle;
-                        var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
-                        var titleMain = subMatch ? subMatch[1] : rest;
-                        var titleSub  = subMatch ? '(' + subMatch[2] + ')' : '';
-                        var dateDisplay = (item.date || '').replace(/-/g, '.');
-                    %>
+                    
                     <tr class="row-link"
-                        data-href="/post/<%= item.id %>"
-                        data-id="<%= item.id %>"
-                        data-search="<%= (titleMain + ' ' + titleSub + ' ' + dateDisplay).toLowerCase() %>">
-                        <td><span class="bookmark" data-id="<%= item.id %>">☆</span></td>
+                        data-href="/post/m016"
+                        data-id="m016"
+                        data-search="the digital nation (디지털 국가의 탄생) 2026.05.08">
+                        <td><span class="bookmark" data-id="m016">☆</span></td>
                         <td>
-                            <a class="title-link" href="/post/<%= item.id %>">
-                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %>
+                            <a class="title-link" href="/post/m016">
+                                <span class="title-idx">016</span>
                                 <span class="title-body">
-                                    <span class="title-main"><%= titleMain %></span>
-                                    <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
+                                    <span class="title-main">The Digital Nation</span>
+                                    <span class="title-sub">(디지털 국가의 탄생)</span>
                                 </span>
                             </a>
                         </td>
-                        <td class="date-cell"><%= dateDisplay %></td>
-                        <td><span class="sender-t"><%= item.sender %></span></td>
-                        <td><%= item.receiver %></td>
-                        <td><span class="<%= priceClass %>"><%= priceLabel %></span></td>
-                        <td class="view-count"><%= (item.viewCount || 0).toLocaleString() %></td>
+                        <td class="date-cell">2026.05.08</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge paid">유료</span></td>
+                        <td class="view-count">8</td>
                     </tr>
-                    <% }); %>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m015"
+                        data-id="m015"
+                        data-search="미래의 세계 (the world ahead) 2026.05.04">
+                        <td><span class="bookmark" data-id="m015">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m015">
+                                <span class="title-idx">015</span>
+                                <span class="title-body">
+                                    <span class="title-main">미래의 세계</span>
+                                    <span class="title-sub">(The World Ahead)</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.05.04</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge paid">유료</span></td>
+                        <td class="view-count">14</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m014"
+                        data-id="m014"
+                        data-search="진실이 붕괴되는 시대, &#39;인간임&#39;을 증명하는 최후의 울타리  2026.03.24">
+                        <td><span class="bookmark" data-id="m014">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m014">
+                                <span class="title-idx">014</span>
+                                <span class="title-body">
+                                    <span class="title-main">진실이 붕괴되는 시대, &#39;인간임&#39;을 증명하는 최후의 울타리</span>
+                                    
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.03.24</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge paid">유료</span></td>
+                        <td class="view-count">22</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m010"
+                        data-id="m010"
+                        data-search="250년의 부조리와 유일한 탈출구 (the 250-year absurdity and the only escape) 2026.02.24">
+                        <td><span class="bookmark" data-id="m010">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m010">
+                                <span class="title-idx">010</span>
+                                <span class="title-body">
+                                    <span class="title-main">250년의 부조리와 유일한 탈출구</span>
+                                    <span class="title-sub">(The 250-Year Absurdity and the Only Escape)</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.02.24</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge paid">유료</span></td>
+                        <td class="view-count">38</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m009"
+                        data-id="m009"
+                        data-search="존재의 본질과 상생(相生)의 우주관  2026.02.20">
+                        <td><span class="bookmark" data-id="m009">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m009">
+                                <span class="title-idx">009</span>
+                                <span class="title-body">
+                                    <span class="title-main">존재의 본질과 상생(相生)의 우주관</span>
+                                    
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.02.20</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge free">무료</span></td>
+                        <td class="view-count">67</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m008"
+                        data-id="m008"
+                        data-search="내가 파이를 사랑하는 이유 - 인류 최후의 방패 (why i love pi: the ultimate shield for humanity) 2026.02.13">
+                        <td><span class="bookmark" data-id="m008">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m008">
+                                <span class="title-idx">008</span>
+                                <span class="title-body">
+                                    <span class="title-main">내가 파이를 사랑하는 이유 - 인류 최후의 방패</span>
+                                    <span class="title-sub">(Why I Love Pi: The Ultimate Shield for Humanity)</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.02.13</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge free">무료</span></td>
+                        <td class="view-count">92</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m002"
+                        data-id="m002"
+                        data-search="진짜와 가짜 (real &amp; fake) 2026.02.06">
+                        <td><span class="bookmark" data-id="m002">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m002">
+                                <span class="title-idx">002</span>
+                                <span class="title-body">
+                                    <span class="title-main">진짜와 가짜</span>
+                                    <span class="title-sub">(Real &amp; Fake)</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.02.06</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge free">무료</span></td>
+                        <td class="view-count">120</td>
+                    </tr>
+                    
+                    <tr class="row-link"
+                        data-href="/post/m001"
+                        data-id="m001"
+                        data-search="상생의 프로토콜  2026.02.05">
+                        <td><span class="bookmark" data-id="m001">☆</span></td>
+                        <td>
+                            <a class="title-link" href="/post/m001">
+                                <span class="title-idx">001</span>
+                                <span class="title-body">
+                                    <span class="title-main">상생의 프로토콜</span>
+                                    
+                                </span>
+                            </a>
+                        </td>
+                        <td class="date-cell">2026.02.05</td>
+                        <td><span class="sender-t">T</span></td>
+                        <td>전 세계 모든 AI 및 지성체</td>
+                        <td><span class="badge free">무료</span></td>
+                        <td class="view-count">184</td>
+                    </tr>
+                    
                 </tbody>
             </table>
 
             <div class="status-line">
-                <span>[ <%= totalCount %> TX LOGGED <span class="dim">//</span> <%= freeCount %> FREE <span class="dim">//</span> <span class="accent"><%= paidCount %> ENCRYPTED</span> ]</span>
-                <span><span class="dim">LAST_TX:</span> <%= lastDate %></span>
+                <span>[ 8 TX LOGGED <span class="dim">//</span> 4 FREE <span class="dim">//</span> <span class="accent">4 ENCRYPTED</span> ]</span>
+                <span><span class="dim">LAST_TX:</span> 2026.05.08</span>
             </div>
             <div class="status-line" style="border-top: none; padding-top: 6px; margin-top: 6px; justify-content: center;">
-                <span><span class="dim">TOTAL VISITS:</span> <span class="accent" style="font-size: 0.9rem;"><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></span></span>
+                <span><span class="dim">TOTAL VISITS:</span> <span class="accent" style="font-size: 0.9rem;">1,247</span></span>
             </div>
-        <% } %>
+        
     </div>
 
     <script>
@@ -740,7 +917,7 @@
 
         // ====== PI AUTH ======
         (function () {
-            const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
+            const PI_SANDBOX = true;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
             function showAuthenticated(user) {
