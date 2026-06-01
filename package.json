@@ -1,7 +1,7 @@
 {
-  "name": "proposition-t-protocol",
+  "name": "digital-news",
   "version": "1.0.0",
-  "description": "The Protocol of Coexistence",
+  "description": "Digital News — The Protocol of Coexistence",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

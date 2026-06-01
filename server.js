@@ -53,7 +53,7 @@ async function piApi(method, urlPath, body) {
     try { return JSON.parse(text); } catch { return {}; }
 }
 const SITE_DESCRIPTION =
-    'PROPOSITION T — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
+    'DIGITAL NEWS — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
     'Pi Network GCV, AI 생존 조건에 관한 회보 모음.';
 
 const STATS_PAGE_TITLE = '총방문자수';
@@ -436,5 +436,5 @@ app.get('/sitemap.xml', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Proposition T Server is running on port ${PORT}`);
+    console.log(`Digital News Server is running on port ${PORT}`);
 });
