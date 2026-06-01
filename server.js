@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const { Client } = require('@notionhq/client');
 const path = require('path');
 const { NotionToMarkdown } = require('notion-to-md');
@@ -14,14 +15,28 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Pi Developer Portal 도메인 검증 — Render env로 테스트넷/메인넷 각각 다른 키 가능
-app.get('/validation-key.txt', (req, res) => {
-    const key = (process.env.PI_VALIDATION_KEY || '').trim();
-    if (key) {
-        res.type('text/plain').send(key);
-        return;
+// Pi Developer Portal 도메인 검증 — static이 아닌 라우트만 사용 (키 1줄만 응답)
+function getPiValidationKey() {
+    const fromEnv = (process.env.PI_VALIDATION_KEY || '').trim();
+    if (fromEnv) return fromEnv;
+    const candidates = [
+        path.join(__dirname, 'pi-validation-key.txt'),
+        path.join(__dirname, 'public', 'validation-key.txt'),
+    ];
+    for (const filePath of candidates) {
+        if (!fs.existsSync(filePath)) continue;
+        const line = fs
+            .readFileSync(filePath, 'utf8')
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .find(Boolean);
+        if (line) return line;
     }
-    res.sendFile(path.join(__dirname, 'public', 'validation-key.txt'));
+    return '';
+}
+
+app.get('/validation-key.txt', (req, res) => {
+    res.type('text/plain').set('Cache-Control', 'no-store').send(getPiValidationKey());
 });
 
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
