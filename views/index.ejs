@@ -196,6 +196,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem;
             display: flex; align-items: center; gap: 10px;
+            flex-wrap: nowrap;
         }
         #pi-signin-btn {
             background: linear-gradient(135deg, rgba(0, 25, 8, 0.94), rgba(0, 10, 0, 0.94));
@@ -268,15 +269,27 @@
         .subtitle {
             text-align: center;
             font-size: 0.95rem;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             color: var(--accent);
-            letter-spacing: 2.5px;
+            letter-spacing: 1px;
             text-shadow: 0 0 6px rgba(255, 140, 0, 0.55);
-            word-break: keep-all;
-            overflow-wrap: normal;
-            line-height: 1.55;
-            padding: 0 8px;
+            line-height: 1.5;
+            padding: 0 10px;
         }
+        .subtitle-wrap {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.35em;
+            max-width: 100%;
+        }
+        .sub-bracket {
+            flex-shrink: 0;
+            letter-spacing: 0;
+        }
+        .subtitle-desktop { display: inline; }
+        .subtitle-mobile { display: none; }
         .badge-demo {
             display: block;
             text-align: center;
@@ -298,13 +311,18 @@
             box-shadow: 0 0 28px rgba(255, 140, 0, 0.35), inset 0 0 40px rgba(255, 140, 0, 0.06);
         }
         .testnet-reward-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
             font-size: 0.72rem;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             color: var(--accent-soft);
             margin-bottom: 18px;
             font-weight: 600;
-            white-space: nowrap;
+            line-height: 1.45;
         }
+        .testnet-reward-label span { white-space: nowrap; }
         #pi-reward-btn-hero {
             display: block;
             width: 100%;
@@ -563,24 +581,31 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 32px 14px 28px; margin: 68px auto 24px; width: 96%; }
-            h1 { font-size: 1.65rem; letter-spacing: 4px; line-height: 1.25; }
-            .subtitle { font-size: 0.72rem; letter-spacing: 0.5px; line-height: 1.65; padding: 0 4px; }
-            #pi-auth-bar { top: 8px; right: 8px; left: 8px; justify-content: flex-end; font-size: 0.65rem; gap: 6px; max-width: none; }
-            #pi-signin-btn { padding: 6px 8px; letter-spacing: 0; font-size: 0.62rem; flex-shrink: 0; }
-            #pi-username { max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
-            #toolbar { top: 8px; left: 8px; right: auto; max-width: calc(100% - 120px); }
-            .testnet-reward-box { margin: 18px auto 28px; padding: 20px 12px 18px; width: 100%; }
-            .testnet-reward-label { font-size: 0.62rem; letter-spacing: 0.5px; white-space: normal; line-height: 1.55; }
-            #pi-reward-btn-hero { padding: 16px 10px; font-size: 1rem; max-width: 100%; }
+            .container { padding: 28px 12px 24px; margin: 76px auto 20px; width: 94%; }
+            h1 { font-size: 1.55rem; letter-spacing: 3px; line-height: 1.3; }
+            .subtitle { font-size: 0.74rem; letter-spacing: 0; padding: 0 6px; margin-bottom: 14px; }
+            .subtitle-desktop { display: none; }
+            .subtitle-mobile { display: inline; }
+            .subtitle-wrap { gap: 0.3em; }
+            #pi-auth-bar {
+                top: 6px; right: 6px; left: auto;
+                font-size: 0.62rem; gap: 5px;
+                max-width: 52vw;
+            }
+            #pi-signin-btn { padding: 5px 7px; letter-spacing: 0; font-size: 0.6rem; }
+            #pi-username { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            #toolbar { top: 6px; left: 6px; max-width: 46vw; gap: 5px; }
+            #search-input { width: 100%; max-width: 110px; font-size: 0.6rem; padding: 5px 7px; min-height: 32px; }
+            .tool-btn { padding: 5px 7px; font-size: 0.6rem; min-height: 32px; letter-spacing: 0; }
+            .testnet-reward-box { margin: 16px auto 24px; padding: 18px 10px 16px; width: 100%; }
+            .testnet-reward-label { font-size: 0.68rem; letter-spacing: 0.5px; margin-bottom: 14px; }
+            #pi-reward-btn-hero { padding: 15px 10px; font-size: 1rem; max-width: 100%; }
             #pi-reward-btn-hero .reward-btn-long { display: none; }
-            #pi-reward-btn-hero .reward-btn-short { display: block; font-size: 1.05rem; letter-spacing: 0; }
-            .testnet-reward-desc { font-size: 0.82rem; line-height: 1.7; }
-            .testnet-reward-steps { font-size: 0.8rem; max-width: 100%; line-height: 1.75; }
-            .testnet-reward-status { font-size: 0.78rem; line-height: 1.6; }
+            #pi-reward-btn-hero .reward-btn-short { display: block; font-size: 1rem; letter-spacing: 0; }
+            .testnet-reward-desc { font-size: 0.8rem; line-height: 1.65; }
+            .testnet-reward-steps { font-size: 0.78rem; line-height: 1.7; padding: 0 2px; }
+            .testnet-reward-status { font-size: 0.76rem; line-height: 1.55; padding: 0 2px; }
             .mobile-br { display: inline; }
-            #search-input { width: 120px; font-size: 0.65rem; }
-            #toolbar { flex-wrap: wrap; max-width: calc(100% - 130px); }
             thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; border: none; }
             tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
@@ -593,6 +618,12 @@
             td:nth-child(4), td:nth-child(5), td:nth-child(7) { display: none; }
             tr:hover { background: transparent; box-shadow: none; }
             .status-line { font-size: 0.68rem; letter-spacing: 1px; }
+        }
+        @media (max-width: 380px) {
+            h1 { font-size: 1.35rem; letter-spacing: 2px; }
+            .subtitle { font-size: 0.68rem; }
+            #pi-auth-bar { max-width: 48vw; }
+            #toolbar { max-width: 50vw; }
         }
     </style>
 </head>
@@ -625,11 +656,21 @@
         <span class="corner-br"></span>
 
         <h1 id="title"></h1>
-        <div class="subtitle" id="subtitle"></div>
+        <div class="subtitle" id="subtitle">
+            <span class="subtitle-wrap">
+                <span class="sub-bracket">[</span>
+                <span class="subtitle-desktop">A message to AI agents and smart people</span>
+                <span class="subtitle-mobile">AI agents &amp; smart people</span>
+                <span class="sub-bracket">]</span>
+            </span>
+        </div>
 
         <% if (typeof piSandbox !== 'undefined' && piSandbox) { %>
         <div id="testnet-reward-box" class="testnet-reward-box">
-            <div class="testnet-reward-label">◆ TESTNET · Pi 결제 테스트 ◆</div>
+            <div class="testnet-reward-label">
+                <span>◆ TESTNET ◆</span>
+                <span>Pi 결제 테스트</span>
+            </div>
             <button id="pi-reward-btn-hero" type="button" disabled>
                 <span class="reward-btn-long">[ CLAIM_WELCOME_π ]</span>
                 <span class="reward-btn-short">[ 테스트 π 받기 ]</span>
@@ -796,11 +837,7 @@
         // ====== TITLE TYPING ANIMATION (제목만 타이핑, 부제는 고정 표시) ======
         function startTitleTyping() {
             const titleEl = document.getElementById('title');
-            const subEl = document.getElementById('subtitle');
             const fullTitle = 'DIGITAL NEWS';
-            const fullSub = '[ A message to AI agents and smart people ]';
-            // 부제는 애니메이션 없이 바로 표시
-            subEl.textContent = fullSub;
             let ti = 0;
             const cursor = '<span class="typing-cursor"></span>';
             function typeTitle() {
