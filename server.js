@@ -13,6 +13,17 @@ app.use(cors());
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Pi Developer Portal 도메인 검증 — Render env로 테스트넷/메인넷 각각 다른 키 가능
+app.get('/validation-key.txt', (req, res) => {
+    const key = (process.env.PI_VALIDATION_KEY || '').trim();
+    if (key) {
+        res.type('text/plain').send(key);
+        return;
+    }
+    res.sendFile(path.join(__dirname, 'public', 'validation-key.txt'));
+});
+
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const databaseId = process.env.NOTION_DATABASE_ID;
