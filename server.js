@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const { Client } = require('@notionhq/client');
 const path = require('path');
 const { NotionToMarkdown } = require('notion-to-md');
@@ -14,31 +13,6 @@ app.use(cors());
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-
-// Pi Developer Portal 도메인 검증 — static이 아닌 라우트만 사용 (키 1줄만 응답)
-function getPiValidationKey() {
-    const fromEnv = (process.env.PI_VALIDATION_KEY || '').trim();
-    if (fromEnv) return fromEnv;
-    const candidates = [
-        path.join(__dirname, 'pi-validation-key.txt'),
-        path.join(__dirname, 'public', 'validation-key.txt'),
-    ];
-    for (const filePath of candidates) {
-        if (!fs.existsSync(filePath)) continue;
-        const line = fs
-            .readFileSync(filePath, 'utf8')
-            .split(/\r?\n/)
-            .map((l) => l.trim())
-            .find(Boolean);
-        if (line) return line;
-    }
-    return '';
-}
-
-app.get('/validation-key.txt', (req, res) => {
-    res.type('text/plain').set('Cache-Control', 'no-store').send(getPiValidationKey());
-});
-
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const databaseId = process.env.NOTION_DATABASE_ID;
@@ -79,7 +53,7 @@ async function piApi(method, urlPath, body) {
     try { return JSON.parse(text); } catch { return {}; }
 }
 const SITE_DESCRIPTION =
-    'DIGITAL NEWS — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
+    'PROPOSITION T — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
     'Pi Network GCV, AI 생존 조건에 관한 회보 모음.';
 
 const STATS_PAGE_TITLE = '총방문자수';
@@ -100,19 +74,6 @@ function extractPages(response) {
         const isFree = yoGeum.includes('무료');
         const viewCount = props['조회수']?.number || 0;
         return { id: page.id, title, date, receiver, sender, isFree, viewCount };
-    });
-}
-
-function messageNumber(title) {
-    const m = (title || '').match(/#(\d+)/i);
-    return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
-}
-
-function sortMessagesAscending(messages) {
-    return messages.slice().sort((a, b) => {
-        const diff = messageNumber(a.title) - messageNumber(b.title);
-        if (diff !== 0) return diff;
-        return (a.date || '').localeCompare(b.date || '');
     });
 }
 
@@ -174,11 +135,10 @@ function buildDescription(htmlContent, fallback) {
 app.get('/', async (req, res) => {
     try {
         const { messages, statsPage } = await queryAll();
-        const sortedMessages = sortMessagesAscending(messages);
         const totalVisits = (statsPage?.viewCount || 0) + 1; // 이번 방문 포함해서 표시
         if (statsPage) incrementViewsAsync(statsPage.id);
         res.render('index', {
-            messages: sortedMessages,
+            messages,
             totalVisits,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
@@ -313,13 +273,9 @@ app.post('/pi/reward', async (req, res) => {
 
 // A2U 진단 (시드값 노출 없이 설정 여부 + 송금 건수만)
 app.get('/pi/reward/status', (req, res) => {
-    const seed = (PI_WALLET_SEED || '').trim();
-    const key = (PI_API_KEY || '').trim();
     res.json({
-        walletConfigured: !!seed,
-        walletSeedFormatOk: seed.startsWith('S'),
-        apiConfigured: !!key,
-        sandbox: PI_SANDBOX,
+        walletConfigured: !!PI_WALLET_SEED,
+        apiConfigured: !!PI_API_KEY,
         rewardsSent: rewardClaimed.size,
         amount: REWARD_AMOUNT,
     });
@@ -480,5 +436,5 @@ app.get('/sitemap.xml', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Digital News Server is running on port ${PORT}`);
+    console.log(`Proposition T Server is running on port ${PORT}`);
 });
