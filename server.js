@@ -103,6 +103,19 @@ function extractPages(response) {
     });
 }
 
+function messageNumber(title) {
+    const m = (title || '').match(/#(\d+)/i);
+    return m ? parseInt(m[1], 10) : Number.MAX_SAFE_INTEGER;
+}
+
+function sortMessagesAscending(messages) {
+    return messages.slice().sort((a, b) => {
+        const diff = messageNumber(a.title) - messageNumber(b.title);
+        if (diff !== 0) return diff;
+        return (a.date || '').localeCompare(b.date || '');
+    });
+}
+
 async function queryAllPages() {
     const database = await notion.databases.retrieve({ database_id: databaseId });
     const dataSourceId = database.data_sources[0].id;
@@ -161,10 +174,11 @@ function buildDescription(htmlContent, fallback) {
 app.get('/', async (req, res) => {
     try {
         const { messages, statsPage } = await queryAll();
+        const sortedMessages = sortMessagesAscending(messages);
         const totalVisits = (statsPage?.viewCount || 0) + 1; // 이번 방문 포함해서 표시
         if (statsPage) incrementViewsAsync(statsPage.id);
         res.render('index', {
-            messages,
+            messages: sortedMessages,
             totalVisits,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,

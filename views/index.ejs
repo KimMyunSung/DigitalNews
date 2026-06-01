@@ -514,7 +514,7 @@
                 var totalCount = messages.length;
                 var freeCount  = messages.filter(function(m){ return m.isFree; }).length;
                 var paidCount  = totalCount - freeCount;
-                var lastDate   = (messages[0] && messages[0].date) ? messages[0].date.replace(/-/g, '.') : '—';
+                var lastDate   = (messages[messages.length - 1] && messages[messages.length - 1].date) ? messages[messages.length - 1].date.replace(/-/g, '.') : '—';
             %>
             <table id="data-table">
                 <thead>
@@ -529,13 +529,13 @@
                     </tr>
                 </thead>
                 <tbody id="tbody">
-                    <% messages.forEach(function(item){
+                    <% messages.forEach(function(item, rowIndex){
                         var priceLabel = item.isFree ? '무료' : '유료';
                         var priceClass = item.isFree ? 'badge free' : 'badge paid';
                         var rawTitle = item.title || '';
                         // "Message #NNN:" 가 표준이지만 "Massage" 같은 오타도 허용 — #NNN: 패턴만 잡음
                         var idxMatch = rawTitle.match(/#(\d+)\s*:\s*(.+)$/);
-                        var idxStr   = idxMatch ? idxMatch[1] : '';
+                        var idxStr   = idxMatch ? String(parseInt(idxMatch[1], 10)) : String(rowIndex + 1);
                         var rest     = idxMatch ? idxMatch[2] : rawTitle;
                         var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
                         var titleMain = subMatch ? subMatch[1] : rest;
