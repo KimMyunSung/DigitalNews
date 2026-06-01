@@ -987,7 +987,37 @@
             const rewardBtn = document.getElementById('pi-reward-btn-hero') || document.getElementById('pi-reward-btn');
             const rewardMsg = document.getElementById('pi-reward-msg-hero') || document.getElementById('pi-reward-msg');
             let currentUid = null;
+            let currentAccessToken = null;
             let hasWalletAddress = false;
+
+            function userHasWalletScope(user) {
+                if (!user) return false;
+                if (user.wallet_address) return true;
+                var creds = user.credentials;
+                if (creds && Array.isArray(creds.scopes)) {
+                    return creds.scopes.indexOf('wallet_address') >= 0;
+                }
+                return false;
+            }
+
+            async function verifyWalletOnServer(accessToken) {
+                const r = await fetch('/pi/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ accessToken }),
+                });
+                return r.json();
+            }
+
+            async function onIncompletePaymentFound(payment) {
+                try {
+                    await fetch('/pi/incomplete', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ payment }),
+                    });
+                } catch (e) { /* ignore */ }
+            }
 
             function setRewardStatus(text, kind) {
                 if (!rewardMsg) return;
@@ -1009,10 +1039,10 @@
                 return detailMsg || errText;
             }
 
-            function applyAuthState(user) {
+            function applyAuthState(user, walletOk) {
                 if (!user || !user.uid) return false;
                 currentUid = user.uid;
-                hasWalletAddress = !!user.wallet_address;
+                hasWalletAddress = typeof walletOk === 'boolean' ? walletOk : userHasWalletScope(user);
                 if (user.username) usernameEl.textContent = '@' + user.username;
 
                 if (hasWalletAddress) {
@@ -1031,7 +1061,7 @@
                     signInHero.style.display = '';
                 }
                 if (rewardBtn) rewardBtn.disabled = true;
-                setRewardStatus('Pi 팝업에서 「지갑 주소(wallet_address)」를 반드시 허용해 주세요. 거부하면 π를 받을 수 없습니다.', 'err');
+                setRewardStatus('지갑 권한이 확인되지 않았습니다. Allow(허용)를 눌렀다면 잠시 후 초록 버튼을 눌러 보세요.', 'err');
                 return false;
             }
 
@@ -1048,18 +1078,24 @@
                 if (signInHero) signInHero.disabled = true;
                 setRewardStatus('Pi 로그인 중...', '');
                 try {
-                    var auth = await Pi.authenticate(['username', 'wallet_address'], () => {});
+                    var auth = await Pi.authenticate(['username', 'wallet_address'], onIncompletePaymentFound);
                     var user = auth && auth.user;
-                    if (user && !user.wallet_address) {
-                        setRewardStatus('지갑 권한 팝업을 확인해 주세요...', '');
-                        auth = await Pi.authenticate(['wallet_address'], () => {});
-                        user = auth && auth.user;
-                    }
+                    currentAccessToken = auth && auth.accessToken;
                     if (!user || !user.uid) {
                         setRewardStatus('로그인이 취소되었습니다.', 'err');
                         return false;
                     }
-                    return applyAuthState(user);
+                    var walletOk = userHasWalletScope(user);
+                    if (!walletOk && currentAccessToken) {
+                        setRewardStatus('권한 확인 중...', '');
+                        var verified = await verifyWalletOnServer(currentAccessToken);
+                        if (verified.ok) {
+                            walletOk = verified.hasWalletScope;
+                            if (verified.username) user = Object.assign({}, user, { username: verified.username });
+                            if (verified.uid) user = Object.assign({}, user, { uid: verified.uid });
+                        }
+                    }
+                    return applyAuthState(user, walletOk);
                 } catch (err) {
                     setRewardStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
                     return false;
@@ -1082,6 +1118,13 @@
                     try {
                         if (!hasWalletAddress || !currentUid) {
                             var ok = await runSignIn();
+                            if (!ok && currentAccessToken) {
+                                var v = await verifyWalletOnServer(currentAccessToken);
+                                if (v.ok && v.hasWalletScope) {
+                                    hasWalletAddress = true;
+                                    ok = true;
+                                }
+                            }
                             if (!ok) return;
                         }
                         rewardBtn.disabled = true;
@@ -1089,7 +1132,7 @@
                         const r = await fetch('/pi/reward', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ uid: currentUid }),
+                            body: JSON.stringify({ uid: currentUid, accessToken: currentAccessToken }),
                         });
                         const data = await r.json();
                         if (data.ok) {

@@ -212,7 +212,37 @@ app.get('/pi/status', (req, res) => {
     });
 });
 
-// ====== A2U (App-to-User) 송금 인프라 ======
+async function fetchPiMe(accessToken) {
+    const r = await fetch(`${PI_API_BASE}/me`, {
+        headers: { Authorization: 'Bearer ' + accessToken },
+    });
+    if (!r.ok) {
+        const text = await r.text();
+        throw new Error('Pi /me ' + r.status + ': ' + text.slice(0, 200));
+    }
+    return r.json();
+}
+
+// 클라이언트 accessToken으로 Pi /me 검증 (wallet_address scope 확인)
+app.post('/pi/verify', async (req, res) => {
+    try {
+        const { accessToken } = req.body || {};
+        if (!accessToken) return res.status(400).json({ ok: false, error: 'accessToken required' });
+        const me = await fetchPiMe(accessToken);
+        const scopes = (me.credentials && me.credentials.scopes) || [];
+        res.json({
+            ok: true,
+            uid: me.uid,
+            username: me.username || null,
+            scopes,
+            hasWalletScope: scopes.includes('wallet_address'),
+        });
+    } catch (err) {
+        console.error('[Pi verify]', err.message);
+        res.status(401).json({ ok: false, error: err.message });
+    }
+});
+
 // 시드는 Render 환경변수 PI_WALLET_SEED 에만 존재 (코드/깃에 절대 없음)
 const PiNetwork = require('pi-backend').default || require('pi-backend');
 const PI_WALLET_SEED = process.env.PI_WALLET_SEED;
@@ -231,11 +261,49 @@ function getPiNetwork() {
 const rewardClaimed = new Set();
 const REWARD_AMOUNT = Number(process.env.REWARD_AMOUNT || 0.001);
 
+// 미완료 A2U 결제 정리 (Pi.authenticate 콜백용)
+app.post('/pi/incomplete', async (req, res) => {
+    try {
+        const payment = req.body && req.body.payment;
+        if (!payment || !payment.identifier) {
+            return res.status(400).json({ ok: false, error: 'payment required' });
+        }
+        const pi = getPiNetwork();
+        const tx = payment.transaction && payment.transaction.txid;
+        if (tx) {
+            await pi.completePayment(payment.identifier, tx);
+        } else {
+            await pi.cancelPayment(payment.identifier);
+        }
+        res.json({ ok: true });
+    } catch (err) {
+        console.warn('[Pi incomplete]', err.message);
+        res.status(500).json({ ok: false, error: err.message });
+    }
+});
+
 // A2U 보상 송금: 로그인한 사용자가 1회 수령
 app.post('/pi/reward', async (req, res) => {
     try {
-        const { uid } = req.body || {};
+        const { uid, accessToken } = req.body || {};
         if (!uid) return res.status(400).json({ error: 'uid required' });
+        if (accessToken) {
+            try {
+                const me = await fetchPiMe(accessToken);
+                if (me.uid !== uid) {
+                    return res.status(403).json({ error: 'uid mismatch', piDetail: { error: 'uid_mismatch' } });
+                }
+                const scopes = (me.credentials && me.credentials.scopes) || [];
+                if (!scopes.includes('wallet_address')) {
+                    return res.status(403).json({
+                        error: 'wallet_address scope required',
+                        piDetail: { error: 'missing_scope', error_message: 'wallet_address scope not granted' },
+                    });
+                }
+            } catch (e) {
+                console.warn('[A2U] accessToken verify skipped:', e.message);
+            }
+        }
         if (rewardClaimed.has(uid)) {
             return res.json({ ok: true, already: true, message: '이미 수령하셨습니다' });
         }
