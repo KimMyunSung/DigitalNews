@@ -383,6 +383,10 @@
         .testnet-reward-steps li {
             padding: 4px 0;
         }
+        .testnet-reward-steps .sub-hint {
+            font-size: 0.72em;
+            color: var(--fg-dim);
+        }
         .nowrap { white-space: nowrap; display: inline-block; }
         .mobile-br { display: none; }
         .testnet-reward-desc strong {
@@ -679,7 +683,7 @@
                 <strong>눌러서 테스트 결제를<br class="mobile-br"> 부탁드립니다.</strong>
             </p>
             <ol class="testnet-reward-steps">
-                <li>① <span class="nowrap">[ PI_SIGN_IN ]</span> 로그인</li>
+                <li>① <span class="nowrap">[ PI_SIGN_IN ]</span> 로그인<br><span class="sub-hint">(지갑 주소 권한 허용)</span></li>
                 <li>② 버튼 클릭 →<br class="mobile-br"> 테스트 π 수령</li>
             </ol>
             <p id="pi-reward-msg-hero" class="testnet-reward-status"></p>
@@ -929,6 +933,20 @@
                 rewardMsg.classList.remove('ok', 'err');
                 if (kind) rewardMsg.classList.add(kind);
             }
+            const PI_AUTH_SCOPES = ['username', 'wallet_address'];
+
+            function formatRewardError(data) {
+                var errText = (data && data.error) || 'unknown';
+                var detail = (data && data.piDetail) || {};
+                var detailMsg = detail.error_message || detail.error || '';
+                if (detail.error === 'missing_scope' || String(detailMsg).indexOf('wallet_address') >= 0) {
+                    return '지갑 주소 권한이 필요합니다. [ PI_SIGN_IN ]을 다시 눌러 wallet_address를 허용해 주세요.';
+                }
+                if (String(errText).indexOf('401') >= 0 && detail.error !== 'missing_scope') {
+                    return 'API Key 인증 실패 — Render PI_API_KEY(Sandbox)를 확인하세요.';
+                }
+                return errText;
+            }
             function showAuthenticated(user) {
                 if (user && user.username) {
                     usernameEl.textContent = '@' + user.username;
@@ -944,8 +962,17 @@
                 }
             }
             async function signIn() {
-                const auth = await Pi.authenticate(['username'], () => {});
-                showAuthenticated(auth && auth.user);
+                const auth = await Pi.authenticate(PI_AUTH_SCOPES, () => {});
+                const user = auth && auth.user;
+                if (user && !user.wallet_address) {
+                    currentUid = user.uid || null;
+                    if (user.username) usernameEl.textContent = '@' + user.username;
+                    btnEl.style.display = '';
+                    if (rewardBtn) rewardBtn.disabled = true;
+                    setRewardStatus('지갑 연결 권한(wallet_address)을 허용해 주세요. [ PI_SIGN_IN ] 다시 누르기', 'err');
+                    return;
+                }
+                showAuthenticated(user);
             }
             if (rewardBtn) {
                 rewardBtn.addEventListener('click', async () => {
@@ -970,12 +997,7 @@
                             }
                             rewardBtn.innerHTML = '<span class="reward-btn-short" style="display:block">[ 완료 ✓ ]</span>';
                         } else {
-                            var errText = data.error || 'unknown';
-                            if (String(errText).indexOf('401') >= 0) {
-                                errText = 'API Key 인증 실패(401) — Render의 PI_API_KEY가 Sandbox 키인지 확인하세요';
-                            }
-                            if (data.piDetail) errText += ' (' + JSON.stringify(data.piDetail) + ')';
-                            setRewardStatus('실패: ' + errText, 'err');
+                            setRewardStatus('실패: ' + formatRewardError(data), 'err');
                             rewardBtn.disabled = false;
                         }
                     } catch (e) {
