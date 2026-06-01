@@ -1040,13 +1040,6 @@
                     }
                 });
             }
-            async function initAndAuth() {
-                if (typeof Pi === 'undefined') return;
-                try {
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
-                    await signIn();
-                } catch (err) {}
-            }
             btnEl.addEventListener('click', async () => {
                 try {
                     if (typeof Pi === 'undefined') { alert('Pi 브라우저에서 열어주세요.'); return; }
@@ -1054,8 +1047,6 @@
                     await signIn();
                 } catch (err) { alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err)); }
             });
-            if (document.readyState === 'complete') initAndAuth();
-            else window.addEventListener('load', initAndAuth);
         })();
     </script>
 </body>
