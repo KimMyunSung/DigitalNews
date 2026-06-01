@@ -204,7 +204,8 @@
             padding: 7px 13px;
             cursor: pointer;
             font-family: inherit; font-size: inherit;
-            letter-spacing: 1.5px; font-weight: 600;
+            letter-spacing: 1px; font-weight: 600;
+            white-space: nowrap;
             box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
             transition: all 0.3s ease;
         }
@@ -271,6 +272,10 @@
             color: var(--accent);
             letter-spacing: 2.5px;
             text-shadow: 0 0 6px rgba(255, 140, 0, 0.55);
+            word-break: keep-all;
+            overflow-wrap: normal;
+            line-height: 1.55;
+            padding: 0 8px;
         }
         .badge-demo {
             display: block;
@@ -294,21 +299,24 @@
         }
         .testnet-reward-label {
             font-size: 0.72rem;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             color: var(--accent-soft);
             margin-bottom: 18px;
             font-weight: 600;
+            white-space: nowrap;
         }
         #pi-reward-btn-hero {
             display: block;
             width: 100%;
             max-width: 420px;
             margin: 0 auto 20px;
-            padding: 22px 20px;
+            padding: 20px 14px;
             font-family: inherit;
-            font-size: 1.35rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            letter-spacing: 3px;
+            letter-spacing: 0.5px;
+            line-height: 1.35;
+            white-space: normal;
             color: #001a00;
             background: linear-gradient(135deg, #39ff14 0%, #00cc33 100%);
             border: 2px solid var(--fg);
@@ -317,6 +325,11 @@
             box-shadow: 0 0 24px rgba(57, 255, 20, 0.55);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        #pi-reward-btn-hero .reward-btn-long,
+        #pi-reward-btn-hero .reward-btn-short {
+            display: block;
+        }
+        #pi-reward-btn-hero .reward-btn-short { display: none; }
         #pi-reward-btn-hero:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 0 36px rgba(57, 255, 20, 0.85);
@@ -331,9 +344,29 @@
             font-size: 0.88rem;
             line-height: 1.75;
             color: var(--text);
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            letter-spacing: 0;
+            margin-bottom: 12px;
+            word-break: keep-all;
+            overflow-wrap: normal;
+            text-align: center;
         }
+        .testnet-reward-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto 4px;
+            max-width: 320px;
+            text-align: center;
+            font-size: 0.84rem;
+            line-height: 1.85;
+            color: var(--text);
+            word-break: keep-all;
+            overflow-wrap: normal;
+        }
+        .testnet-reward-steps li {
+            padding: 4px 0;
+        }
+        .nowrap { white-space: nowrap; display: inline-block; }
+        .mobile-br { display: none; }
         .testnet-reward-desc strong {
             color: var(--accent-soft);
             font-weight: 600;
@@ -342,8 +375,13 @@
             min-height: 1.4em;
             font-size: 0.85rem;
             color: var(--fg);
-            margin-top: 10px;
-            letter-spacing: 1px;
+            margin-top: 12px;
+            letter-spacing: 0;
+            line-height: 1.65;
+            word-break: keep-all;
+            overflow-wrap: normal;
+            text-align: center;
+            padding: 0 6px;
         }
         .testnet-reward-status.ok { color: #39ff14; }
         .testnet-reward-status.err { color: #ff6b6b; }
@@ -525,10 +563,23 @@
         }
 
         @media (max-width: 768px) {
-            .container { padding: 32px 22px 28px; margin: 70px auto 30px; }
-            h1 { font-size: 1.85rem; letter-spacing: 5px; }
-            .subtitle { font-size: 0.82rem; }
-            #search-input { width: 140px; }
+            .container { padding: 32px 14px 28px; margin: 68px auto 24px; width: 96%; }
+            h1 { font-size: 1.65rem; letter-spacing: 4px; line-height: 1.25; }
+            .subtitle { font-size: 0.72rem; letter-spacing: 0.5px; line-height: 1.65; padding: 0 4px; }
+            #pi-auth-bar { top: 8px; right: 8px; left: 8px; justify-content: flex-end; font-size: 0.65rem; gap: 6px; max-width: none; }
+            #pi-signin-btn { padding: 6px 8px; letter-spacing: 0; font-size: 0.62rem; flex-shrink: 0; }
+            #pi-username { max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
+            #toolbar { top: 8px; left: 8px; right: auto; max-width: calc(100% - 120px); }
+            .testnet-reward-box { margin: 18px auto 28px; padding: 20px 12px 18px; width: 100%; }
+            .testnet-reward-label { font-size: 0.62rem; letter-spacing: 0.5px; white-space: normal; line-height: 1.55; }
+            #pi-reward-btn-hero { padding: 16px 10px; font-size: 1rem; max-width: 100%; }
+            #pi-reward-btn-hero .reward-btn-long { display: none; }
+            #pi-reward-btn-hero .reward-btn-short { display: block; font-size: 1.05rem; letter-spacing: 0; }
+            .testnet-reward-desc { font-size: 0.82rem; line-height: 1.7; }
+            .testnet-reward-steps { font-size: 0.8rem; max-width: 100%; line-height: 1.75; }
+            .testnet-reward-status { font-size: 0.78rem; line-height: 1.6; }
+            .mobile-br { display: inline; }
+            #search-input { width: 120px; font-size: 0.65rem; }
             #toolbar { flex-wrap: wrap; max-width: calc(100% - 130px); }
             thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; border: none; }
@@ -579,12 +630,17 @@
         <% if (typeof piSandbox !== 'undefined' && piSandbox) { %>
         <div id="testnet-reward-box" class="testnet-reward-box">
             <div class="testnet-reward-label">◆ TESTNET · Pi 결제 테스트 ◆</div>
-            <button id="pi-reward-btn-hero" type="button" disabled>[ CLAIM_WELCOME_π ]</button>
+            <button id="pi-reward-btn-hero" type="button" disabled>
+                <span class="reward-btn-long">[ CLAIM_WELCOME_π ]</span>
+                <span class="reward-btn-short">[ 테스트 π 받기 ]</span>
+            </button>
             <p class="testnet-reward-desc">
-                <strong>눌러서 테스트 결제를 부탁드립니다.</strong><br>
-                ① 우측 상단 <strong>[ PI_SIGN_IN ]</strong> 로그인<br>
-                ② 위 버튼을 누르면 테스트 π가 지갑으로 전송됩니다
+                <strong>눌러서 테스트 결제를<br class="mobile-br"> 부탁드립니다.</strong>
             </p>
+            <ol class="testnet-reward-steps">
+                <li>① <span class="nowrap">[ PI_SIGN_IN ]</span> 로그인</li>
+                <li>② 버튼 클릭 →<br class="mobile-br"> 테스트 π 수령</li>
+            </ol>
             <p id="pi-reward-msg-hero" class="testnet-reward-status"></p>
         </div>
         <% } %>
@@ -847,7 +903,7 @@
                         rewardBtn.disabled = false;
                         rewardBtn.style.display = '';
                     }
-                    if (PI_SANDBOX) setRewardStatus('로그인 완료 — 버튼을 눌러 테스트 결제를 진행해 주세요.', 'ok');
+                    if (PI_SANDBOX) setRewardStatus('로그인 완료 — 아래 버튼을 눌러주세요.', 'ok');
                 }
             }
             async function signIn() {
@@ -875,9 +931,14 @@
                             } else {
                                 setRewardStatus('테스트 결제 완료! 지갑을 확인해 주세요 ✓', 'ok');
                             }
-                            rewardBtn.textContent = '[ 완료 ✓ ]';
+                            rewardBtn.innerHTML = '<span class="reward-btn-short" style="display:block">[ 완료 ✓ ]</span>';
                         } else {
-                            setRewardStatus('실패: ' + (data.error || 'unknown'), 'err');
+                            var errText = data.error || 'unknown';
+                            if (String(errText).indexOf('401') >= 0) {
+                                errText = 'API Key 인증 실패(401) — Render의 PI_API_KEY가 Sandbox 키인지 확인하세요';
+                            }
+                            if (data.piDetail) errText += ' (' + JSON.stringify(data.piDetail) + ')';
+                            setRewardStatus('실패: ' + errText, 'err');
                             rewardBtn.disabled = false;
                         }
                     } catch (e) {
