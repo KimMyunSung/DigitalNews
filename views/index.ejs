@@ -281,6 +281,73 @@
             color: var(--fg-dim);
         }
 
+        /* === Testnet reward CTA (중앙) === */
+        .testnet-reward-box {
+            margin: 28px auto 40px;
+            max-width: 560px;
+            padding: 32px 28px 28px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(255, 140, 0, 0.12) 0%, rgba(0, 20, 0, 0.85) 100%);
+            box-shadow: 0 0 28px rgba(255, 140, 0, 0.35), inset 0 0 40px rgba(255, 140, 0, 0.06);
+        }
+        .testnet-reward-label {
+            font-size: 0.72rem;
+            letter-spacing: 4px;
+            color: var(--accent-soft);
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+        #pi-reward-btn-hero {
+            display: block;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto 20px;
+            padding: 22px 20px;
+            font-family: inherit;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #001a00;
+            background: linear-gradient(135deg, #39ff14 0%, #00cc33 100%);
+            border: 2px solid var(--fg);
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 24px rgba(57, 255, 20, 0.55);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        #pi-reward-btn-hero:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 0 36px rgba(57, 255, 20, 0.85);
+        }
+        #pi-reward-btn-hero:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            background: rgba(0, 255, 65, 0.25);
+            color: var(--fg-dim);
+        }
+        .testnet-reward-desc {
+            font-size: 0.88rem;
+            line-height: 1.75;
+            color: var(--text);
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .testnet-reward-desc strong {
+            color: var(--accent-soft);
+            font-weight: 600;
+        }
+        .testnet-reward-status {
+            min-height: 1.4em;
+            font-size: 0.85rem;
+            color: var(--fg);
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+        .testnet-reward-status.ok { color: #39ff14; }
+        .testnet-reward-status.err { color: #ff6b6b; }
+
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th {
             background-color: rgba(0, 255, 65, 0.1);
@@ -496,8 +563,10 @@
     <div id="pi-auth-bar">
         <button id="pi-signin-btn" type="button">[ PI_SIGN_IN ]</button>
         <span id="pi-username"></span>
+        <% if (typeof piSandbox === 'undefined' || !piSandbox) { %>
         <button id="pi-reward-btn" type="button" style="display:none;">[ CLAIM_WELCOME_π ]</button>
         <span id="pi-reward-msg"></span>
+        <% } %>
     </div>
 
     <div class="container">
@@ -506,6 +575,19 @@
 
         <h1 id="title"></h1>
         <div class="subtitle" id="subtitle"></div>
+
+        <% if (typeof piSandbox !== 'undefined' && piSandbox) { %>
+        <div id="testnet-reward-box" class="testnet-reward-box">
+            <div class="testnet-reward-label">◆ TESTNET · Pi 결제 테스트 ◆</div>
+            <button id="pi-reward-btn-hero" type="button" disabled>[ CLAIM_WELCOME_π ]</button>
+            <p class="testnet-reward-desc">
+                <strong>눌러서 테스트 결제를 부탁드립니다.</strong><br>
+                ① 우측 상단 <strong>[ PI_SIGN_IN ]</strong> 로그인<br>
+                ② 위 버튼을 누르면 테스트 π가 지갑으로 전송됩니다
+            </p>
+            <p id="pi-reward-msg-hero" class="testnet-reward-status"></p>
+        </div>
+        <% } %>
 
         <% if (!messages || messages.length === 0) { %>
             <div class="empty">No messages available.</div>
@@ -745,9 +827,15 @@
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
-            const rewardBtn = document.getElementById('pi-reward-btn');
-            const rewardMsg = document.getElementById('pi-reward-msg');
+            const rewardBtn = document.getElementById('pi-reward-btn-hero') || document.getElementById('pi-reward-btn');
+            const rewardMsg = document.getElementById('pi-reward-msg-hero') || document.getElementById('pi-reward-msg');
             let currentUid = null;
+            function setRewardStatus(text, kind) {
+                if (!rewardMsg) return;
+                rewardMsg.textContent = text;
+                rewardMsg.classList.remove('ok', 'err');
+                if (kind) rewardMsg.classList.add(kind);
+            }
             function showAuthenticated(user) {
                 if (user && user.username) {
                     usernameEl.textContent = '@' + user.username;
@@ -755,7 +843,11 @@
                 }
                 if (user && user.uid) {
                     currentUid = user.uid;
-                    if (rewardBtn) rewardBtn.style.display = '';
+                    if (rewardBtn) {
+                        rewardBtn.disabled = false;
+                        rewardBtn.style.display = '';
+                    }
+                    if (PI_SANDBOX) setRewardStatus('로그인 완료 — 버튼을 눌러 테스트 결제를 진행해 주세요.', 'ok');
                 }
             }
             async function signIn() {
@@ -764,9 +856,12 @@
             }
             if (rewardBtn) {
                 rewardBtn.addEventListener('click', async () => {
-                    if (!currentUid) { alert('먼저 로그인해주세요.'); return; }
+                    if (!currentUid) {
+                        alert('먼저 우측 상단 [ PI_SIGN_IN ]으로 로그인해 주세요.');
+                        return;
+                    }
                     rewardBtn.disabled = true;
-                    if (rewardMsg) rewardMsg.textContent = ' 송금 중...';
+                    setRewardStatus('테스트 π 송금 중...', '');
                     try {
                         const r = await fetch('/pi/reward', {
                             method: 'POST',
@@ -775,14 +870,18 @@
                         });
                         const data = await r.json();
                         if (data.ok) {
-                            if (rewardMsg) rewardMsg.textContent = data.already ? ' 이미 수령함 ✓' : ' 수령 완료 ✓';
-                            rewardBtn.style.display = 'none';
+                            if (data.already) {
+                                setRewardStatus('이미 테스트 결제를 완료하셨습니다 ✓', 'ok');
+                            } else {
+                                setRewardStatus('테스트 결제 완료! 지갑을 확인해 주세요 ✓', 'ok');
+                            }
+                            rewardBtn.textContent = '[ 완료 ✓ ]';
                         } else {
-                            if (rewardMsg) rewardMsg.textContent = ' 실패: ' + (data.error || 'unknown');
+                            setRewardStatus('실패: ' + (data.error || 'unknown'), 'err');
                             rewardBtn.disabled = false;
                         }
                     } catch (e) {
-                        if (rewardMsg) rewardMsg.textContent = ' 오류: ' + (e && e.message ? e.message : e);
+                        setRewardStatus('오류: ' + (e && e.message ? e.message : e), 'err');
                         rewardBtn.disabled = false;
                     }
                 });
