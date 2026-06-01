@@ -351,6 +351,27 @@
             display: block;
         }
         #pi-reward-btn-hero .reward-btn-short { display: none; }
+        #pi-signin-hero {
+            display: block;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto 14px;
+            padding: 14px 12px;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            color: var(--accent-soft);
+            background: rgba(255, 140, 0, 0.1);
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 16px rgba(255, 140, 0, 0.25);
+        }
+        #pi-signin-hero:hover:not(:disabled) {
+            background: rgba(255, 140, 0, 0.22);
+        }
+        #pi-signin-hero:disabled { opacity: 0.5; cursor: wait; }
         #pi-reward-btn-hero:hover:not(:disabled) {
             transform: scale(1.02);
             box-shadow: 0 0 36px rgba(57, 255, 20, 0.85);
@@ -712,6 +733,7 @@
                 <span>◆ TESTNET ◆</span>
                 <span>Pi 결제 테스트</span>
             </div>
+            <button id="pi-signin-hero" type="button">[ ① 로그인 · 지갑 권한 허용 ]</button>
             <button id="pi-reward-btn-hero" type="button" disabled>
                 <span class="reward-btn-long">[ CLAIM_WELCOME_π ]</span>
                 <span class="reward-btn-short">[ 테스트 π 받기 ]</span>
@@ -720,8 +742,8 @@
                 <strong>눌러서 테스트 결제를<br class="mobile-br"> 부탁드립니다.</strong>
             </p>
             <ol class="testnet-reward-steps">
-                <li>① <span class="nowrap">[ PI_SIGN_IN ]</span> 로그인<br><span class="sub-hint">(지갑 주소 권한 허용)</span></li>
-                <li>② 버튼 클릭 →<br class="mobile-br"> 테스트 π 수령</li>
+                <li>① 주황 버튼 → Pi 로그인<br><span class="sub-hint">팝업에서 <strong>지갑 주소</strong> 허용 필수</span></li>
+                <li>② 초록 버튼 →<br class="mobile-br"> 테스트 π 수령</li>
             </ol>
             <p id="pi-reward-msg-hero" class="testnet-reward-status"></p>
         </div>
@@ -961,62 +983,109 @@
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
+            const signInHero = document.getElementById('pi-signin-hero');
             const rewardBtn = document.getElementById('pi-reward-btn-hero') || document.getElementById('pi-reward-btn');
             const rewardMsg = document.getElementById('pi-reward-msg-hero') || document.getElementById('pi-reward-msg');
             let currentUid = null;
+            let hasWalletAddress = false;
+
             function setRewardStatus(text, kind) {
                 if (!rewardMsg) return;
                 rewardMsg.textContent = text;
                 rewardMsg.classList.remove('ok', 'err');
                 if (kind) rewardMsg.classList.add(kind);
             }
-            const PI_AUTH_SCOPES = ['username', 'wallet_address'];
 
             function formatRewardError(data) {
                 var errText = (data && data.error) || 'unknown';
                 var detail = (data && data.piDetail) || {};
                 var detailMsg = (detail && detail.error_message) || '';
-                if (String(detailMsg).indexOf('wallet_address') >= 0) {
-                    return '지갑 주소 권한이 필요합니다. [ PI_SIGN_IN ]을 눌러 wallet_address를 허용해 주세요.';
+                if (detail.error === 'missing_scope' || String(detailMsg).indexOf('wallet_address') >= 0) {
+                    return '지갑 주소 권한이 없습니다. 주황 버튼으로 다시 로그인하고 지갑 주소를 허용해 주세요.';
+                }
+                if (String(errText).indexOf('401') >= 0) {
+                    return 'API Key 인증 실패 — Render PI_API_KEY(Sandbox)를 확인하세요.';
                 }
                 return detailMsg || errText;
             }
-            function showAuthenticated(user) {
-                if (user && user.username) {
-                    usernameEl.textContent = '@' + user.username;
+
+            function applyAuthState(user) {
+                if (!user || !user.uid) return false;
+                currentUid = user.uid;
+                hasWalletAddress = !!user.wallet_address;
+                if (user.username) usernameEl.textContent = '@' + user.username;
+
+                if (hasWalletAddress) {
                     btnEl.style.display = 'none';
+                    if (signInHero) signInHero.style.display = 'none';
+                    if (rewardBtn) rewardBtn.disabled = false;
+                    setRewardStatus('로그인 완료 ✓ 아래 초록 버튼을 눌러 테스트 π를 받으세요.', 'ok');
+                    return true;
                 }
-                if (user && user.uid) {
-                    currentUid = user.uid;
-                    if (rewardBtn) {
-                        rewardBtn.disabled = false;
-                        rewardBtn.style.display = '';
+
+                var retryLabel = '[ ① 지갑 권한 재허용 ]';
+                btnEl.textContent = retryLabel;
+                btnEl.style.display = '';
+                if (signInHero) {
+                    signInHero.textContent = retryLabel;
+                    signInHero.style.display = '';
+                }
+                if (rewardBtn) rewardBtn.disabled = true;
+                setRewardStatus('Pi 팝업에서 「지갑 주소(wallet_address)」를 반드시 허용해 주세요. 거부하면 π를 받을 수 없습니다.', 'err');
+                return false;
+            }
+
+            async function ensurePiInit() {
+                if (typeof Pi === 'undefined') {
+                    throw new Error('Pi 브라우저에서 열어주세요.');
+                }
+                await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
+            }
+
+            async function runSignIn() {
+                await ensurePiInit();
+                btnEl.disabled = true;
+                if (signInHero) signInHero.disabled = true;
+                setRewardStatus('Pi 로그인 중...', '');
+                try {
+                    var auth = await Pi.authenticate(['username', 'wallet_address'], () => {});
+                    var user = auth && auth.user;
+                    if (user && !user.wallet_address) {
+                        setRewardStatus('지갑 권한 팝업을 확인해 주세요...', '');
+                        auth = await Pi.authenticate(['wallet_address'], () => {});
+                        user = auth && auth.user;
                     }
-                    if (PI_SANDBOX) setRewardStatus('로그인 완료 — 아래 버튼을 눌러주세요.', 'ok');
+                    if (!user || !user.uid) {
+                        setRewardStatus('로그인이 취소되었습니다.', 'err');
+                        return false;
+                    }
+                    return applyAuthState(user);
+                } catch (err) {
+                    setRewardStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
+                    return false;
+                } finally {
+                    btnEl.disabled = false;
+                    if (signInHero) signInHero.disabled = false;
                 }
             }
-            async function signIn() {
-                const auth = await Pi.authenticate(PI_AUTH_SCOPES, () => {});
-                const user = auth && auth.user;
-                if (user && !user.wallet_address) {
-                    if (user.username) usernameEl.textContent = '@' + user.username;
-                    btnEl.textContent = '[ 지갑 권한 재허용 ]';
-                    btnEl.style.display = '';
-                    if (rewardBtn) rewardBtn.disabled = true;
-                    setRewardStatus('Pi 브라우저에서 지갑(wallet_address) 권한을 허용해야 π를 받을 수 있습니다. 위 버튼을 다시 눌러주세요.', 'err');
-                    return;
+
+            async function handleSignInClick() {
+                try {
+                    await runSignIn();
+                } catch (err) {
+                    alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
                 }
-                showAuthenticated(user);
             }
+
             if (rewardBtn) {
                 rewardBtn.addEventListener('click', async () => {
-                    if (!currentUid) {
-                        alert('먼저 우측 상단 [ PI_SIGN_IN ]으로 로그인해 주세요.');
-                        return;
-                    }
-                    rewardBtn.disabled = true;
-                    setRewardStatus('테스트 π 송금 중...', '');
                     try {
+                        if (!hasWalletAddress || !currentUid) {
+                            var ok = await runSignIn();
+                            if (!ok) return;
+                        }
+                        rewardBtn.disabled = true;
+                        setRewardStatus('테스트 π 송금 중...', '');
                         const r = await fetch('/pi/reward', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1027,10 +1096,14 @@
                             if (data.already) {
                                 setRewardStatus('이미 테스트 결제를 완료하셨습니다 ✓', 'ok');
                             } else {
-                                setRewardStatus('테스트 결제 완료! 지갑을 확인해 주세요 ✓', 'ok');
+                                setRewardStatus('테스트 결제 완료! Pi 지갑을 확인해 주세요 ✓', 'ok');
                             }
                             rewardBtn.innerHTML = '<span class="reward-btn-short" style="display:block">[ 완료 ✓ ]</span>';
                         } else {
+                            if (String((data.piDetail && data.piDetail.error_message) || '').indexOf('wallet_address') >= 0) {
+                                hasWalletAddress = false;
+                                applyAuthState({ uid: currentUid, username: usernameEl.textContent.replace('@', '') });
+                            }
                             setRewardStatus('실패: ' + formatRewardError(data), 'err');
                             rewardBtn.disabled = false;
                         }
@@ -1040,13 +1113,9 @@
                     }
                 });
             }
-            btnEl.addEventListener('click', async () => {
-                try {
-                    if (typeof Pi === 'undefined') { alert('Pi 브라우저에서 열어주세요.'); return; }
-                    await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
-                    await signIn();
-                } catch (err) { alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err)); }
-            });
+
+            btnEl.addEventListener('click', handleSignInClick);
+            if (signInHero) signInHero.addEventListener('click', handleSignInClick);
         })();
     </script>
 </body>

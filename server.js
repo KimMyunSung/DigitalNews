@@ -273,9 +273,12 @@ app.post('/pi/reward', async (req, res) => {
 
 // A2U 진단 (시드값 노출 없이 설정 여부 + 송금 건수만)
 app.get('/pi/reward/status', (req, res) => {
+    const seed = PI_WALLET_SEED || '';
     res.json({
         walletConfigured: !!PI_WALLET_SEED,
+        walletSeedFormatOk: seed.startsWith('S'),
         apiConfigured: !!PI_API_KEY,
+        sandbox: PI_SANDBOX,
         rewardsSent: rewardClaimed.size,
         amount: REWARD_AMOUNT,
     });
