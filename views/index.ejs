@@ -970,15 +970,16 @@
                 rewardMsg.classList.remove('ok', 'err');
                 if (kind) rewardMsg.classList.add(kind);
             }
-            const PI_AUTH_SCOPES = ['username'];
+            const PI_AUTH_SCOPES = ['username', 'wallet_address'];
 
             function formatRewardError(data) {
                 var errText = (data && data.error) || 'unknown';
                 var detail = (data && data.piDetail) || {};
-                if (String(errText).indexOf('401') >= 0) {
-                    return 'API Key 인증 실패 — Render PI_API_KEY(Sandbox)를 확인하세요.';
+                var detailMsg = (detail && detail.error_message) || '';
+                if (String(detailMsg).indexOf('wallet_address') >= 0) {
+                    return '지갑 주소 권한이 필요합니다. [ PI_SIGN_IN ]을 눌러 wallet_address를 허용해 주세요.';
                 }
-                return (detail && detail.error_message) || errText;
+                return detailMsg || errText;
             }
             function showAuthenticated(user) {
                 if (user && user.username) {
@@ -997,6 +998,14 @@
             async function signIn() {
                 const auth = await Pi.authenticate(PI_AUTH_SCOPES, () => {});
                 const user = auth && auth.user;
+                if (user && !user.wallet_address) {
+                    if (user.username) usernameEl.textContent = '@' + user.username;
+                    btnEl.textContent = '[ 지갑 권한 재허용 ]';
+                    btnEl.style.display = '';
+                    if (rewardBtn) rewardBtn.disabled = true;
+                    setRewardStatus('Pi 브라우저에서 지갑(wallet_address) 권한을 허용해야 π를 받을 수 있습니다. 위 버튼을 다시 눌러주세요.', 'err');
+                    return;
+                }
                 showAuthenticated(user);
             }
             if (rewardBtn) {
