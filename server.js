@@ -98,6 +98,22 @@ function extractPages(response) {
     });
 }
 
+function messageIndexFromTitle(title) {
+    const m = (title || '').match(/#(\d+)\s*:/);
+    if (m) return parseInt(m[1], 10);
+    const m2 = (title || '').match(/#(\d+)/);
+    if (m2) return parseInt(m2[1], 10);
+    return 999999;
+}
+
+function sortMessagesByNumberAsc(messages) {
+    return messages.slice().sort((a, b) => {
+        const diff = messageIndexFromTitle(a.title) - messageIndexFromTitle(b.title);
+        if (diff !== 0) return diff;
+        return (a.title || '').localeCompare(b.title || '');
+    });
+}
+
 async function queryAllPages() {
     const database = await notion.databases.retrieve({ database_id: databaseId });
     const dataSourceId = database.data_sources[0].id;
@@ -112,7 +128,7 @@ async function queryAll() {
     // 회보 메시지와 통계 페이지("총방문자수")를 분리해서 반환
     const all = await queryAllPages();
     return {
-        messages: all.filter((p) => p.title !== STATS_PAGE_TITLE),
+        messages: sortMessagesByNumberAsc(all.filter((p) => p.title !== STATS_PAGE_TITLE)),
         statsPage: all.find((p) => p.title === STATS_PAGE_TITLE) || null,
     };
 }
