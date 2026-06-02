@@ -326,64 +326,6 @@
             line-height: 1.45;
         }
         .testnet-reward-label span { white-space: nowrap; }
-        .testnet-reward-counter {
-            margin: 0 auto 20px;
-            max-width: 420px;
-            padding: 16px 14px 14px;
-            border: 1px solid rgba(57, 255, 20, 0.35);
-            border-radius: 8px;
-            background: rgba(0, 30, 0, 0.55);
-        }
-        .testnet-reward-counter.goal-met {
-            border-color: #39ff14;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.25);
-        }
-        .counter-display {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 4px;
-            font-family: 'Fira Code', monospace;
-            line-height: 1;
-        }
-        #reward-count-num {
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: #39ff14;
-            text-shadow: 0 0 12px rgba(57, 255, 20, 0.65);
-        }
-        .counter-slash, #reward-count-goal {
-            font-size: 1.35rem;
-            color: var(--fg-dim);
-            font-weight: 600;
-        }
-        .counter-label {
-            margin: 8px 0 12px;
-            font-size: 0.72rem;
-            letter-spacing: 1px;
-            color: var(--accent-soft);
-        }
-        .counter-bar {
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        #reward-count-fill {
-            height: 100%;
-            width: 0;
-            border-radius: 3px;
-            background: linear-gradient(90deg, #39ff14, #00cc33);
-            transition: width 0.45s ease;
-        }
-        .counter-hint {
-            font-size: 0.78rem;
-            line-height: 1.55;
-            color: var(--fg-dim);
-            margin: 0;
-        }
-        .counter-hint.done { color: #39ff14; font-weight: 600; }
         #pi-reward-btn-hero {
             display: block;
             width: 100%;
@@ -718,9 +660,6 @@
             #search-input { width: 100%; max-width: 110px; font-size: 0.6rem; padding: 5px 7px; min-height: 32px; }
             .tool-btn { padding: 5px 7px; font-size: 0.6rem; min-height: 32px; letter-spacing: 0; }
             .testnet-reward-box { margin: 16px auto 24px; padding: 18px 10px 16px; width: 100%; }
-            .testnet-reward-counter { margin-bottom: 16px; padding: 14px 10px 12px; }
-            #reward-count-num { font-size: 2rem; }
-            .counter-slash, #reward-count-goal { font-size: 1.1rem; }
             .testnet-reward-label { font-size: 0.68rem; letter-spacing: 0.5px; margin-bottom: 14px; }
             #pi-reward-btn-hero { padding: 15px 10px; font-size: 1rem; max-width: 100%; }
             #pi-reward-btn-hero .reward-btn-long { display: none; }
@@ -807,23 +746,6 @@
             <div class="testnet-reward-label">
                 <span>◆ TESTNET ◆</span>
                 <span>Pi 결제 테스트</span>
-            </div>
-            <div id="testnet-reward-counter" class="testnet-reward-counter<%= (typeof goalMet !== 'undefined' && goalMet) ? ' goal-met' : '' %>">
-                <div class="counter-display">
-                    <span id="reward-count-num"><%= typeof rewardsSent !== 'undefined' ? rewardsSent : 0 %></span>
-                    <span class="counter-slash">/</span>
-                    <span id="reward-count-goal"><%= typeof rewardGoal !== 'undefined' ? rewardGoal : 10 %></span>
-                </div>
-                <p class="counter-label">테스트 π 수령 완료 · Pioneers</p>
-                <div class="counter-bar" aria-hidden="true">
-                    <div id="reward-count-fill" style="width: <%= Math.min(100, ((typeof rewardsSent !== 'undefined' ? rewardsSent : 0) / (typeof rewardGoal !== 'undefined' ? rewardGoal : 10)) * 100) %>%"></div>
-                </div>
-                <p id="reward-counter-hint" class="counter-hint<%= (typeof goalMet !== 'undefined' && goalMet) ? ' done' : '' %>"><%
-                    var _sent = typeof rewardsSent !== 'undefined' ? rewardsSent : 0;
-                    var _goal = typeof rewardGoal !== 'undefined' ? rewardGoal : 10;
-                    if (_sent >= _goal) { %>목표 달성 ✓ Mainnet 지갑 신청 가능<% }
-                    else { %>서로 다른 <%= _goal - _sent %>명 더 필요합니다<% }
-                %></p>
             </div>
             <button id="pi-signin-hero" type="button">[ ① 로그인 · 지갑 권한 허용 ]</button>
             <button id="pi-reward-btn-hero" type="button" disabled>
@@ -1086,44 +1008,6 @@
             let currentUid = null;
             let currentAccessToken = null;
             let hasWalletAddress = false;
-            const counterEl = document.getElementById('testnet-reward-counter');
-            const countNumEl = document.getElementById('reward-count-num');
-            const countGoalEl = document.getElementById('reward-count-goal');
-            const countFillEl = document.getElementById('reward-count-fill');
-            const counterHintEl = document.getElementById('reward-counter-hint');
-
-            function updateRewardCounter(stats) {
-                if (!stats || !countNumEl) return;
-                var sent = stats.rewardsSent || 0;
-                var goal = stats.rewardGoal || 10;
-                var pct = Math.min(100, (sent / goal) * 100);
-                countNumEl.textContent = String(sent);
-                if (countGoalEl) countGoalEl.textContent = String(goal);
-                if (countFillEl) countFillEl.style.width = pct + '%';
-                if (counterHintEl) {
-                    if (stats.goalMet) {
-                        counterHintEl.textContent = '목표 달성 ✓ Mainnet 지갑 신청 가능';
-                        counterHintEl.classList.add('done');
-                    } else {
-                        counterHintEl.textContent = '서로 다른 ' + (stats.remaining != null ? stats.remaining : (goal - sent)) + '명 더 필요합니다';
-                        counterHintEl.classList.remove('done');
-                    }
-                }
-                if (counterEl) counterEl.classList.toggle('goal-met', !!stats.goalMet);
-            }
-
-            async function refreshRewardCounter() {
-                try {
-                    var r = await fetch('/pi/reward/status');
-                    var d = await r.json();
-                    updateRewardCounter(d);
-                } catch (e) { /* ignore */ }
-            }
-
-            if (PI_SANDBOX && counterEl) {
-                refreshRewardCounter();
-                setInterval(refreshRewardCounter, 30000);
-            }
 
             function userHasWalletScope(user) {
                 if (!user) return false;
@@ -1276,8 +1160,6 @@
                             } else {
                                 setRewardStatus('테스트 결제 완료! Pi 지갑을 확인해 주세요 ✓', 'ok');
                             }
-                            updateRewardCounter(data);
-                            refreshRewardCounter();
                             rewardBtn.innerHTML = '<span class="reward-btn-short" style="display:block">[ 완료 ✓ ]</span>';
                         } else {
                             if (String((data.piDetail && data.piDetail.error_message) || '').indexOf('wallet_address') >= 0) {
