@@ -681,6 +681,20 @@
             tr:hover { background: transparent; box-shadow: none; }
             .status-line { font-size: 0.68rem; letter-spacing: 1px; }
         }
+        .site-legal {
+            margin-top: 28px;
+            padding: 16px 8px 24px;
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--fg-dim);
+            border-top: 1px solid var(--border);
+        }
+        .site-legal a {
+            color: var(--accent-soft);
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .site-legal a:hover { color: var(--fg); text-decoration: underline; }
         @media (max-width: 380px) {
             h1 { font-size: 1.35rem; letter-spacing: 2px; }
             .subtitle { font-size: 0.68rem; }
@@ -815,6 +829,11 @@
             <div class="status-line" style="border-top: none; padding-top: 6px; margin-top: 6px; justify-content: center;">
                 <span><span class="dim">TOTAL VISITS:</span> <span class="accent" style="font-size: 0.9rem;"><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></span></span>
             </div>
+            <footer class="site-legal">
+                <a href="/privacy">Privacy Policy</a>
+                <span class="dim">·</span>
+                <a href="/terms">Terms of Service</a>
+            </footer>
         <% } %>
     </div>
 

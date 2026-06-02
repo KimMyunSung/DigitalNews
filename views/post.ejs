@@ -339,6 +339,21 @@
         }
         .btn-back:hover { background: #fff; box-shadow: 0 0 20px #fff; }
 
+        .site-legal {
+            margin-top: 24px;
+            padding: 14px 0 8px;
+            text-align: center;
+            font-size: 0.72rem;
+            color: rgba(0, 255, 65, 0.45);
+            border-top: 1px solid rgba(0, 255, 65, 0.15);
+        }
+        .site-legal a {
+            color: rgba(0, 255, 65, 0.7);
+            text-decoration: none;
+            margin: 0 8px;
+        }
+        .site-legal a:hover { color: #00ff41; text-decoration: underline; }
+
         /* === Pi Auth Bar === */
         #pi-auth-bar {
             position: fixed;
@@ -589,6 +604,11 @@
         <% } %>
 
         <a href="/" class="btn-back">< RETURN_TO_SYSTEM</a>
+        <footer class="site-legal">
+            <a href="/privacy">Privacy Policy</a>
+            <span>·</span>
+            <a href="/terms">Terms of Service</a>
+        </footer>
     </div>
 
     <script>
