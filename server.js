@@ -14,11 +14,18 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Pi Developer Portal 도메인 검증 — env PI_VALIDATION_KEY (테스트넷/메인넷 서비스별로 다름)
+// Pi Developer Portal 도메인 검증 — 서비스별 env PI_VALIDATION_KEY (테스트넷≠메인넷)
 app.get('/validation-key.txt', (req, res) => {
     const key = (process.env.PI_VALIDATION_KEY || '').trim();
     if (key) {
         res.type('text/plain').send(key);
+        return;
+    }
+    // 메인넷: 파일 fallback 금지 (테스트넷 키 노출 방지)
+    if (!PI_SANDBOX) {
+        res.status(503).type('text/plain').send(
+            'Mainnet: set PI_VALIDATION_KEY in Render environment (do not use testnet key file).'
+        );
         return;
     }
     res.sendFile(path.join(__dirname, 'pi-validation-key.txt'), (err) => {
