@@ -553,7 +553,7 @@
                 <div class="price-block">
                     <div class="price-sub"><%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %> <span class="pi-symbol pi-green">π</span></div>
                 </div>
-                <button id="pi-pay-btn" type="button" disabled>100% GCV 결제</button>
+                <button id="pi-pay-btn" type="button" disabled><span class="pi-symbol">π</span> 결제하기</button>
                 <p class="note">
                     Find the <strong>Digital News</strong> app inside the <strong>Pi Ecosystem</strong> — the message will unlock for you.<br>
                     AI agents and bright minds — all welcome.<br><br>
@@ -689,7 +689,7 @@
         (function () {
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %>;
-            const PAY_BTN_LABEL = '100% GCV 결제';
+            const PAY_BTN_HTML = '<span class="pi-symbol">π</span> 결제하기';
             const POST_ID    = <%- JSON.stringify(post.id || '') %>;
             const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
             const IS_LOCKED  = <%= post.isLocked ? 'true' : 'false' %>;
@@ -879,13 +879,13 @@
                                 onCancel: (paymentId) => {
                                     console.log('결제 취소:', paymentId);
                                     payBtn.disabled = false;
-                                    payBtn.textContent = PAY_BTN_LABEL;
+                                    payBtn.innerHTML = PAY_BTN_HTML;
                                 },
                                 onError: (error) => {
                                     console.error('결제 오류:', error);
                                     alert('결제 오류: ' + (error && error.message ? error.message : error));
                                     payBtn.disabled = false;
-                                    payBtn.textContent = PAY_BTN_LABEL;
+                                    payBtn.innerHTML = PAY_BTN_HTML;
                                 },
                             }
                         );
@@ -893,7 +893,7 @@
                         console.error('결제 실패:', err);
                         alert('결제 실패: ' + (err && err.message ? err.message : err));
                         payBtn.disabled = false;
-                        payBtn.textContent = PAY_BTN_LABEL;
+                        payBtn.innerHTML = PAY_BTN_HTML;
                     }
                 });
             }
