@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const { Client } = require('@notionhq/client');
 const path = require('path');
 const { NotionToMarkdown } = require('notion-to-md');
@@ -164,6 +165,7 @@ app.get('/', async (req, res) => {
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,
+            ...(PI_SANDBOX ? getRewardStats() : {}),
         });
     } catch (error) {
         console.error('메인 페이지 로드 오류:', error.message);
@@ -173,6 +175,7 @@ app.get('/', async (req, res) => {
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,
+            ...(PI_SANDBOX ? getRewardStats() : {}),
         });
     }
 });
@@ -281,9 +284,46 @@ function getPiNetwork() {
 }
 
 // 보상 수령 기록 (uid) — 중복 송금 방지 + 10 unique 보장
-// 한계: 재배포 시 휘발 (메인넷 검증 10건만 채우면 되므로 충분)
-const rewardClaimed = new Set();
+const REWARD_GOAL = 10;
 const REWARD_AMOUNT = Number(process.env.REWARD_AMOUNT || 0.001);
+const REWARD_LEDGER_PATH = path.join(__dirname, 'data', 'reward-claimed.json');
+
+function loadRewardClaimed() {
+    try {
+        if (fs.existsSync(REWARD_LEDGER_PATH)) {
+            const raw = JSON.parse(fs.readFileSync(REWARD_LEDGER_PATH, 'utf8'));
+            if (Array.isArray(raw.uids)) return new Set(raw.uids);
+        }
+    } catch (e) {
+        console.warn('[A2U] ledger load failed:', e.message);
+    }
+    return new Set();
+}
+
+function persistRewardClaimed(set) {
+    try {
+        fs.mkdirSync(path.dirname(REWARD_LEDGER_PATH), { recursive: true });
+        fs.writeFileSync(
+            REWARD_LEDGER_PATH,
+            JSON.stringify({ uids: [...set], updatedAt: new Date().toISOString() })
+        );
+    } catch (e) {
+        console.warn('[A2U] ledger save failed:', e.message);
+    }
+}
+
+const rewardClaimed = loadRewardClaimed();
+console.log('[A2U] reward ledger loaded:', rewardClaimed.size, 'unique');
+
+function getRewardStats() {
+    const rewardsSent = rewardClaimed.size;
+    return {
+        rewardsSent,
+        rewardGoal: REWARD_GOAL,
+        goalMet: rewardsSent >= REWARD_GOAL,
+        remaining: Math.max(0, REWARD_GOAL - rewardsSent),
+    };
+}
 
 // 미완료 A2U 결제 정리 (Pi.authenticate 콜백용)
 app.post('/pi/incomplete', async (req, res) => {
@@ -332,7 +372,7 @@ app.post('/pi/reward', async (req, res) => {
             }
         }
         if (rewardClaimed.has(uid)) {
-            return res.json({ ok: true, already: true, message: '이미 수령하셨습니다' });
+            return res.json({ ok: true, already: true, message: '이미 수령하셨습니다', ...getRewardStats() });
         }
         const pi = getPiNetwork();
         // 1) 미완료 결제 정리 (Pi 규칙: 동일 사용자 미완료 결제 존재 시 신규 불가)
@@ -356,8 +396,9 @@ app.post('/pi/reward', async (req, res) => {
         const txid = await pi.submitPayment(paymentId);
         await pi.completePayment(paymentId, txid);
         rewardClaimed.add(uid);
-        console.log('[A2U] reward sent:', uid, 'txid:', txid);
-        res.json({ ok: true, paymentId, txid, amount: REWARD_AMOUNT });
+        persistRewardClaimed(rewardClaimed);
+        console.log('[A2U] reward sent:', uid, 'txid:', txid, 'total:', rewardClaimed.size);
+        res.json({ ok: true, paymentId, txid, amount: REWARD_AMOUNT, ...getRewardStats() });
     } catch (err) {
         // pi-backend는 axios 기반 → 실제 Pi API 거절 사유는 err.response.data 에 있음
         const piDetail = (err && err.response && err.response.data) || null;
@@ -374,8 +415,8 @@ app.get('/pi/reward/status', (req, res) => {
         walletSeedFormatOk: seed.startsWith('S'),
         apiConfigured: !!PI_API_KEY,
         sandbox: PI_SANDBOX,
-        rewardsSent: rewardClaimed.size,
         amount: REWARD_AMOUNT,
+        ...getRewardStats(),
     });
 });
 
