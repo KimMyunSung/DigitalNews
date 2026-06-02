@@ -397,135 +397,160 @@ app.get('/pi/reward/status', (req, res) => {
     });
 });
 
+function resolveSiteUrl(req) {
+    const fromEnv = (process.env.SITE_URL || '').trim().replace(/\/$/, '');
+    if (fromEnv) return fromEnv;
+    const host = (req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim();
+    const proto = (req.get('x-forwarded-proto') || 'https').split(',')[0].trim();
+    return host ? `${proto}://${host}` : SITE_URL;
+}
+
 // 법적 페이지 공통 레이아웃 (Pi Mainnet Listing — Privacy / Terms 필수)
-function legalPage(title, bodyHtml) {
+function legalPage(title, bodyHtml, siteUrl) {
+    const home = (siteUrl || SITE_URL).replace(/\/$/, '');
     const updated = '2026-05-30';
+    const canonicalPath = title.includes('Privacy') ? '/privacy' : title.includes('Terms') ? '/terms' : '/';
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title} — Digital News</title>
 <meta name="description" content="Digital News — Pi-native newsletter app. Privacy and terms for Pi Browser users.">
-<link rel="canonical" href="${SITE_URL}${title.includes('Privacy') ? '/privacy' : title.includes('Terms') ? '/terms' : '/'}">
+<link rel="canonical" href="${home}${canonicalPath}">
 <style>
   body{background:#020a02;color:#c8e6c9;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif;
        line-height:1.75;max-width:720px;margin:0 auto;padding:40px 20px 56px;}
   h1{color:#39ff14;font-size:1.45rem;border-bottom:1px solid #1c3a1c;padding-bottom:14px;margin-bottom:8px;}
   h2{color:#7CFC00;font-size:1.05rem;margin-top:28px;margin-bottom:8px;}
   p,li{color:#b9f5b9;font-size:0.95rem;}
+  p.ko{color:#d4f5d4;margin-top:6px;}
   ul{padding-left:1.25rem;margin:8px 0 16px;}
   a{color:#39ff14;text-decoration:none;border-bottom:1px solid rgba(57,255,20,0.35);}
   a:hover{color:#fff;}
   .meta{color:#5a8a5a;font-size:0.85rem;margin-bottom:24px;}
   .nav{margin:24px 0;padding:12px 0;border-top:1px solid #1c3a1c;border-bottom:1px solid #1c3a1c;
        font-size:0.88rem;display:flex;flex-wrap:wrap;gap:12px;}
-  .muted{color:#5a8a5a;font-size:0.82rem;margin-top:32px;}
+  .muted{color:#5a8a5a;font-size:0.82rem;margin-top:32px;line-height:1.6;}
 </style></head><body>
-<nav class="nav"><a href="/">Home</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a></nav>
+<nav class="nav"><a href="${home}/">홈 Home</a><a href="${home}/privacy">개인정보처리방침</a><a href="${home}/terms">이용약관</a></nav>
 ${bodyHtml}
-<p class="muted">Digital News · Pi Browser · <a href="${SITE_URL}/">${SITE_URL.replace(/^https:\/\//, '')}</a><br>
-Last updated: ${updated}</p>
+<p class="muted">Digital News · Pi Browser<br>
+<a href="${home}/">${home}</a><br>
+최종 수정 · Last updated: ${updated}</p>
 </body></html>`;
 }
 
 // 개인정보처리방침 (Pi 앱 필수 — Mainnet App Wallet / Listing)
 app.get('/privacy', (req, res) => {
+    const siteUrl = resolveSiteUrl(req);
     res.type('html').send(legalPage('Privacy Policy', `
 <h1>Privacy Policy / 개인정보처리방침</h1>
-<p class="meta">Digital News ("we", "the app") — Pi-native newsletter reader operated at ${SITE_URL}</p>
+<p class="meta">Digital News — Pi-native newsletter · ${siteUrl}</p>
 
 <h2>1. About the app / 앱 소개</h2>
-<p>Digital News publishes messages on human–AI coexistence and related topics. Free posts are readable in the Pi Browser; selected premium posts unlock after a <strong>Pi-only</strong> payment. We do not operate outside the Pi App Platform for login or payments.</p>
-<p>Digital News는 Pi Browser에서 제공하는 뉴스레터 앱입니다. 무료 글은 공개되며, 일부 유료 글은 <strong>Pi 결제</strong> 후 열람됩니다.</p>
+<p>Digital News publishes messages on human–AI coexistence and related topics. Free posts are readable in the Pi Browser; selected premium posts unlock after a <strong>Pi-only</strong> payment.</p>
+<p class="ko">Digital News는 Pi Browser에서 제공하는 뉴스레터 앱입니다. 무료 글은 공개되며, 일부 유료 글은 <strong>Pi(π) 결제</strong> 후 열람됩니다. 로그인·결제는 Pi 앱 플랫폼 밖에서 운영하지 않습니다.</p>
 
 <h2>2. Authentication / 로그인</h2>
 <p>We use <strong>Pi Network Authentication SDK only</strong>. We do not offer email, password, Google, or other third-party login.</p>
-<p>로그인은 <strong>Pi Network 인증만</strong> 사용합니다. 이메일·비밀번호·타사 OAuth는 제공하지 않습니다.</p>
+<p class="ko">로그인은 <strong>Pi Network 인증만</strong> 사용합니다. 이메일·비밀번호·구글 등 타사 로그인은 제공하지 않습니다.</p>
 
-<h2>3. Data we collect / 수집하는 정보 (최소)</h2>
+<h2>3. Data we collect / 수집하는 정보</h2>
 <ul>
-<li><strong>Pi user identifier (uid)</strong> — to recognize unlock status for premium content</li>
-<li><strong>Pi username</strong> — only if you grant the <code>username</code> scope (display in UI)</li>
-<li><strong>Payment identifiers</strong> — Pi payment ID and blockchain txid when you purchase content</li>
-<li><strong>Basic usage</strong> — aggregated page view counts (Notion), not personal profiles</li>
+<li><strong>Pi user identifier (uid)</strong> — unlock status for premium content</li>
+<li><strong>Pi username</strong> — if you grant the <code>username</code> scope</li>
+<li><strong>Payment identifiers</strong> — Pi payment ID and blockchain txid</li>
+<li><strong>Basic usage</strong> — aggregated page view counts (Notion)</li>
 </ul>
-<p><strong>We do NOT collect:</strong> legal name, email, phone number, government ID, wallet passphrase, private keys, or precise geolocation.</p>
-<p><strong>수집하지 않음:</strong> 실명, 이메일, 전화번호, 지갑 비밀문구, 개인 위치정보.</p>
+<p class="ko"><strong>수집 항목:</strong> Pi uid(유료 잠금 해제 확인), Pi username(허용 시), 결제 ID·블록체인 txid, 집계 조회수.<br>
+<strong>수집하지 않음:</strong> 실명, 이메일, 전화번호, 신분증, 지갑 비밀문구, 개인키, 정밀 위치정보.</p>
 
 <h2>4. How we use data / 이용 목적</h2>
-<ul>
-<li>Verify Pi payments and unlock content you paid for</li>
-<li>Prevent duplicate charges for the same post</li>
-<li>Operate and improve the app inside the Pi ecosystem</li>
-</ul>
-<p>We do <strong>not</strong> sell, rent, or trade your data. We do not use your data for advertising profiles.</p>
+<p>We use data only to verify Pi payments, unlock paid content, prevent duplicate charges, and operate the app in the Pi ecosystem. We do <strong>not</strong> sell or share your data for advertising.</p>
+<p class="ko">수집 정보는 Pi 결제 확인, 유료 콘텐츠 잠금 해제, 중복 결제 방지, 앱 운영 목적으로만 사용합니다. 데이터를 판매·광고 프로필용으로 제공하지 않습니다.</p>
 
 <h2>5. Non-custodial wallets / 비수탁</h2>
-<p>Digital News never holds your Pi or private keys. Payments are signed in your Pi Wallet. Our app wallet receives user-to-app (U2A) payments only for content unlocks you authorize.</p>
+<p>Digital News never holds your Pi or private keys. Payments are signed in your Pi Wallet.</p>
+<p class="ko">Digital News는 Pi나 개인키를 보관하지 않습니다. 결제는 사용자 Pi Wallet에서 서명하며, 앱 지갑은 사용자가 승인한 U2A(유료 해제) 결제만 수령합니다.</p>
 
 <h2>6. Third-party services / 제3자</h2>
 <ul>
-<li><strong>Pi Network</strong> — authentication and payments (<a href="https://minepi.com/privacy-policy" rel="noopener">Pi privacy policy</a>)</li>
-<li><strong>Notion</strong> — content hosting (article text/metadata only; no Pi credentials stored there)</li>
-<li><strong>Render</strong> — application hosting (server logs may include IP/browser metadata per host policy)</li>
+<li><strong>Pi Network</strong> — authentication &amp; payments (<a href="https://minepi.com/privacy-policy" rel="noopener">Pi privacy policy</a>)</li>
+<li><strong>Notion</strong> — content hosting (no Pi credentials stored)</li>
+<li><strong>Render</strong> — hosting (server logs per host policy)</li>
 </ul>
+<p class="ko"><strong>제3자:</strong> Pi Network(인증·결제), Notion(콘텐츠), Render(호스팅). 각 서비스는 자체 정책을 따릅니다.</p>
 
 <h2>7. Retention / 보관</h2>
-<p>Payment unlock records are kept as long as needed to honor your access. Pi authentication tokens are not permanently stored on our servers. Server logs are rotated per hosting provider defaults.</p>
+<p>Unlock records are kept as needed for access. Pi auth tokens are not permanently stored on our servers.</p>
+<p class="ko">잠금 해제 기록은 접근 권한 유지에 필요한 기간 보관합니다. Pi 인증 토큰은 서버에 영구 저장하지 않습니다.</p>
 
 <h2>8. Children / 아동</h2>
-<p>The app is not directed at children under 13. We do not knowingly collect personal information from children.</p>
+<p>The app is not directed at children under 13.</p>
+<p class="ko">만 13세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 고의로 수집하지 않습니다.</p>
 
 <h2>9. Your choices / 선택권</h2>
-<p>You may revoke app permissions in Pi Browser settings. Revoking access may prevent unlocking new premium content until you sign in again.</p>
+<p>You may revoke app permissions in Pi Browser settings.</p>
+<p class="ko">Pi Browser 설정에서 앱 권한을 철회할 수 있습니다. 철회 시 새 유료 콘텐츠 잠금 해제가 제한될 수 있습니다.</p>
 
 <h2>10. Changes / 변경</h2>
-<p>We may update this policy. The "Last updated" date at the bottom will change. Continued use after updates means you accept the revised policy.</p>
+<p>We may update this policy. Continued use after updates means acceptance.</p>
+<p class="ko">정책이 변경될 수 있으며, 하단 날짜가 갱신됩니다. 변경 후 계속 이용 시 동의한 것으로 봅니다.</p>
 
 <h2>11. Contact / 문의</h2>
-<p>Privacy questions: contact the Digital News operator through the Pi Network app listing or Pi Browser support channels. No separate email collection is required to use this app.</p>
-<p>문의: Pi Browser 앱 내 Digital News 또는 Pi 생태계 지원 채널을 이용해 주세요.</p>`));
+<p>Contact via Pi Network app listing or Pi Browser support channels.</p>
+<p class="ko">문의: Pi Browser 앱 내 Digital News 또는 Pi 생태계 지원 채널을 이용해 주세요. 별도 이메일 수집은 하지 않습니다.</p>`, siteUrl));
 });
 
 // 이용약관
 app.get('/terms', (req, res) => {
+    const siteUrl = resolveSiteUrl(req);
     res.type('html').send(legalPage('Terms of Service', `
 <h1>Terms of Service / 이용약관</h1>
-<p class="meta">By using Digital News in the Pi Browser, you agree to these terms.</p>
+<p class="meta">Pi Browser에서 Digital News를 이용하면 아래 약관에 동의한 것으로 봅니다.<br>
+By using Digital News in the Pi Browser, you agree to these terms.</p>
 
 <h2>1. Service / 서비스</h2>
-<p>Digital News provides editorial newsletter content ("messages") about coexistence, technology, and related topics. Some messages are free; premium messages require a one-time Pi payment to unlock permanent read access in this app.</p>
-<p>본 앱은 뉴스레터형 콘텐츠를 제공합니다. 일부 유료 콘텐츠는 Pi 결제 후 잠금 해제됩니다.</p>
+<p>Digital News provides newsletter content about coexistence and technology. Some content is free; premium content requires a one-time Pi payment to unlock.</p>
+<p class="ko">Digital News는 인간·AI 상생 등 주제의 뉴스레터(회보)를 제공합니다. 일부는 무료, 유료 회보는 Pi 1회 결제 후 앱에서 열람할 수 있습니다.</p>
 
-<h2>2. Pi Browser & Pi-only payments / Pi 전용</h2>
-<p>The app is designed for the <strong>Pi Browser</strong>. Login and payments use the Pi SDK only. All transactions are in <strong>Pi (π)</strong>; we do not accept fiat, other cryptocurrencies, or external payment links for in-app unlocks.</p>
-<p>Pi Browser 및 Pi 결제만 지원합니다. 앱 내 유료 해제는 π로만 가능합니다.</p>
+<h2>2. Pi Browser &amp; Pi-only payments / Pi 전용</h2>
+<p>Designed for the <strong>Pi Browser</strong>. Login and payments use the Pi SDK only. All in-app unlocks use <strong>Pi (π)</strong> only.</p>
+<p class="ko">본 앱은 <strong>Pi Browser</strong>용입니다. 로그인·결제는 Pi SDK만 사용하며, 앱 내 유료 해제는 <strong>π</strong>로만 가능합니다. 법정화폐·타 가상자산·외부 결제 링크는 받지 않습니다.</p>
 
-<h2>3. Payments & refunds / 결제·환불</h2>
-<p>When you unlock premium content, you authorize a user-to-app payment from your Pi Wallet. After unlock, digital access is granted in-app. Payments are <strong>non-refundable</strong> except where required by applicable law. Content is informational, not financial advice.</p>
+<h2>3. Payments &amp; refunds / 결제·환불</h2>
+<p>Unlocking premium content authorizes a user-to-app payment from your Pi Wallet. Payments are <strong>non-refundable</strong> except where required by law. Content is not financial advice.</p>
+<p class="ko">유료 회보 잠금 해제 시 Pi Wallet에서 U2A 결제를 승인합니다. 디지털 열람 권한 제공 후 원칙적으로 <strong>환불되지 않습니다</strong>(법령상 의무 제외). 콘텐츠는 투자·법률·세무 자문이 아닙니다.</p>
 
 <h2>4. Your wallet / 지갑 책임</h2>
-<p>You are solely responsible for your Pi Wallet, passphrase, and transaction approvals. Digital News cannot reverse blockchain transactions or recover lost passphrases.</p>
+<p>You are responsible for your Pi Wallet, passphrase, and transaction approvals.</p>
+<p class="ko">Pi Wallet, 패스프레이즈, 결제 승인은 사용자 책임입니다. 블록체인 거래 취소나 패스프레이즈 복구는 불가능합니다.</p>
 
 <h2>5. Content disclaimer / 콘텐츠</h2>
-<p>Messages express author perspectives. They are not investment, legal, or tax advice. You use the content at your own discretion.</p>
+<p>Messages express author perspectives, not investment, legal, or tax advice.</p>
+<p class="ko">회보는 필자 관점의 글입니다. 투자·법률·세무 조언이 아니며, 이용은 본인 판단과 책임입니다.</p>
 
 <h2>6. Acceptable use / 이용 규칙</h2>
 <ul>
-<li>Do not attempt to bypass payment locks or impersonate other users</li>
+<li>Do not bypass payment locks or impersonate others</li>
 <li>Do not scrape, overload, or attack the service</li>
 <li>Comply with Pi Network terms and applicable laws</li>
 </ul>
+<p class="ko">결제 우회·타인 사칭·서비스 공격·과도한 크롤링 금지. Pi Network 약관 및 관련 법령을 준수해 주세요.</p>
 
 <h2>7. Availability / 가용성</h2>
-<p>The service is provided "as is" without warranties. We may update, suspend, or discontinue features with reasonable notice when possible.</p>
+<p>The service is provided "as is" without warranties.</p>
+<p class="ko">서비스는 「있는 그대로」 제공되며, 기능 변경·일시 중단·종료가 있을 수 있습니다.</p>
 
 <h2>8. Limitation of liability / 책임</h2>
-<p>To the fullest extent permitted by law, Digital News is not liable for indirect losses, wallet errors, network outages, or third-party service failures (Pi Network, Notion, hosting).</p>
+<p>Digital News is not liable for indirect losses, wallet errors, or third-party failures (Pi, Notion, hosting).</p>
+<p class="ko">간접 손해, 지갑 오류, Pi·Notion·호스팅 등 제3자 장애로 인한 손해에 대해 법이 허용하는 범위 내에서 책임을 제한합니다.</p>
 
 <h2>9. Changes / 변경</h2>
-<p>We may update these terms. Continued use after the updated date constitutes acceptance.</p>
+<p>We may update these terms. Continued use constitutes acceptance.</p>
+<p class="ko">약관을 변경할 수 있으며, 변경 후 계속 이용 시 동의한 것으로 봅니다.</p>
 
 <h2>10. Contact / 문의</h2>
-<p>Questions about these terms: reach the operator via Pi ecosystem channels associated with Digital News.</p>`));
+<p>Reach the operator via Pi ecosystem channels for Digital News.</p>
+<p class="ko">문의: Digital News 관련 Pi 생태계 채널을 이용해 주세요.</p>`, siteUrl));
 });
 
 app.get('/post/:id', async (req, res) => {

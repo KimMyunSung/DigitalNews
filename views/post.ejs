@@ -110,33 +110,6 @@
             text-shadow: 0 0 8px var(--accent-faint);
         }
 
-        /* === 한/영 토글 버튼 === */
-        .lang-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            position: absolute;
-            top: 14px;
-            left: 14px;
-            background: rgba(0, 10, 0, 0.85);
-            color: #00ff41;
-            border: 1px solid rgba(0, 255, 65, 0.5);
-            padding: 7px 13px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.78rem;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-            cursor: pointer;
-            z-index: 1000;
-            transition: all 0.25s ease;
-        }
-        .lang-toggle:hover {
-            background: #00ff41;
-            color: #000;
-            box-shadow: 0 0 12px #00ff41;
-        }
-        .lang-toggle .arrow { opacity: 0.6; }
-
         /* === 메타데이터 (인라인 — 원래 스타일) === */
         .meta-data {
             font-size: 0.82rem;
@@ -551,15 +524,6 @@
         <span id="pi-username"></span>
     </div>
 
-    <% if (post.isLocked) { /* 잠긴 회보는 토글 무의미 */ } else { %>
-    <button type="button" class="lang-toggle" id="lang-toggle"
-            title="한글/영문 토글 — 제목 순서를 바꿉니다">
-        <span id="lang-toggle-label">KO</span>
-        <span class="arrow">⇄</span>
-        <span id="lang-toggle-other">EN</span>
-    </button>
-    <% } %>
-
     <div class="container">
         <%
             var rawTitle = post.title || 'MESSAGE_READING...';
@@ -717,55 +681,6 @@
                     codeEl.innerHTML = out;
                 });
             })();
-        })();
-    </script>
-
-    <!-- 한/영 토글 — 제목 두 줄(메인/서브) 의 표시 순서를 스왑 -->
-    <script>
-        (function() {
-            const btn = document.getElementById('lang-toggle');
-            if (!btn) return;
-            const h1 = document.getElementById('post-title-h1');
-            const mainEl = document.getElementById('title-main');
-            const subEl  = document.getElementById('title-sub');
-            if (!h1 || !mainEl) return;
-
-            const original = {
-                main: h1.getAttribute('data-title-main') || '',
-                sub:  h1.getAttribute('data-title-sub')  || '',
-            };
-            if (!original.sub) { btn.style.display = 'none'; return; }
-
-            const koRe = /[가-힯]/;
-            const mainIsKo = koRe.test(original.main);
-            const labelLeft  = document.getElementById('lang-toggle-label');
-            const labelRight = document.getElementById('lang-toggle-other');
-
-            // state: 'orig' (서버 렌더 순서) | 'swap' (제목 두 줄 위치 교환)
-            let state = localStorage.getItem('pt_post_lang_' + location.pathname) || 'orig';
-
-            function render() {
-                if (state === 'swap') {
-                    mainEl.textContent = original.sub;
-                    if (subEl) subEl.textContent = '(' + original.main + ')';
-                } else {
-                    mainEl.textContent = original.main;
-                    if (subEl) subEl.textContent = '(' + original.sub + ')';
-                }
-                // 라벨: 현재 표시 중인 언어를 왼쪽에, 다른 쪽을 오른쪽에
-                const currentTop = state === 'swap' ? original.sub : original.main;
-                const currentTopIsKo = koRe.test(currentTop);
-                labelLeft.textContent  = currentTopIsKo ? 'KO' : 'EN';
-                labelRight.textContent = currentTopIsKo ? 'EN' : 'KO';
-            }
-
-            btn.addEventListener('click', () => {
-                state = state === 'swap' ? 'orig' : 'swap';
-                localStorage.setItem('pt_post_lang_' + location.pathname, state);
-                render();
-            });
-
-            render();
         })();
     </script>
 
