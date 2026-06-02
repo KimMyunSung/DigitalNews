@@ -14,6 +14,18 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Pi Browser 등에서 HTML 캐시로 구버전 UI가 남는 것 방지
+app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    const p = req.path;
+    if (p === '/' || p.startsWith('/post/') || p === '/privacy' || p === '/terms') {
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+    }
+    next();
+});
+
 // Pi Developer Portal 도메인 검증 — 서비스별 env PI_VALIDATION_KEY (테스트넷≠메인넷)
 app.get('/validation-key.txt', (req, res) => {
     const key = (process.env.PI_VALIDATION_KEY || '').trim();
