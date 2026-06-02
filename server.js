@@ -164,6 +164,7 @@ app.get('/', async (req, res) => {
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,
+            piPaymentAmount: PI_PAYMENT_AMOUNT,
         });
     } catch (error) {
         console.error('메인 페이지 로드 오류:', error.message);
@@ -173,6 +174,7 @@ app.get('/', async (req, res) => {
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,
+            piPaymentAmount: PI_PAYMENT_AMOUNT,
         });
     }
 });

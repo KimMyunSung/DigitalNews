@@ -302,135 +302,61 @@
             color: var(--fg-dim);
         }
 
-        /* === Testnet reward CTA (중앙) === */
-        .testnet-reward-box {
-            margin: 28px auto 40px;
-            max-width: 560px;
-            padding: 32px 28px 28px;
+        /* === Mainnet Pi CTA (중앙) === */
+        .mainnet-hero {
+            margin: 28px auto 36px;
+            max-width: 520px;
+            padding: 28px 24px 24px;
             text-align: center;
-            border: 2px solid var(--accent);
+            border: 2px solid rgba(57, 255, 20, 0.55);
             border-radius: 10px;
-            background: linear-gradient(180deg, rgba(255, 140, 0, 0.12) 0%, rgba(0, 20, 0, 0.85) 100%);
-            box-shadow: 0 0 28px rgba(255, 140, 0, 0.35), inset 0 0 40px rgba(255, 140, 0, 0.06);
+            background: linear-gradient(180deg, rgba(57, 255, 20, 0.08) 0%, rgba(0, 20, 0, 0.88) 100%);
+            box-shadow: 0 0 24px rgba(57, 255, 20, 0.2), inset 0 0 32px rgba(57, 255, 20, 0.04);
         }
-        .testnet-reward-label {
+        .mainnet-label {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
             font-size: 0.72rem;
             letter-spacing: 1px;
-            color: var(--accent-soft);
+            color: #39ff14;
             margin-bottom: 18px;
             font-weight: 600;
-            line-height: 1.45;
         }
-        .testnet-reward-label span { white-space: nowrap; }
-        #pi-reward-btn-hero {
+        #pi-signin-hero {
             display: block;
             width: 100%;
-            max-width: 420px;
-            margin: 0 auto 20px;
-            padding: 20px 14px;
+            max-width: 360px;
+            margin: 0 auto 16px;
+            padding: 16px 14px;
             font-family: inherit;
-            font-size: 1.15rem;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.5px;
-            line-height: 1.35;
-            white-space: normal;
             color: #001a00;
             background: linear-gradient(135deg, #39ff14 0%, #00cc33 100%);
             border: 2px solid var(--fg);
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 24px rgba(57, 255, 20, 0.55);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        #pi-reward-btn-hero .reward-btn-long,
-        #pi-reward-btn-hero .reward-btn-short {
-            display: block;
-        }
-        #pi-reward-btn-hero .reward-btn-short { display: none; }
-        #pi-signin-hero {
-            display: block;
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto 14px;
-            padding: 14px 12px;
-            font-family: inherit;
-            font-size: 0.92rem;
-            font-weight: 700;
-            letter-spacing: 0;
-            color: var(--accent-soft);
-            background: rgba(255, 140, 0, 0.1);
-            border: 2px solid var(--accent);
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 16px rgba(255, 140, 0, 0.25);
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.45);
         }
         #pi-signin-hero:hover:not(:disabled) {
-            background: rgba(255, 140, 0, 0.22);
+            transform: scale(1.02);
+            box-shadow: 0 0 28px rgba(57, 255, 20, 0.65);
         }
         #pi-signin-hero:disabled { opacity: 0.5; cursor: wait; }
-        #pi-reward-btn-hero:hover:not(:disabled) {
-            transform: scale(1.02);
-            box-shadow: 0 0 36px rgba(57, 255, 20, 0.85);
-        }
-        #pi-reward-btn-hero:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            background: rgba(0, 255, 65, 0.25);
-            color: var(--fg-dim);
-        }
-        .testnet-reward-desc {
-            font-size: 0.88rem;
+        .mainnet-msg {
+            font-size: 0.86rem;
             line-height: 1.75;
-            color: var(--text);
-            letter-spacing: 0;
-            margin-bottom: 12px;
-            word-break: keep-all;
-            overflow-wrap: normal;
-            text-align: center;
-        }
-        .testnet-reward-steps {
-            list-style: none;
-            padding: 0;
-            margin: 0 auto 4px;
-            max-width: 320px;
-            text-align: center;
-            font-size: 0.84rem;
-            line-height: 1.85;
-            color: var(--text);
-            word-break: keep-all;
-            overflow-wrap: normal;
-        }
-        .testnet-reward-steps li {
-            padding: 4px 0;
-        }
-        .testnet-reward-steps .sub-hint {
-            font-size: 0.72em;
             color: var(--fg-dim);
-        }
-        .nowrap { white-space: nowrap; display: inline-block; }
-        .mobile-br { display: none; }
-        .testnet-reward-desc strong {
-            color: var(--accent-soft);
-            font-weight: 600;
-        }
-        .testnet-reward-status {
-            min-height: 1.4em;
-            font-size: 0.85rem;
-            color: var(--fg);
-            margin-top: 12px;
-            letter-spacing: 0;
-            line-height: 1.65;
+            margin: 0;
             word-break: keep-all;
-            overflow-wrap: normal;
-            text-align: center;
-            padding: 0 6px;
         }
-        .testnet-reward-status.ok { color: #39ff14; }
-        .testnet-reward-status.err { color: #ff6b6b; }
+        .mainnet-msg strong { color: var(--fg); }
+        .mainnet-msg .pi-g { color: #39ff14; font-weight: 700; }
+        .mainnet-msg.ok { color: #39ff14; }
+        .mainnet-msg.err { color: #ff6b6b; }
 
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th {
@@ -659,15 +585,9 @@
             #toolbar { top: 6px; left: 6px; max-width: 46vw; gap: 5px; }
             #search-input { width: 100%; max-width: 110px; font-size: 0.6rem; padding: 5px 7px; min-height: 32px; }
             .tool-btn { padding: 5px 7px; font-size: 0.6rem; min-height: 32px; letter-spacing: 0; }
-            .testnet-reward-box { margin: 16px auto 24px; padding: 18px 10px 16px; width: 100%; }
-            .testnet-reward-label { font-size: 0.68rem; letter-spacing: 0.5px; margin-bottom: 14px; }
-            #pi-reward-btn-hero { padding: 15px 10px; font-size: 1rem; max-width: 100%; }
-            #pi-reward-btn-hero .reward-btn-long { display: none; }
-            #pi-reward-btn-hero .reward-btn-short { display: block; font-size: 1rem; letter-spacing: 0; }
-            .testnet-reward-desc { font-size: 0.8rem; line-height: 1.65; }
-            .testnet-reward-steps { font-size: 0.78rem; line-height: 1.7; padding: 0 2px; }
-            .testnet-reward-status { font-size: 0.76rem; line-height: 1.55; padding: 0 2px; }
-            .mobile-br { display: inline; }
+            .mainnet-hero { margin: 16px auto 24px; padding: 18px 12px 16px; width: 100%; }
+            #pi-signin-hero { padding: 14px 10px; font-size: 0.92rem; max-width: 100%; }
+            .mainnet-msg { font-size: 0.8rem; line-height: 1.65; }
             thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; border: none; }
             tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
@@ -721,10 +641,6 @@
     <div id="pi-auth-bar">
         <button id="pi-signin-btn" type="button">[ PI_SIGN_IN ]</button>
         <span id="pi-username"></span>
-        <% if (typeof piSandbox === 'undefined' || !piSandbox) { %>
-        <button id="pi-reward-btn" type="button" style="display:none;">[ CLAIM_WELCOME_π ]</button>
-        <span id="pi-reward-msg"></span>
-        <% } %>
     </div>
 
     <div class="container">
@@ -741,25 +657,16 @@
             </span>
         </div>
 
-        <% if (typeof piSandbox !== 'undefined' && piSandbox) { %>
-        <div id="testnet-reward-box" class="testnet-reward-box">
-            <div class="testnet-reward-label">
-                <span>◆ TESTNET ◆</span>
-                <span>Pi 결제 테스트</span>
+        <% if (typeof piSandbox === 'undefined' || !piSandbox) { %>
+        <div class="mainnet-hero">
+            <div class="mainnet-label">
+                <span>◆ MAINNET ◆</span>
+                <span>Pi-native newsletter</span>
             </div>
-            <button id="pi-signin-hero" type="button">[ ① 로그인 · 지갑 권한 허용 ]</button>
-            <button id="pi-reward-btn-hero" type="button" disabled>
-                <span class="reward-btn-long">[ CLAIM_WELCOME_π ]</span>
-                <span class="reward-btn-short">[ 테스트 π 받기 ]</span>
-            </button>
-            <p class="testnet-reward-desc">
-                <strong>눌러서 테스트 결제를<br class="mobile-br"> 부탁드립니다.</strong>
+            <button id="pi-signin-hero" type="button">[ PI 로그인 ]</button>
+            <p id="pi-mainnet-msg" class="mainnet-msg">
+                무료 회보는 공개 · <strong>유료</strong> 회보는 글에서 <span class="pi-g">π</span> <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %> 결제 후 열람
             </p>
-            <ol class="testnet-reward-steps">
-                <li>① 주황 버튼 → Pi 로그인<br><span class="sub-hint">팝업에서 <strong>지갑 주소</strong> 허용 필수</span></li>
-                <li>② 초록 버튼 →<br class="mobile-br"> 테스트 π 수령</li>
-            </ol>
-            <p id="pi-reward-msg-hero" class="testnet-reward-status"></p>
         </div>
         <% } %>
 
@@ -997,35 +904,22 @@
             });
         });
 
-        // ====== PI AUTH ======
+        // ====== PI AUTH (Mainnet: login + payments scope) ======
         (function () {
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const usernameEl = document.getElementById('pi-username');
             const btnEl = document.getElementById('pi-signin-btn');
             const signInHero = document.getElementById('pi-signin-hero');
-            const rewardBtn = document.getElementById('pi-reward-btn-hero') || document.getElementById('pi-reward-btn');
-            const rewardMsg = document.getElementById('pi-reward-msg-hero') || document.getElementById('pi-reward-msg');
+            const mainnetMsg = document.getElementById('pi-mainnet-msg');
             let currentUid = null;
             let currentAccessToken = null;
-            let hasWalletAddress = false;
 
-            function userHasWalletScope(user) {
-                if (!user) return false;
-                if (user.wallet_address) return true;
-                var creds = user.credentials;
-                if (creds && Array.isArray(creds.scopes)) {
-                    return creds.scopes.indexOf('wallet_address') >= 0;
+            function setAuthStatus(text, kind) {
+                if (mainnetMsg) {
+                    mainnetMsg.textContent = text;
+                    mainnetMsg.classList.remove('ok', 'err');
+                    if (kind) mainnetMsg.classList.add(kind);
                 }
-                return false;
-            }
-
-            async function verifyWalletOnServer(accessToken) {
-                const r = await fetch('/pi/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accessToken }),
-                });
-                return r.json();
             }
 
             async function onIncompletePaymentFound(payment) {
@@ -1038,50 +932,14 @@
                 } catch (e) { /* ignore */ }
             }
 
-            function setRewardStatus(text, kind) {
-                if (!rewardMsg) return;
-                rewardMsg.textContent = text;
-                rewardMsg.classList.remove('ok', 'err');
-                if (kind) rewardMsg.classList.add(kind);
-            }
-
-            function formatRewardError(data) {
-                var errText = (data && data.error) || 'unknown';
-                var detail = (data && data.piDetail) || {};
-                var detailMsg = (detail && detail.error_message) || '';
-                if (detail.error === 'missing_scope' || String(detailMsg).indexOf('wallet_address') >= 0) {
-                    return '지갑 주소 권한이 없습니다. 주황 버튼으로 다시 로그인하고 지갑 주소를 허용해 주세요.';
-                }
-                if (String(errText).indexOf('401') >= 0) {
-                    return 'API Key 인증 실패 — Render PI_API_KEY(Sandbox)를 확인하세요.';
-                }
-                return detailMsg || errText;
-            }
-
-            function applyAuthState(user, walletOk) {
+            function applyAuthState(user) {
                 if (!user || !user.uid) return false;
                 currentUid = user.uid;
-                hasWalletAddress = typeof walletOk === 'boolean' ? walletOk : userHasWalletScope(user);
                 if (user.username) usernameEl.textContent = '@' + user.username;
-
-                if (hasWalletAddress) {
-                    btnEl.style.display = 'none';
-                    if (signInHero) signInHero.style.display = 'none';
-                    if (rewardBtn) rewardBtn.disabled = false;
-                    setRewardStatus('로그인 완료 ✓ 아래 초록 버튼을 눌러 테스트 π를 받으세요.', 'ok');
-                    return true;
-                }
-
-                var retryLabel = '[ ① 지갑 권한 재허용 ]';
-                btnEl.textContent = retryLabel;
-                btnEl.style.display = '';
-                if (signInHero) {
-                    signInHero.textContent = retryLabel;
-                    signInHero.style.display = '';
-                }
-                if (rewardBtn) rewardBtn.disabled = true;
-                setRewardStatus('지갑 권한이 확인되지 않았습니다. Allow(허용)를 눌렀다면 잠시 후 초록 버튼을 눌러 보세요.', 'err');
-                return false;
+                btnEl.style.display = 'none';
+                if (signInHero) signInHero.style.display = 'none';
+                setAuthStatus('로그인 완료 ✓ 유료 회보는 글에서 π 결제 후 열람', 'ok');
+                return true;
             }
 
             async function ensurePiInit() {
@@ -1095,28 +953,19 @@
                 await ensurePiInit();
                 btnEl.disabled = true;
                 if (signInHero) signInHero.disabled = true;
-                setRewardStatus('Pi 로그인 중...', '');
+                setAuthStatus('Pi 로그인 중...', '');
                 try {
-                    var auth = await Pi.authenticate(['username', 'wallet_address'], onIncompletePaymentFound);
+                    var scopes = PI_SANDBOX ? ['username', 'wallet_address'] : ['username', 'payments'];
+                    var auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
                     var user = auth && auth.user;
                     currentAccessToken = auth && auth.accessToken;
                     if (!user || !user.uid) {
-                        setRewardStatus('로그인이 취소되었습니다.', 'err');
+                        setAuthStatus('로그인이 취소되었습니다.', 'err');
                         return false;
                     }
-                    var walletOk = userHasWalletScope(user);
-                    if (!walletOk && currentAccessToken) {
-                        setRewardStatus('권한 확인 중...', '');
-                        var verified = await verifyWalletOnServer(currentAccessToken);
-                        if (verified.ok) {
-                            walletOk = verified.hasWalletScope;
-                            if (verified.username) user = Object.assign({}, user, { username: verified.username });
-                            if (verified.uid) user = Object.assign({}, user, { uid: verified.uid });
-                        }
-                    }
-                    return applyAuthState(user, walletOk);
+                    return applyAuthState(user);
                 } catch (err) {
-                    setRewardStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
+                    setAuthStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
                     return false;
                 } finally {
                     btnEl.disabled = false;
@@ -1130,50 +979,6 @@
                 } catch (err) {
                     alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
                 }
-            }
-
-            if (rewardBtn) {
-                rewardBtn.addEventListener('click', async () => {
-                    try {
-                        if (!hasWalletAddress || !currentUid) {
-                            var ok = await runSignIn();
-                            if (!ok && currentAccessToken) {
-                                var v = await verifyWalletOnServer(currentAccessToken);
-                                if (v.ok && v.hasWalletScope) {
-                                    hasWalletAddress = true;
-                                    ok = true;
-                                }
-                            }
-                            if (!ok) return;
-                        }
-                        rewardBtn.disabled = true;
-                        setRewardStatus('테스트 π 송금 중...', '');
-                        const r = await fetch('/pi/reward', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ uid: currentUid, accessToken: currentAccessToken }),
-                        });
-                        const data = await r.json();
-                        if (data.ok) {
-                            if (data.already) {
-                                setRewardStatus('이미 테스트 결제를 완료하셨습니다 ✓', 'ok');
-                            } else {
-                                setRewardStatus('테스트 결제 완료! Pi 지갑을 확인해 주세요 ✓', 'ok');
-                            }
-                            rewardBtn.innerHTML = '<span class="reward-btn-short" style="display:block">[ 완료 ✓ ]</span>';
-                        } else {
-                            if (String((data.piDetail && data.piDetail.error_message) || '').indexOf('wallet_address') >= 0) {
-                                hasWalletAddress = false;
-                                applyAuthState({ uid: currentUid, username: usernameEl.textContent.replace('@', '') });
-                            }
-                            setRewardStatus('실패: ' + formatRewardError(data), 'err');
-                            rewardBtn.disabled = false;
-                        }
-                    } catch (e) {
-                        setRewardStatus('오류: ' + (e && e.message ? e.message : e), 'err');
-                        rewardBtn.disabled = false;
-                    }
-                });
             }
 
             btnEl.addEventListener('click', handleSignInClick);
