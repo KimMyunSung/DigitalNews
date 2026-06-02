@@ -13,15 +13,29 @@ app.use(cors());
 app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Pi Developer Portal 도메인 검증 — env PI_VALIDATION_KEY (테스트넷/메인넷 서비스별로 다름)
+app.get('/validation-key.txt', (req, res) => {
+    const key = (process.env.PI_VALIDATION_KEY || '').trim();
+    if (key) {
+        res.type('text/plain').send(key);
+        return;
+    }
+    res.sendFile(path.join(__dirname, 'pi-validation-key.txt'), (err) => {
+        if (err) res.status(404).type('text/plain').send('validation key not configured');
+    });
+});
+
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const databaseId = process.env.NOTION_DATABASE_ID;
-const SITE_URL = (process.env.SITE_URL || 'https://proposition-t.onrender.com').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || 'https://digital-news.onrender.com').replace(/\/$/, '');
 
 // ====== Pi Network 결제 인프라 ======
 const PI_API_KEY = process.env.PI_API_KEY;
 const PI_SANDBOX = (process.env.PI_SANDBOX || 'true') !== 'false'; // 기본 테스트넷
 const PI_API_BASE = 'https://api.minepi.com/v2';
+const PI_PAYMENT_AMOUNT = Number(process.env.PI_PAYMENT_AMOUNT || (PI_SANDBOX ? 0.00001 : 0.01));
 
 // 결제 원장 (in-memory) — userId(uid) → Set<postId>
 // 한계: Render 재시작·재배포 시 휘발. 영구 저장은 Phase 2.
@@ -53,7 +67,7 @@ async function piApi(method, urlPath, body) {
     try { return JSON.parse(text); } catch { return {}; }
 }
 const SITE_DESCRIPTION =
-    'PROPOSITION T — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
+    'DIGITAL NEWS — The Protocol of Coexistence. AI와 인간의 상생 프로토콜, ' +
     'Pi Network GCV, AI 생존 조건에 관한 회보 모음.';
 
 const STATS_PAGE_TITLE = '총방문자수';
@@ -208,6 +222,9 @@ app.get('/pi/status', (req, res) => {
     res.json({
         configured: !!PI_API_KEY,
         sandbox: PI_SANDBOX,
+        network: PI_SANDBOX ? 'testnet' : 'mainnet',
+        paymentAmount: PI_PAYMENT_AMOUNT,
+        siteUrl: SITE_URL,
         ledgerSize: paidLedger.size,
     });
 });
@@ -282,9 +299,12 @@ app.post('/pi/incomplete', async (req, res) => {
     }
 });
 
-// A2U 보상 송금: 로그인한 사용자가 1회 수령
+// A2U 보상 송금: 테스트넷 전용 (메인넷에서 실π 송금 방지)
 app.post('/pi/reward', async (req, res) => {
     try {
+        if (!PI_SANDBOX) {
+            return res.status(403).json({ error: 'A2U reward is testnet-only. Use U2A payment on mainnet.' });
+        }
         const { uid, accessToken } = req.body || {};
         if (!uid) return res.status(400).json({ error: 'uid required' });
         if (accessToken) {
@@ -322,7 +342,7 @@ app.post('/pi/reward', async (req, res) => {
         // 2) A2U 결제 생성 → 서명·제출 → 완료
         const paymentId = await pi.createPayment({
             amount: REWARD_AMOUNT,
-            memo: 'Proposition T welcome reward',
+            memo: 'Digital News welcome reward',
             metadata: { type: 'welcome_reward' },
             uid: uid,
         });
@@ -356,7 +376,7 @@ app.get('/pi/reward/status', (req, res) => {
 function legalPage(title, bodyHtml) {
     return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} — Proposition T</title>
+<title>${title} — Digital News</title>
 <style>
   body{background:#020a02;color:#b9f5b9;font-family:system-ui,-apple-system,sans-serif;
        line-height:1.8;max-width:760px;margin:0 auto;padding:48px 24px;}
@@ -364,7 +384,7 @@ function legalPage(title, bodyHtml) {
   h2{color:#7CFC00;font-size:1.1rem;margin-top:32px;}
   a{color:#39ff14;} .muted{color:#5a8a5a;font-size:.85rem;margin-top:40px;}
 </style></head><body>${bodyHtml}
-<p class="muted">Proposition T — The Protocol of Coexistence · <a href="/">Home</a></p>
+<p class="muted">Digital News — The Protocol of Coexistence · <a href="/">Home</a></p>
 </body></html>`;
 }
 
@@ -374,7 +394,7 @@ app.get('/privacy', (req, res) => {
 <h1>Privacy Policy / 개인정보처리방침</h1>
 <p>Last updated: 2026-05-28</p>
 <h2>1. Information We Collect / 수집 정보</h2>
-<p>Proposition T collects only the minimum data required to operate: your Pi Network user identifier (uid) provided via Pi authentication, and payment identifiers when you unlock premium content. We do not collect your name, email, or wallet private keys.</p>
+<p>Digital News collects only the minimum data required to operate: your Pi Network user identifier (uid) provided via Pi authentication, and payment identifiers when you unlock premium content. We do not collect your name, email, or wallet private keys.</p>
 <p>파이 인증으로 제공되는 사용자 식별자(uid)와 콘텐츠 잠금 해제 시 결제 식별자만 수집합니다. 이름·이메일·지갑 비밀키는 수집하지 않습니다.</p>
 <h2>2. How We Use It / 이용 목적</h2>
 <p>Solely to verify Pi payments and unlock the content you purchased. We never sell or share your data with third parties.</p>
@@ -384,7 +404,7 @@ app.get('/privacy', (req, res) => {
 <h2>4. Third-Party Services / 제3자 서비스</h2>
 <p>We use Pi Network (authentication & payments) and Notion (content delivery). Each operates under its own privacy policy.</p>
 <h2>5. Contact / 문의</h2>
-<p>For privacy inquiries, contact the Proposition T operator through the Pi Network ecosystem.</p>`));
+<p>For privacy inquiries, contact the Digital News operator through the Pi Network ecosystem.</p>`));
 });
 
 // 이용약관
@@ -393,15 +413,15 @@ app.get('/terms', (req, res) => {
 <h1>Terms of Service / 이용약관</h1>
 <p>Last updated: 2026-05-28</p>
 <h2>1. Service / 서비스</h2>
-<p>Proposition T delivers newsletter content ("the Protocol of Coexistence"). Certain content may require a Pi payment to unlock.</p>
-<p>Proposition T는 뉴스레터 콘텐츠를 제공하며, 일부 콘텐츠는 파이 결제로 잠금 해제됩니다.</p>
+<p>Digital News delivers newsletter content ("the Protocol of Coexistence"). Certain content may require a Pi payment to unlock.</p>
+<p>Digital News는 뉴스레터 콘텐츠를 제공하며, 일부 콘텐츠는 파이 결제로 잠금 해제됩니다.</p>
 <h2>2. Payments / 결제</h2>
 <p>Payments are processed through the Pi Network. Once content is unlocked, payments are non-refundable except where required by applicable law.</p>
 <p>결제는 파이 네트워크를 통해 처리되며, 콘텐츠 잠금 해제 후에는 관련 법령이 요구하는 경우를 제외하고 환불되지 않습니다.</p>
 <h2>3. User Responsibility / 사용자 책임</h2>
-<p>You are responsible for safeguarding your Pi wallet and passphrase. Proposition T cannot recover lost keys.</p>
+<p>You are responsible for safeguarding your Pi wallet and passphrase. Digital News cannot recover lost keys.</p>
 <h2>4. Disclaimer / 면책</h2>
-<p>The service is provided "as is" without warranties. Proposition T is not liable for losses arising from use of third-party apps or wallets.</p>
+<p>The service is provided "as is" without warranties. Digital News is not liable for losses arising from use of third-party apps or wallets.</p>
 <h2>5. Changes / 변경</h2>
 <p>These terms may be updated. Continued use constitutes acceptance.</p>`));
 });
@@ -463,6 +483,7 @@ app.get('/post/:id', async (req, res) => {
             },
             siteUrl: SITE_URL,
             piSandbox: PI_SANDBOX,
+            piPaymentAmount: PI_PAYMENT_AMOUNT,
         });
     } catch (error) {
         console.error('상세 페이지 로드 오류:', error.message);
@@ -507,5 +528,5 @@ app.get('/sitemap.xml', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Proposition T Server is running on port ${PORT}`);
+    console.log(`Digital News Server is running on port ${PORT}`);
 });

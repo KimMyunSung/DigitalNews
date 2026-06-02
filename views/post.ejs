@@ -753,6 +753,7 @@
     <script>
         (function () {
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
+            const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %>;
             const POST_ID    = <%- JSON.stringify(post.id || '') %>;
             const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
             const IS_LOCKED  = <%= post.isLocked ? 'true' : 'false' %>;
@@ -899,7 +900,7 @@
 
                         await Pi.createPayment(
                             {
-                                amount: 0.00001,
+                                amount: PI_PAYMENT_AMOUNT,
                                 memo: 'Digital News — ' + POST_TITLE,
                                 metadata: { postId: POST_ID },
                             },
