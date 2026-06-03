@@ -379,7 +379,7 @@ app.post('/pi/reward', async (req, res) => {
         // 2) A2U 결제 생성 → 서명·제출 → 완료
         const paymentId = await pi.createPayment({
             amount: REWARD_AMOUNT,
-            memo: 'Digital News welcome reward',
+            memo: '디지털뉴스 welcome reward',
             metadata: { type: 'welcome_reward' },
             uid: uid,
         });

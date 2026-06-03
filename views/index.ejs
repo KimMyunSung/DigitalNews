@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="app-build" content="20260530-ui-v2">
+    <meta name="app-build" content="20260603-ui-v3">
     <title>DIGITAL NEWS — The Protocol of Coexistence</title>
     <meta name="description" content="<%= siteDescription %>">
     <link rel="canonical" href="<%= siteUrl %>/">
@@ -403,120 +403,36 @@
         .mainnet-msg.ok { color: #39ff14; }
         .mainnet-msg.err { color: #ff6b6b; }
 
-        /* === Pi 홈 바로가기 CTA === */
-        .pi-home-cta {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 520px;
-            margin: 0 auto 28px;
-            padding: 16px 18px;
-            text-decoration: none;
-            color: #001a00;
-            background: linear-gradient(135deg, #39ff14 0%, #00cc33 55%, #ffb366 100%);
-            border: 2px solid var(--fg);
-            border-radius: 10px;
-            box-shadow: 0 0 22px rgba(57, 255, 20, 0.35), inset 0 0 20px rgba(255, 255, 255, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            touch-action: manipulation;
-        }
-        .pi-home-cta:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 0 32px rgba(57, 255, 20, 0.55), 0 0 18px rgba(255, 140, 0, 0.35);
-        }
-        .pi-home-cta:active { transform: scale(0.98); }
-        .pi-home-cta-icon {
-            flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #001a00;
-            background: rgba(255, 255, 255, 0.35);
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-        }
-        .pi-home-cta-text {
-            flex: 1;
-            min-width: 0;
-            text-align: left;
-            line-height: 1.35;
-        }
-        .pi-home-cta-ko {
-            display: block;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            color: #001a00;
-        }
-        .pi-home-cta-en {
-            display: block;
-            font-size: 0.68rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            opacity: 0.75;
-            margin-top: 2px;
-        }
-        .pi-home-cta-arrow {
-            flex-shrink: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            opacity: 0.85;
-        }
-
-        /* === STATS FOOTER === */
-        .stats-panel {
-            margin-top: 28px;
-            padding: 18px 14px 16px;
-            border-top: 1px dashed var(--border);
-            border-bottom: 1px dashed var(--border);
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px 10px;
-        }
-        .stat-cell {
+        /* === STATS (텍스트 한 줄) === */
+        .stats-summary {
+            margin-top: 32px;
+            padding-top: 22px;
             text-align: center;
-            padding: 10px 6px;
-            border: 1px solid rgba(0, 255, 65, 0.2);
-            border-radius: 8px;
-            background: rgba(0, 20, 0, 0.45);
-            min-width: 0;
+            border-top: 1px solid rgba(0, 255, 65, 0.12);
         }
-        .stat-label {
-            display: block;
-            font-size: 0.62rem;
-            letter-spacing: 0.05em;
+        .stats-line {
+            margin: 0;
+            font-size: clamp(0.78rem, 2.2vw, 0.88rem);
+            font-weight: 400;
+            letter-spacing: 0.04em;
             color: var(--fg-dim);
-            margin-bottom: 6px;
+            line-height: 2;
             word-break: keep-all;
         }
-        .stat-value {
-            display: block;
-            font-size: 1.05rem;
+        .stats-line .num {
+            font-style: normal;
             font-weight: 700;
             color: var(--fg);
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.45);
-            line-height: 1.2;
-            word-break: break-word;
+            text-shadow: 0 0 8px rgba(0, 255, 65, 0.35);
         }
-        .stat-value.accent {
+        .stats-line .num.accent {
             color: var(--accent-soft);
-            text-shadow: 0 0 8px rgba(255, 140, 0, 0.5);
+            text-shadow: 0 0 8px rgba(255, 140, 0, 0.45);
         }
-        .stat-unit {
-            font-size: 0.62rem;
-            color: var(--fg-dim);
-            margin-left: 2px;
-        }
-        .stat-cell.stat-wide {
-            grid-column: 1 / -1;
+        .stats-line .sep {
+            margin: 0 0.55em;
+            color: rgba(0, 255, 65, 0.22);
+            font-weight: 300;
         }
 
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -729,21 +645,7 @@
             .mainnet-hero { margin: 16px auto 24px; padding: 18px 12px 16px; width: 100%; }
             #pi-signin-hero { padding: 14px 10px; font-size: 0.92rem; max-width: 100%; }
             .mainnet-msg { font-size: 0.8rem; line-height: 1.65; }
-            .pi-home-cta {
-                max-width: 100%;
-                margin-bottom: 22px;
-                padding: 14px 12px;
-                gap: 10px;
-            }
-            .pi-home-cta-ko { font-size: 0.88rem; }
-            .pi-home-cta-en { font-size: 0.62rem; }
-            .pi-home-cta-icon { width: 32px; height: 32px; font-size: 1.15rem; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px 8px;
-            }
-            .stat-value { font-size: 0.95rem; }
-            .stat-label { font-size: 0.58rem; }
+            .stats-line { line-height: 1.85; }
             thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; border: none; }
             tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
@@ -757,9 +659,8 @@
             tr:hover { background: transparent; box-shadow: none; }
         }
         @media (max-width: 380px) {
-            .stats-grid { gap: 8px 6px; }
-            .stat-cell { padding: 8px 4px; }
-            .pi-home-cta-ko { font-size: 0.82rem; }
+            .stats-line { font-size: 0.72rem; }
+            .stats-line .sep { margin: 0 0.35em; }
         }
         .site-legal {
             margin-top: 28px;
@@ -812,7 +713,7 @@
             <h1 id="title"></h1>
             <p class="masthead-tagline">
                 <span class="tagline-line" aria-hidden="true"></span>
-                <span class="tagline-text">Proposition T</span>
+                <span class="tagline-text">DIGITAL NEWS</span>
                 <span class="tagline-line" aria-hidden="true"></span>
             </p>
             <div class="masthead-rule" aria-hidden="true"></div>
@@ -830,15 +731,6 @@
             </p>
         </div>
         <% } %>
-
-        <a class="pi-home-cta" href="https://minepi.com/" target="_blank" rel="noopener noreferrer">
-            <span class="pi-home-cta-icon">π</span>
-            <span class="pi-home-cta-text">
-                <span class="pi-home-cta-ko">Pi 홈페이지 바로가기</span>
-                <span class="pi-home-cta-en">Shortcut to Pi Home Page</span>
-            </span>
-            <span class="pi-home-cta-arrow" aria-hidden="true">→</span>
-        </a>
 
         <% if (!messages || messages.length === 0) { %>
             <div class="empty">No messages available.</div>
@@ -905,29 +797,18 @@
                 </tbody>
             </table>
 
-            <div class="stats-panel">
-                <div class="stats-grid">
-                    <div class="stat-cell">
-                        <span class="stat-label">총 회보</span>
-                        <span class="stat-value accent"><%= totalCount %><span class="stat-unit">편</span></span>
-                    </div>
-                    <div class="stat-cell">
-                        <span class="stat-label">무료</span>
-                        <span class="stat-value"><%= freeCount %></span>
-                    </div>
-                    <div class="stat-cell">
-                        <span class="stat-label">유료</span>
-                        <span class="stat-value accent"><%= paidCount %></span>
-                    </div>
-                    <div class="stat-cell">
-                        <span class="stat-label">최신 날짜</span>
-                        <span class="stat-value"><%= latestDate %></span>
-                    </div>
-                    <div class="stat-cell stat-wide">
-                        <span class="stat-label">총 방문</span>
-                        <span class="stat-value accent"><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></span>
-                    </div>
-                </div>
+            <div class="stats-summary" aria-label="회보 통계">
+                <p class="stats-line">
+                    총 회보 <span class="num accent"><%= totalCount %></span>편
+                    <span class="sep">·</span>
+                    무료 <span class="num"><%= freeCount %></span>
+                    <span class="sep">·</span>
+                    유료 <span class="num accent"><%= paidCount %></span>
+                    <span class="sep">·</span>
+                    최신 <span class="num"><%= latestDate %></span>
+                    <span class="sep">·</span>
+                    방문 <span class="num accent"><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></span>
+                </p>
             </div>
             <footer class="site-legal">
                 <a href="/privacy">Privacy Policy</a>

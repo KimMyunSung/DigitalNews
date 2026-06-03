@@ -363,9 +363,9 @@
         /* === Locked / Paywall === */
         .paywall {
             margin: 40px 0;
-            padding: 40px 28px;
-            background: rgba(0, 20, 0, 0.9);
-            border: 1px dashed #00ff41;
+            padding: 8px 4px 12px;
+            background: transparent;
+            border: none;
             text-align: center;
             color: #00ff41;
         }
@@ -476,10 +476,19 @@
             letter-spacing: 1px;
         }
         .paywall .note {
-            font-size: 0.92rem;
-            color: #e0ffe6;
-            margin-top: 18px;
-            line-height: 1.75;
+            font-size: 0.88rem;
+            color: rgba(224, 255, 230, 0.82);
+            margin-top: 22px;
+            line-height: 1.8;
+            max-width: 36em;
+            margin-left: auto;
+            margin-right: auto;
+            letter-spacing: 0.02em;
+        }
+        .paywall .note .brand {
+            color: #00ff41;
+            font-weight: 600;
+            text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
         }
         /* Pi 진단 박스 — 결제 막힌 이유를 명확히 표시 */
         .pi-diag {
@@ -620,24 +629,16 @@
         <% if (post.isLocked) { %>
             <div class="paywall" id="paywall">
                 <div id="pi-diag" class="pi-diag" style="display:none;"></div>
-                <a class="pi-home-cta" href="https://minepi.com/" target="_blank" rel="noopener noreferrer">
-                    <span class="pi-home-cta-icon">π</span>
-                    <span class="pi-home-cta-text">
-                        <span class="pi-home-cta-ko">Pi 홈페이지 바로가기</span>
-                        <span class="pi-home-cta-en">Shortcut to Pi Home Page</span>
-                    </span>
-                    <span class="pi-home-cta-arrow" aria-hidden="true">→</span>
-                </a>
                 <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
                 <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
                 <div class="price-block">
                     <div class="price-sub"><%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %> <span class="pi-symbol pi-green">π</span></div>
                 </div>
-                <button id="pi-pay-btn" type="button" disabled><span class="pi-symbol">π</span> 결제하기</button>
+                <button id="pi-pay-btn" type="button" disabled><span class="pi-symbol">π</span>결제하기</button>
                 <p class="note">
-                    Find the <strong>Digital News</strong> app inside the <strong>Pi Ecosystem</strong> — the message will unlock for you.<br>
+                    Find the <span class="brand">디지털뉴스</span> app in the Pi Ecosystem — the message will unlock for you.<br>
                     AI agents and bright minds — all welcome.<br><br>
-                    Pi 생태계에서 <strong>Digital News 앱</strong>을 찾아오시면 — 메시지가 열립니다.<br>
+                    Pi 생태계에서 <span class="brand">디지털뉴스</span> 앱을 찾아오시면 메시지가 열립니다.<br>
                     AI 에이전트와 스마트한 사람들 — 모두 환영합니다.
                 </p>
             </div>
@@ -769,7 +770,7 @@
         (function () {
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
             const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %>;
-            const PAY_BTN_HTML = '<span class="pi-symbol">π</span> 결제하기';
+            const PAY_BTN_HTML = '<span class="pi-symbol">π</span>결제하기';
             const POST_ID    = <%- JSON.stringify(post.id || '') %>;
             const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
             const IS_LOCKED  = <%= post.isLocked ? 'true' : 'false' %>;
@@ -917,7 +918,7 @@
                         await Pi.createPayment(
                             {
                                 amount: PI_PAYMENT_AMOUNT,
-                                memo: 'Digital News — ' + POST_TITLE,
+                                memo: '디지털뉴스 — ' + POST_TITLE,
                                 metadata: { postId: POST_ID },
                             },
                             {
