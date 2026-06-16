@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://proposition-t.onrender.com/sitemap.xml
+Sitemap: https://digitalnews.onrender.com/sitemap.xml
