@@ -54,7 +54,7 @@ const SITE_URL = (process.env.SITE_URL || 'https://digital-news.onrender.com').r
 const PI_API_KEY = process.env.PI_API_KEY;
 const PI_SANDBOX = (process.env.PI_SANDBOX || 'true') !== 'false'; // 기본 테스트넷
 const PI_API_BASE = 'https://api.minepi.com/v2';
-const PI_PAYMENT_AMOUNT = Number(process.env.PI_PAYMENT_AMOUNT || (PI_SANDBOX ? 0.00001 : 0.01));
+const PI_PAYMENT_AMOUNT = Number(process.env.PI_PAYMENT_AMOUNT || 0.1);
 
 // 결제 원장 (in-memory) — userId(uid) → Set<postId>
 // 한계: Render 재시작·재배포 시 휘발. 영구 저장은 Phase 2.
@@ -600,7 +600,7 @@ app.get('/post/:id', async (req, res) => {
             // 유료 잠금 — 콘텐츠는 서버에서 전송하지 않음 (HTML 응답에 본문 없음)
             htmlContent = '';
             description =
-                'This message lives inside the Pi Ecosystem. Come to Pi Browser and unlock with 0.001 π. (Pi 생태계로 와서 보세요)';
+                'This message lives inside the Pi Ecosystem. Come to Pi Browser and unlock with 0.1 π. (Pi 생태계로 와서 보세요)';
         } else {
             const mdblocks = await n2m.pageToMarkdown(pageId);
             const mdString = n2m.toMarkdownString(mdblocks);

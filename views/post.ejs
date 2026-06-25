@@ -640,7 +640,7 @@
                 <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
                 <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
                 <div class="price-block">
-                    <div class="price-sub"><%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %> <span class="pi-symbol pi-green">π</span></div>
+                    <div class="price-sub"><%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %> <span class="pi-symbol pi-green">π</span></div>
                 </div>
                 <button id="pi-pay-btn" type="button" disabled><span class="pi-symbol">π</span>결제하기</button>
                 <p class="note">
@@ -777,7 +777,7 @@
     <script>
         (function () {
             const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
-            const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.01 %>;
+            const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %>;
             const PAY_BTN_HTML = '<span class="pi-symbol">π</span>결제하기';
             const POST_ID    = <%- JSON.stringify(post.id || '') %>;
             const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
