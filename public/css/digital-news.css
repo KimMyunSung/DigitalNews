@@ -119,24 +119,23 @@ a:hover { color: var(--purple); }
   background: linear-gradient(120deg, #29217CEB, #3C2A9BEB, #2A16B7EB);
 }
 .panel-inner {
+  --col-star: 52px;
+  --col-date: 120px;
+  --col-badge: 90px;
+  --col-reads: 90px;
+  --cell-px: 10px;
   max-width: none;
   margin: 0;
   padding: 0;
 }
 .hero {
-  /* Align hero with table columns (★/제목/날짜/요금/조회수) */
-  --col-star: 40px;
-  --col-date: 120px;
-  --col-badge: 90px;
-  --col-reads: 90px;
+  /* Same column grid as .ledger (★/제목/날짜/요금/조회수) */
   display: grid;
   grid-template-columns: var(--col-star) 1fr var(--col-date) var(--col-badge) var(--col-reads);
   align-items: center;
-  column-gap: 10px;
-  max-width: 1120px;
-  margin: 0 auto 32px;
+  margin-bottom: 32px;
 }
-.hero .copy { grid-column: 2 / 4; min-width: 280px; }
+.hero .copy { grid-column: 2 / 4; min-width: 280px; padding: 0 var(--cell-px); }
 .hero .eyebrow {
   display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 2.5px;
   color: #eddfff; background: rgba(255,255,255,0.14); border-radius: 999px;
@@ -147,7 +146,7 @@ a:hover { color: var(--purple); }
   color: #fff; line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 14px;
 }
 .hero p { font-size: 0.97rem; color: #e4d6ff; line-height: 1.7; margin: 0 0 26px; max-width: 480px; }
-.hero .art { grid-column: 4 / 5; justify-self: center; width: 220px; }
+.hero .art { grid-column: 4; justify-self: center; width: 220px; padding: 0 var(--cell-px); }
 .hero .art img { width: 100%; display: block; }
 
 /* Pi 배너 카드 (히어로 내 CTA) */
@@ -173,23 +172,28 @@ a:hover { color: var(--purple); }
 
 /* ===== 회보 테이블 ===== */
 .ledger { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.ledger col.c-star { width: 40px; }
-.ledger col.c-title { width: 46%; }
-.ledger col.c-date { width: 120px; }
-.ledger col.c-badge { width: 90px; }
-.ledger col.c-reads { width: 90px; }
+.ledger col.c-star { width: var(--col-star); }
+.ledger col.c-title { width: auto; }
+.ledger col.c-date { width: var(--col-date); }
+.ledger col.c-badge { width: var(--col-badge); }
+.ledger col.c-reads { width: var(--col-reads); }
 .ledger th {
-  padding: 10px; border-bottom: 2px solid rgba(255,255,255,0.35);
+  padding: 10px var(--cell-px); border-bottom: 2px solid rgba(255,255,255,0.35);
   font-size: 0.78rem; font-weight: 800; letter-spacing: 1.5px; color: rgba(255,255,255,0.85);
   text-align: left;
 }
+.ledger th:first-child,
+.ledger td:first-child { text-align: center; }
 .ledger th.center { text-align: center; }
 .ledger th.right { text-align: right; }
-.ledger td { padding: 17px 10px; border-bottom: 1px solid rgba(255,255,255,0.18); }
+.ledger td { padding: 17px var(--cell-px); border-bottom: 1px solid rgba(255,255,255,0.18); }
 .ledger tbody tr { cursor: pointer; transition: background-color 0.18s ease; }
 .ledger tbody tr:hover { background: rgba(255,255,255,0.06); }
 
-.star-toggle { cursor: pointer; font-size: 1.1rem; color: rgba(255,255,255,0.35); user-select: none; }
+.star-toggle {
+  cursor: pointer; font-size: 1.1rem; color: rgba(255,255,255,0.35); user-select: none;
+  display: inline-flex; align-items: center; justify-content: center; width: 100%;
+}
 .star-toggle.on { color: var(--gold); }
 
 .title-cell { display: flex; align-items: center; gap: 14px; }
@@ -387,7 +391,7 @@ a:hover { color: var(--purple); }
   .purple-panel { padding: 24px 16px 20px; }
   .hero { grid-template-columns: 1fr; row-gap: 18px; column-gap: 0; }
   .hero .copy { grid-column: 1; }
-  .hero .art { width: 160px; margin: 0 auto; }
+  .hero .art { grid-column: 1; width: 160px; margin: 0 auto; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
 }
 
