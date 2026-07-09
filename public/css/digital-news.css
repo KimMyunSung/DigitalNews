@@ -40,10 +40,35 @@ a:hover { color: var(--purple); }
   font-family: var(--font-display); font-size: 1.8rem; font-weight: 900;
   letter-spacing: -0.02em; white-space: nowrap; color: var(--purple); line-height: 1;
 }
-.site-header .controls { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.site-header .controls {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.btn-star-only { flex-shrink: 0; }
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 240px;
+  width: 240px;
+  min-width: 140px;
+  max-width: 280px;
+}
+.auth-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
 .pi-username { font-size: 0.78rem; font-weight: 600; color: var(--purple-darker); white-space: nowrap; }
-.site-header .pi-username:not(:empty) + .btn-primary,
-.site-header #pi-signin-btn[style*="display: none"] { display: none; }
+
+/* 구버전 플로팅 로그인 바 — 검색창과 겹침 방지 */
+#pi-auth-bar { display: none !important; }
 
 /* 읽기 페이지 본문 영역 */
 .post-page { background: #fff; min-height: calc(100vh - 72px); }
@@ -56,8 +81,8 @@ a:hover { color: var(--purple); }
 }
 .btn-star-only.active { background: var(--purple); color: #fff; }
 
-.search-wrap { position: relative; display: inline-flex; align-items: center; width: 240px; }
-.search-wrap svg { position: absolute; left: 14px; color: var(--ink-dim); pointer-events: none; }
+.search-wrap { position: relative; display: flex; align-items: center; flex: 0 1 240px; width: 240px; min-width: 140px; max-width: 280px; }
+.search-wrap svg { position: absolute; left: 14px; color: var(--ink-dim); pointer-events: none; z-index: 1; }
 .search-wrap input {
   width: 100%; background: var(--surface-input); color: var(--ink);
   border: 1px solid transparent; border-radius: 999px; padding: 9px 38px;
@@ -331,7 +356,10 @@ a:hover { color: var(--purple); }
 @media (max-width: 768px) {
   .site-header { padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
   .site-header .brand b { font-size: 1.2rem; }
-  .search-wrap { width: 160px; }
+  .site-header .controls { flex-wrap: wrap; width: 100%; justify-content: flex-end; gap: 10px; }
+  .search-wrap { flex: 1 1 100%; width: 100%; max-width: none; order: 3; }
+  .auth-wrap { order: 2; margin-left: auto; }
+  .btn-star-only { order: 1; }
   .purple-panel { padding: 24px 16px 20px; }
   .hero .art { width: 160px; margin: 0 auto; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
