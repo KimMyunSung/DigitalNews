@@ -154,31 +154,29 @@ a:hover { color: var(--purple); }
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: calc(var(--col-badge) + var(--col-reads) + 11rem);
-  max-width: 460px;
+  max-width: 480px;
   padding: 0 var(--cell-px);
 }
 .hero .art img {
   width: var(--cube-size);
-  height: var(--cube-size);
-  object-fit: contain;
+  height: auto;
   flex-shrink: 0;
   display: block;
 }
 .hero .hero-wordmark-wrap {
   flex: 1 1 auto;
   min-width: 0;
-  height: var(--cube-size);
   display: flex;
   align-items: center;
 }
 .hero .hero-wordmark {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2rem, 3.2vw, 2.85rem);
+  font-size: clamp(2.15rem, 3.6vw, 3.15rem);
   line-height: 1;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   white-space: nowrap;
   background: linear-gradient(180deg, #fff6d4 0%, #f0cc6a 38%, #e8b84a 72%, #c9922e 100%);
@@ -474,7 +472,7 @@ a:hover { color: var(--purple); }
   .hero { grid-template-columns: 1fr; row-gap: 18px; column-gap: 0; }
   .hero .copy { grid-column: 1; }
   .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: column; justify-self: center; --cube-size: 132px; gap: 10px; }
-  .hero .hero-wordmark { font-size: clamp(1.75rem, 6.5vw, 2.4rem); letter-spacing: 0.05em; }
+  .hero .hero-wordmark { font-size: clamp(1.9rem, 7vw, 2.65rem); }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
   .legal-doc { padding: 28px 22px; }
   .legal-wrap { padding: 20px 16px 40px; }
