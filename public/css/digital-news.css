@@ -115,23 +115,23 @@ a:hover { color: var(--purple); }
 
 /* ===== 보라 패널 (히어로 + 목록) ===== */
 .purple-panel {
-  padding: 36px 24px 28px; color: #fff;
+  padding: 36px 40px 28px; color: #fff;
   background: linear-gradient(120deg, #29217CEB, #3C2A9BEB, #2A16B7EB);
 }
 .panel-inner {
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 0 16px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 .hero {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 40px;
-  margin-bottom: 32px;
+  gap: 32px;
+  max-width: 1120px;
+  margin: 0 auto 32px;
   flex-wrap: wrap;
 }
-.hero .copy { flex: 0 1 520px; min-width: 280px; max-width: 560px; }
+.hero .copy { flex: 1; min-width: 280px; }
 .hero .eyebrow {
   display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 2.5px;
   color: #eddfff; background: rgba(255,255,255,0.14); border-radius: 999px;
@@ -142,7 +142,7 @@ a:hover { color: var(--purple); }
   color: #fff; line-height: 1.25; letter-spacing: -0.01em; margin: 0 0 14px;
 }
 .hero p { font-size: 0.97rem; color: #e4d6ff; line-height: 1.7; margin: 0 0 26px; max-width: 480px; }
-.hero .art { width: 200px; flex-shrink: 0; }
+.hero .art { width: 220px; flex-shrink: 0; margin-left: auto; }
 .hero .art img { width: 100%; display: block; }
 
 /* Pi 배너 카드 (히어로 내 CTA) */
@@ -379,10 +379,9 @@ a:hover { color: var(--purple); }
   .search-wrap { flex: 1 1 100%; width: 100%; max-width: none; order: 3; }
   .auth-wrap { order: 2; margin-left: auto; }
   .btn-star-only { order: 1; }
-  .purple-panel { padding: 24px 12px 20px; }
-  .panel-inner { padding: 0 8px; }
-  .hero { gap: 28px; justify-content: center; }
-  .hero .copy { flex: 1 1 100%; max-width: none; }
+  .purple-panel { padding: 24px 16px 20px; }
+  .hero { gap: 24px; }
+  .hero .copy { flex: 1 1 100%; }
   .hero .art { width: 160px; margin: 0 auto; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
 }
