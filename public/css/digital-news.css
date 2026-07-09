@@ -149,28 +149,45 @@ a:hover { color: var(--purple); }
 }
 .hero p { font-size: 0.97rem; color: #e4d6ff; line-height: 1.7; margin: 0 0 26px; max-width: 480px; }
 .hero .art {
+  --cube-size: 156px;
   grid-column: 4 / 6;
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: calc(var(--col-badge) + var(--col-reads) + 7.5rem);
-  max-width: 360px;
+  gap: 10px;
+  width: calc(var(--col-badge) + var(--col-reads) + 10rem);
+  max-width: 440px;
   padding: 0 var(--cell-px);
+  overflow: visible;
 }
-.hero .art img { width: 150px; flex-shrink: 0; display: block; }
-.hero .hero-wordmark {
+.hero .art img {
+  width: var(--cube-size);
+  height: var(--cube-size);
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+.hero .hero-wordmark-wrap {
   flex: 1 1 auto;
   min-width: 0;
+  height: var(--cube-size);
+  display: flex;
+  align-items: center;
+  overflow: visible;
+}
+.hero .hero-wordmark {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(1.85rem, 2.9vw, 2.7rem);
+  font-size: var(--cube-size);
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
   color: var(--gold-cube);
   text-shadow: 0 2px 12px rgba(232, 184, 74, 0.45), 0 1px 0 rgba(255, 248, 220, 0.4);
   white-space: nowrap;
+  transform: scaleX(0.54);
+  transform-origin: left center;
+  display: inline-block;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -458,9 +475,8 @@ a:hover { color: var(--purple); }
   .purple-panel { padding: 24px 16px 20px; }
   .hero { grid-template-columns: 1fr; row-gap: 18px; column-gap: 0; }
   .hero .copy { grid-column: 1; }
-  .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: column; justify-self: center; }
-  .hero .art img { width: 150px; }
-  .hero .hero-wordmark { font-size: clamp(1.6rem, 7vw, 2.2rem); text-align: center; }
+  .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: column; justify-self: center; --cube-size: 140px; }
+  .hero .hero-wordmark { font-size: var(--cube-size); transform: scaleX(0.62); }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
   .legal-doc { padding: 28px 22px; }
   .legal-wrap { padding: 20px 16px 40px; }
