@@ -242,6 +242,48 @@ a:hover { color: var(--purple); }
 .site-footer .links { margin-left: auto; display: flex; gap: 18px; }
 
 /* ============================================================
+   법적 페이지 (privacy / terms)
+   ============================================================ */
+.legal-page { background: var(--surface-soft); min-height: 100vh; }
+.legal-wrap { width: 95%; max-width: 760px; margin: 0 auto; padding: 28px 20px 48px; }
+.legal-nav {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--line);
+}
+.legal-nav a {
+  font-size: 0.86rem; font-weight: 700; color: var(--ink-dim);
+  padding: 7px 14px; border-radius: 999px; transition: background 0.18s ease, color 0.18s ease;
+}
+.legal-nav a:hover { color: var(--purple); background: var(--surface-input); }
+.legal-nav a.active { color: #fff; background: var(--purple); }
+.legal-doc {
+  background: #fff; border: 1px solid rgba(113,50,245,0.22); border-radius: 20px;
+  padding: 40px 36px; box-shadow: 0 16px 40px rgba(40,15,100,0.08);
+}
+.legal-doc h1 {
+  font-family: var(--font-display); font-size: clamp(1.35rem, 3vw, 1.65rem);
+  font-weight: 800; color: var(--purple-darker); margin: 0 0 12px; line-height: 1.35;
+  padding-bottom: 14px; border-bottom: 2px solid rgba(113,50,245,0.15);
+}
+.legal-doc .meta { color: var(--ink-dim); font-size: 0.88rem; margin-bottom: 8px; line-height: 1.65; }
+.legal-doc h2 {
+  font-size: 1rem; font-weight: 800; color: var(--purple); margin: 28px 0 10px;
+}
+.legal-doc p, .legal-doc li { font-size: 0.94rem; line-height: 1.75; color: var(--ink); margin: 0 0 10px; }
+.legal-doc p.ko { color: var(--ink-dim); margin-top: 4px; }
+.legal-doc ul { padding-left: 1.25rem; margin: 8px 0 14px; }
+.legal-doc li { margin-bottom: 6px; }
+.legal-doc code {
+  font-family: var(--font-mono); font-size: 0.86em;
+  background: var(--surface-input); padding: 2px 6px; border-radius: 6px;
+}
+.legal-doc a { color: var(--purple); border-bottom: 1px solid rgba(113,50,245,0.25); }
+.legal-doc a:hover { color: var(--purple-deep); }
+.legal-site-footer { margin-top: 28px; padding: 20px 0 0; border-top: 1px solid var(--line); background: transparent; }
+.legal-updated { text-align: center; font-size: 0.78rem; color: var(--ink-dim); margin: 16px 0 0; line-height: 1.65; }
+.legal-updated a { color: var(--purple); }
+
+/* ============================================================
    읽기 화면 (post.ejs)
    ============================================================ */
 .post-wrap {
@@ -394,5 +436,7 @@ a:hover { color: var(--purple); }
   .hero .copy { grid-column: 1; }
   .hero .art { grid-column: 1; width: 160px; margin: 0 auto; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
+  .legal-doc { padding: 28px 22px; }
+  .legal-wrap { padding: 20px 16px 40px; }
 }
 

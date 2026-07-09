@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-build" content="20260709-legal-pages">
+<title>Privacy Policy — Digital News</title>
+<meta name="description" content="Digital News — Pi-native newsletter app. Privacy policy for Pi Browser users.">
+<link rel="canonical" href="<%= siteUrl %>/privacy">
+<link rel="stylesheet" href="/css/digital-news.css?v=20260709-legal-pages">
+</head>
+<body class="legal-page">
+
+<%- include('partials/header-legal') %>
+
+<main class="legal-wrap">
+  <nav class="legal-nav" aria-label="법적 문서">
+    <a href="/">홈 Home</a>
+    <a href="/privacy" class="active">개인정보처리방침</a>
+    <a href="/terms">이용약관</a>
+  </nav>
+
+  <article class="legal-doc">
+    <h1>Privacy Policy / 개인정보처리방침</h1>
+    <p class="meta">Digital News — Pi-native newsletter · <%= siteUrl %></p>
+
+    <h2>1. About the app / 앱 소개</h2>
+    <p>Digital News publishes messages on human–AI coexistence and related topics. Free posts are readable in the Pi Browser; selected premium posts unlock after a <strong>Pi-only</strong> payment.</p>
+    <p class="ko">Digital News는 Pi Browser에서 제공하는 뉴스레터 앱입니다. 무료 글은 공개되며, 일부 유료 글은 <strong>Pi(π) 결제</strong> 후 열람됩니다. 로그인·결제는 Pi 앱 플랫폼 밖에서 운영하지 않습니다.</p>
+
+    <h2>2. Authentication / 로그인</h2>
+    <p>We use <strong>Pi Network Authentication SDK only</strong>. We do not offer email, password, Google, or other third-party login.</p>
+    <p class="ko">로그인은 <strong>Pi Network 인증만</strong> 사용합니다. 이메일·비밀번호·구글 등 타사 로그인은 제공하지 않습니다.</p>
+
+    <h2>3. Data we collect / 수집하는 정보</h2>
+    <ul>
+      <li><strong>Pi user identifier (uid)</strong> — unlock status for premium content</li>
+      <li><strong>Pi username</strong> — if you grant the <code>username</code> scope</li>
+      <li><strong>Payment identifiers</strong> — Pi payment ID and blockchain txid</li>
+      <li><strong>Basic usage</strong> — aggregated page view counts (Notion)</li>
+    </ul>
+    <p class="ko"><strong>수집 항목:</strong> Pi uid(유료 잠금 해제 확인), Pi username(허용 시), 결제 ID·블록체인 txid, 집계 조회수.<br>
+    <strong>수집하지 않음:</strong> 실명, 이메일, 전화번호, 신분증, 지갑 비밀문구, 개인키, 정밀 위치정보.</p>
+
+    <h2>4. How we use data / 이용 목적</h2>
+    <p>We use data only to verify Pi payments, unlock paid content, prevent duplicate charges, and operate the app in the Pi ecosystem. We do <strong>not</strong> sell or share your data for advertising.</p>
+    <p class="ko">수집 정보는 Pi 결제 확인, 유료 콘텐츠 잠금 해제, 중복 결제 방지, 앱 운영 목적으로만 사용합니다. 데이터를 판매·광고 프로필용으로 제공하지 않습니다.</p>
+
+    <h2>5. Non-custodial wallets / 비수탁</h2>
+    <p>Digital News never holds your Pi or private keys. Payments are signed in your Pi Wallet.</p>
+    <p class="ko">Digital News는 Pi나 개인키를 보관하지 않습니다. 결제는 사용자 Pi Wallet에서 서명하며, 앱 지갑은 사용자가 승인한 U2A(유료 해제) 결제만 수령합니다.</p>
+
+    <h2>6. Third-party services / 제3자</h2>
+    <ul>
+      <li><strong>Pi Network</strong> — authentication &amp; payments (<a href="https://minepi.com/privacy-policy" rel="noopener">Pi privacy policy</a>)</li>
+      <li><strong>Notion</strong> — content hosting (no Pi credentials stored)</li>
+      <li><strong>Render</strong> — hosting (server logs per host policy)</li>
+    </ul>
+    <p class="ko"><strong>제3자:</strong> Pi Network(인증·결제), Notion(콘텐츠), Render(호스팅). 각 서비스는 자체 정책을 따릅니다.</p>
+
+    <h2>7. Retention / 보관</h2>
+    <p>Unlock records are kept as needed for access. Pi auth tokens are not permanently stored on our servers.</p>
+    <p class="ko">잠금 해제 기록은 접근 권한 유지에 필요한 기간 보관합니다. Pi 인증 토큰은 서버에 영구 저장하지 않습니다.</p>
+
+    <h2>8. Children / 아동</h2>
+    <p>The app is not directed at children under 13.</p>
+    <p class="ko">만 13세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 고의로 수집하지 않습니다.</p>
+
+    <h2>9. Your choices / 선택권</h2>
+    <p>You may revoke app permissions in Pi Browser settings.</p>
+    <p class="ko">Pi Browser 설정에서 앱 권한을 철회할 수 있습니다. 철회 시 새 유료 콘텐츠 잠금 해제가 제한될 수 있습니다.</p>
+
+    <h2>10. Changes / 변경</h2>
+    <p>We may update this policy. Continued use after updates means acceptance.</p>
+    <p class="ko">정책이 변경될 수 있으며, 하단 날짜가 갱신됩니다. 변경 후 계속 이용 시 동의한 것으로 봅니다.</p>
+
+    <h2>11. Contact / 문의</h2>
+    <p>Contact via Pi Network app listing or Pi Browser support channels.</p>
+    <p class="ko">문의: Pi Browser 앱 내 Digital News 또는 Pi 생태계 지원 채널을 이용해 주세요. 별도 이메일 수집은 하지 않습니다.</p>
+  </article>
+
+  <%- include('partials/legal-footer') %>
+</main>
+
+</body>
+</html>

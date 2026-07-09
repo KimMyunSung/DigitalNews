@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-build" content="20260709-legal-pages">
+<title>Terms of Service — Digital News</title>
+<meta name="description" content="Digital News — Pi-native newsletter app. Terms of service for Pi Browser users.">
+<link rel="canonical" href="<%= siteUrl %>/terms">
+<link rel="stylesheet" href="/css/digital-news.css?v=20260709-legal-pages">
+</head>
+<body class="legal-page">
+
+<%- include('partials/header-legal') %>
+
+<main class="legal-wrap">
+  <nav class="legal-nav" aria-label="법적 문서">
+    <a href="/">홈 Home</a>
+    <a href="/privacy">개인정보처리방침</a>
+    <a href="/terms" class="active">이용약관</a>
+  </nav>
+
+  <article class="legal-doc">
+    <h1>Terms of Service / 이용약관</h1>
+    <p class="meta">Pi Browser에서 Digital News를 이용하면 아래 약관에 동의한 것으로 봅니다.<br>
+    By using Digital News in the Pi Browser, you agree to these terms.</p>
+
+    <h2>1. Service / 서비스</h2>
+    <p>Digital News provides newsletter content about coexistence and technology. Some content is free; premium content requires a one-time Pi payment to unlock.</p>
+    <p class="ko">Digital News는 인간·AI 상생 등 주제의 뉴스레터(회보)를 제공합니다. 일부는 무료, 유료 회보는 Pi 1회 결제 후 앱에서 열람할 수 있습니다.</p>
+
+    <h2>2. Pi Browser &amp; Pi-only payments / Pi 전용</h2>
+    <p>Designed for the <strong>Pi Browser</strong>. Login and payments use the Pi SDK only. All in-app unlocks use <strong>Pi (π)</strong> only.</p>
+    <p class="ko">본 앱은 <strong>Pi Browser</strong>용입니다. 로그인·결제는 Pi SDK만 사용하며, 앱 내 유료 해제는 <strong>π</strong>로만 가능합니다. 법정화폐·타 가상자산·외부 결제 링크는 받지 않습니다.</p>
+
+    <h2>3. Payments &amp; refunds / 결제·환불</h2>
+    <p>Unlocking premium content authorizes a user-to-app payment from your Pi Wallet. Payments are <strong>non-refundable</strong> except where required by law. Content is not financial advice.</p>
+    <p class="ko">유료 회보 잠금 해제 시 Pi Wallet에서 U2A 결제를 승인합니다. 디지털 열람 권한 제공 후 원칙적으로 <strong>환불되지 않습니다</strong>(법령상 의무 제외). 콘텐츠는 투자·법률·세무 자문이 아닙니다.</p>
+
+    <h2>4. Your wallet / 지갑 책임</h2>
+    <p>You are responsible for your Pi Wallet, passphrase, and transaction approvals.</p>
+    <p class="ko">Pi Wallet, 패스프레이즈, 결제 승인은 사용자 책임입니다. 블록체인 거래 취소나 패스프레이즈 복구는 불가능합니다.</p>
+
+    <h2>5. Content disclaimer / 콘텐츠</h2>
+    <p>Messages express author perspectives, not investment, legal, or tax advice.</p>
+    <p class="ko">회보는 필자 관점의 글입니다. 투자·법률·세무 조언이 아니며, 이용은 본인 판단과 책임입니다.</p>
+
+    <h2>6. Acceptable use / 이용 규칙</h2>
+    <ul>
+      <li>Do not bypass payment locks or impersonate others</li>
+      <li>Do not scrape, overload, or attack the service</li>
+      <li>Comply with Pi Network terms and applicable laws</li>
+    </ul>
+    <p class="ko">결제 우회·타인 사칭·서비스 공격·과도한 크롤링 금지. Pi Network 약관 및 관련 법령을 준수해 주세요.</p>
+
+    <h2>7. Availability / 가용성</h2>
+    <p>The service is provided "as is" without warranties.</p>
+    <p class="ko">서비스는 「있는 그대로」 제공되며, 기능 변경·일시 중단·종료가 있을 수 있습니다.</p>
+
+    <h2>8. Limitation of liability / 책임</h2>
+    <p>Digital News is not liable for indirect losses, wallet errors, or third-party failures (Pi, Notion, hosting).</p>
+    <p class="ko">간접 손해, 지갑 오류, Pi·Notion·호스팅 등 제3자 장애로 인한 손해에 대해 법이 허용하는 범위 내에서 책임을 제한합니다.</p>
+
+    <h2>9. Changes / 변경</h2>
+    <p>We may update these terms. Continued use constitutes acceptance.</p>
+    <p class="ko">약관을 변경할 수 있으며, 변경 후 계속 이용 시 동의한 것으로 봅니다.</p>
+
+    <h2>10. Contact / 문의</h2>
+    <p>Reach the operator via Pi ecosystem channels for Digital News.</p>
+    <p class="ko">문의: Digital News 관련 Pi 생태계 채널을 이용해 주세요.</p>
+  </article>
+
+  <%- include('partials/legal-footer') %>
+</main>
+
+</body>
+</html>
