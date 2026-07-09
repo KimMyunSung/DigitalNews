@@ -120,6 +120,7 @@ a:hover { color: var(--purple); }
 }
 .panel-inner {
   --col-star: 52px;
+  --col-title: 46%;
   --col-date: 120px;
   --col-badge: 90px;
   --col-reads: 90px;
@@ -131,7 +132,7 @@ a:hover { color: var(--purple); }
 .hero {
   /* Same column grid as .ledger (★/제목/날짜/요금/조회수) */
   display: grid;
-  grid-template-columns: var(--col-star) 1fr var(--col-date) var(--col-badge) var(--col-reads);
+  grid-template-columns: var(--col-star) var(--col-title) var(--col-date) var(--col-badge) var(--col-reads);
   align-items: center;
   margin-bottom: 32px;
 }
@@ -173,7 +174,7 @@ a:hover { color: var(--purple); }
 /* ===== 회보 테이블 ===== */
 .ledger { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .ledger col.c-star { width: var(--col-star); }
-.ledger col.c-title { width: auto; }
+.ledger col.c-title { width: var(--col-title); }
 .ledger col.c-date { width: var(--col-date); }
 .ledger col.c-badge { width: var(--col-badge); }
 .ledger col.c-reads { width: var(--col-reads); }
