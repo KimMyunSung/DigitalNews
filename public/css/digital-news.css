@@ -149,14 +149,14 @@ a:hover { color: var(--purple); }
 }
 .hero p { font-size: 0.97rem; color: #e4d6ff; line-height: 1.7; margin: 0 0 26px; max-width: 480px; }
 .hero .art {
-  --cube-size: 148px;
+  --cube-size: 142px;
   grid-column: 4 / 6;
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 14px;
-  width: calc(var(--col-badge) + var(--col-reads) + 11rem);
-  max-width: 480px;
+  gap: 11px;
+  width: calc(var(--col-badge) + var(--col-reads) + 10rem);
+  max-width: 430px;
   padding: 0 var(--cell-px);
 }
 .hero .art img {
@@ -164,26 +164,28 @@ a:hover { color: var(--purple); }
   height: auto;
   flex-shrink: 0;
   display: block;
+  filter: drop-shadow(0 6px 14px rgba(20, 5, 60, 0.22));
 }
 .hero .hero-wordmark-wrap {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
+  padding-top: 2px;
 }
 .hero .hero-wordmark {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.15rem, 3.6vw, 3.15rem);
+  font-size: clamp(1.55rem, 2.45vw, 2.05rem);
   line-height: 1;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.085em;
   text-transform: uppercase;
   white-space: nowrap;
-  background: linear-gradient(180deg, #fff6d4 0%, #f0cc6a 38%, #e8b84a 72%, #c9922e 100%);
+  background: linear-gradient(180deg, #fff8e6 0%, #f2d078 42%, #e8b84a 78%, #d4a038 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 rgba(255, 248, 220, 0.5)) drop-shadow(0 3px 10px rgba(232, 184, 74, 0.35));
+  filter: drop-shadow(0 1px 0 rgba(255, 250, 230, 0.45)) drop-shadow(0 2px 8px rgba(232, 184, 74, 0.28));
   -webkit-font-smoothing: antialiased;
 }
 
@@ -471,8 +473,8 @@ a:hover { color: var(--purple); }
   .purple-panel { padding: 24px 16px 20px; }
   .hero { grid-template-columns: 1fr; row-gap: 18px; column-gap: 0; }
   .hero .copy { grid-column: 1; }
-  .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: column; justify-self: center; --cube-size: 132px; gap: 10px; }
-  .hero .hero-wordmark { font-size: clamp(1.9rem, 7vw, 2.65rem); }
+  .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: row; justify-content: center; justify-self: center; --cube-size: 120px; gap: 10px; }
+  .hero .hero-wordmark { font-size: clamp(1.35rem, 5.5vw, 1.75rem); letter-spacing: 0.07em; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
   .legal-doc { padding: 28px 22px; }
   .legal-wrap { padding: 20px 16px 40px; }
