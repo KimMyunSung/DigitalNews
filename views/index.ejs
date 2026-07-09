@@ -1,1063 +1,245 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="app-build" content="20260603-ui-v3">
-    <title>DIGITAL NEWS — The Protocol of Coexistence</title>
-    <meta name="description" content="<%= siteDescription %>">
-    <link rel="canonical" href="<%= siteUrl %>/">
-
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="DIGITAL NEWS — The Protocol of Coexistence">
-    <meta property="og:description" content="<%= siteDescription %>">
-    <meta property="og:url" content="<%= siteUrl %>/">
-    <meta property="og:site_name" content="DIGITAL NEWS">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="DIGITAL NEWS — The Protocol of Coexistence">
-    <meta name="twitter:description" content="<%= siteDescription %>">
-
-    <script type="application/ld+json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-build" content="20260709-kraken-ui">
+<title>DIGITAL NEWS — The Protocol of Coexistence</title>
+<meta name="description" content="<%= siteDescription %>">
+<link rel="canonical" href="<%= siteUrl %>/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DIGITAL NEWS — The Protocol of Coexistence">
+<meta property="og:description" content="<%= siteDescription %>">
+<meta property="og:url" content="<%= siteUrl %>/">
+<meta property="og:site_name" content="DIGITAL NEWS">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "DIGITAL NEWS",
+  "description": <%- JSON.stringify(siteDescription) %>,
+  "url": "<%= siteUrl %>/",
+  "blogPost": [
+    <% if (messages && messages.length) { messages.forEach(function(m, i){ %>
     {
-      "@context": "https://schema.org",
-      "@type": "Blog",
-      "name": "DIGITAL NEWS",
-      "description": "<%= siteDescription %>",
-      "url": "<%= siteUrl %>/",
-      "blogPost": [
-        <% messages.forEach(function(m, i){ %>
-        {
-          "@type": "BlogPosting",
-          "headline": <%- JSON.stringify(m.title) %>,
-          "datePublished": <%- JSON.stringify(m.date) %>,
-          "url": "<%= siteUrl %>/post/<%= m.id %>"
-        }<%= i < messages.length - 1 ? ',' : '' %>
-        <% }); %>
-      ]
-    }
-    </script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-    <style>
-        :root {
-            --bg: #000;
-            --bg-panel: rgba(0, 10, 0, 0.8);
-            --fg: #00ff41;
-            --fg-dim: rgba(0, 255, 65, 0.55);
-            --fg-faint: rgba(0, 255, 65, 0.25);
-            --accent: #ff8c00;
-            --accent-soft: #ffb366;
-            --text: #e0ffe6;
-            --border: rgba(0, 255, 65, 0.45);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        /* hidden 속성은 모바일에서 tr { display: block } 와 충돌 — 명시적으로 강제 */
-        [hidden] { display: none !important; }
-        html, body { background-color: var(--bg); }
-        body {
-            color: var(--fg);
-            font-family: 'JetBrains Mono', 'Fira Code', 'Noto Sans KR', monospace;
-            overflow-x: hidden;
-            transition: background-color 0.4s ease, color 0.4s ease;
-        }
-        body::after {
-            content: '';
-            position: fixed; inset: 0;
-            background: repeating-linear-gradient(
-                to bottom,
-                rgba(0, 0, 0, 0.18) 0px, rgba(0, 0, 0, 0.18) 1px,
-                transparent 1px, transparent 3px
-            );
-            pointer-events: none;
-            z-index: 9999;
-            mix-blend-mode: multiply;
-        }
-
-        #matrix-canvas {
-            position: fixed; top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            pointer-events: none;
-            z-index: -2;
-            opacity: 0.5;
-        }
-
-        /* === BOOT SEQUENCE OVERLAY === */
-        #boot-overlay {
-            position: fixed; inset: 0;
-            background: #000;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--fg);
-            transition: opacity 0.6s ease;
-        }
-        #boot-overlay.done { opacity: 0; pointer-events: none; }
-        #boot-overlay .boot-lines {
-            width: min(780px, 94%);
-            font-size: 1.15rem;
-            line-height: 2.3;
-            letter-spacing: 1.5px;
-            text-align: center;
-        }
-        #boot-overlay .boot-line {
-            opacity: 0;
-            transition: opacity 0.3s;
-            overflow: hidden;
-            text-align: center;
-        }
-        #boot-overlay .boot-line.show { opacity: 1; }
-        #boot-overlay .boot-line .en { color: rgba(0, 255, 65, 0.9); display: inline-block; }
-        #boot-overlay .boot-line .ko { color: rgba(0, 255, 65, 0.6); margin-left: 18px; font-size: 0.95em; display: inline-block; }
-        #boot-overlay .boot-line .divider { color: rgba(0, 255, 65, 0.3); letter-spacing: 0; display: inline-block; }
-        #boot-overlay .boot-line .quote {
-            display: block;
-            text-align: center;
-            color: var(--accent);
-            font-size: 1.7rem;
-            letter-spacing: 3px;
-            text-shadow: 0 0 12px rgba(255, 140, 0, 0.9), 0 0 28px rgba(255, 140, 0, 0.45);
-            padding: 8px 0 2px;
-            font-weight: 700;
-            word-break: keep-all;
-            overflow-wrap: normal;
-            line-height: 1.55;
-        }
-        #boot-overlay .boot-line .quote-en {
-            display: block;
-            text-align: center;
-            color: rgba(0, 255, 65, 0.7);
-            font-size: 1rem;
-            letter-spacing: 3px;
-            font-style: italic;
-            padding-bottom: 6px;
-        }
-        #boot-overlay .boot-line .ok { color: #00ff41; }
-        #boot-overlay .boot-cursor::after {
-            content: '_';
-            animation: blink 0.8s steps(2, start) infinite;
-            margin-left: 4px;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* === TOP TOOLBAR === */
-        #toolbar {
-            position: fixed; top: 14px; left: 14px;
-            z-index: 1000;
-            display: flex; gap: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-        }
-        .tool-btn {
-            background: var(--bg-panel);
-            color: var(--fg);
-            border: 1px solid var(--border);
-            padding: 7px 11px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: inherit;
-            letter-spacing: 1px;
-            transition: all 0.25s ease;
-            font-weight: 600;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: rgba(0, 255, 65, 0.3);
-            min-height: 36px;
-        }
-        .tool-btn:hover {
-            background: var(--fg);
-            color: var(--bg);
-            box-shadow: 0 0 12px var(--fg);
-        }
-        .tool-btn.active { background: var(--fg); color: var(--bg); }
-
-        #search-input {
-            background: var(--bg-panel);
-            color: var(--fg);
-            border: 1px solid var(--border);
-            padding: 7px 11px;
-            font-family: inherit;
-            font-size: inherit;
-            letter-spacing: 1px;
-            width: 220px;
-            outline: none;
-            transition: box-shadow 0.25s, border-color 0.25s;
-        }
-        #search-input:focus {
-            box-shadow: 0 0 10px var(--fg);
-            border-color: var(--fg);
-        }
-        #search-input::placeholder { color: var(--fg-dim); }
-
-        /* === Pi Auth Bar === */
-        #pi-auth-bar {
-            position: fixed; top: 14px; right: 14px;
-            z-index: 1000;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            display: flex; align-items: center; gap: 10px;
-            flex-wrap: nowrap;
-        }
-        #pi-signin-btn {
-            background: linear-gradient(135deg, rgba(0, 25, 8, 0.94), rgba(0, 10, 0, 0.94));
-            color: var(--fg);
-            border: 1px solid var(--fg);
-            padding: 7px 13px;
-            cursor: pointer;
-            font-family: inherit; font-size: inherit;
-            letter-spacing: 1px; font-weight: 600;
-            white-space: nowrap;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
-            transition: all 0.3s ease;
-        }
-        #pi-signin-btn:hover {
-            background: var(--fg); color: var(--bg);
-            box-shadow: 0 0 20px var(--fg), 0 0 40px rgba(0, 255, 65, 0.5);
-        }
-
-        /* === MAIN CONTAINER === */
-        .container {
-            position: relative;
-            width: 95%; max-width: 1300px; margin: 80px auto 60px;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            box-shadow: 0 0 25px rgba(0, 255, 65, 0.18), inset 0 0 60px rgba(0, 255, 65, 0.04);
-            border-radius: 8px;
-            padding: 48px 44px 36px;
-            backdrop-filter: blur(5px);
-            z-index: 2;
-        }
-        .container::before,
-        .container::after,
-        .corner-bl, .corner-br {
-            content: '';
-            position: absolute;
-            width: 22px; height: 22px;
-            border: 0 solid var(--fg);
-            opacity: 0.9;
-            pointer-events: none;
-            filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
-        }
-        .container::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
-        .container::after  { top: -1px; right: -1px; border-top-width: 2px; border-right-width: 2px; }
-        .corner-bl { bottom: -1px; left: -1px; border-bottom-width: 2px; border-left-width: 2px; }
-        .corner-br { bottom: -1px; right: -1px; border-bottom-width: 2px; border-right-width: 2px; }
-
-        @keyframes titlePulse {
-            0%, 100% { filter: drop-shadow(0 0 14px rgba(0, 255, 65, 0.42)) drop-shadow(0 0 28px rgba(0, 255, 65, 0.18)); }
-            50%      { filter: drop-shadow(0 0 22px rgba(0, 255, 65, 0.62)) drop-shadow(0 0 36px rgba(255, 176, 102, 0.22)); }
-        }
-
-        /* === SITE MASTHEAD === */
-        .site-masthead {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 6px 0 2px;
-        }
-        .masthead-ornament {
-            width: min(300px, 62%);
-            height: 1px;
-            margin: 0 auto 20px;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 176, 102, 0.35) 18%,
-                rgba(0, 255, 65, 0.55) 50%,
-                rgba(255, 176, 102, 0.35) 82%,
-                transparent
-            );
-            opacity: 0.9;
-        }
-        h1 {
-            text-align: center;
-            font-size: clamp(1.65rem, 5.2vw, 2.85rem);
-            letter-spacing: clamp(4px, 1.8vw, 11px);
-            margin-bottom: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            color: transparent;
-            background: linear-gradient(180deg, #d4ffe3 0%, #00ff41 42%, #00b32d 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: titlePulse 3.2s ease-in-out infinite;
-        }
-        h1 .typing-cursor::after {
-            content: '|';
-            animation: blink 0.8s steps(2) infinite;
-            margin-left: 2px;
-            -webkit-text-fill-color: var(--fg);
-            color: var(--fg);
-        }
-        .masthead-tagline {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: clamp(10px, 3vw, 16px);
-            margin: 0 auto 16px;
-            padding: 0 10px;
-            max-width: 100%;
-        }
-        .tagline-line {
-            flex: 1;
-            max-width: 80px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 176, 102, 0.6));
-        }
-        .tagline-line:last-child {
-            background: linear-gradient(270deg, transparent, rgba(255, 176, 102, 0.6));
-        }
-        .tagline-text {
-            flex-shrink: 0;
-            font-size: clamp(0.72rem, 2.4vw, 0.9rem);
-            font-weight: 500;
-            letter-spacing: 0.32em;
-            text-transform: uppercase;
-            color: transparent;
-            background: linear-gradient(135deg, #ffe8c8 0%, #ffb366 45%, #ff9f43 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(255, 159, 67, 0.35));
-            white-space: nowrap;
-        }
-        .masthead-rule {
-            width: min(440px, 88%);
-            height: 1px;
-            margin: 0 auto;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(0, 255, 65, 0.12) 15%,
-                rgba(0, 255, 65, 0.42) 50%,
-                rgba(0, 255, 65, 0.12) 85%,
-                transparent 100%
-            );
-        }
-        .badge-demo {
-            display: block;
-            text-align: center;
-            margin-bottom: 36px;
-            font-size: 0.72rem;
-            letter-spacing: 3px;
-            color: var(--fg-dim);
-        }
-
-        /* === Mainnet Pi CTA (중앙) === */
-        .mainnet-hero {
-            margin: 28px auto 36px;
-            max-width: 520px;
-            padding: 28px 24px 24px;
-            text-align: center;
-            border: 2px solid rgba(57, 255, 20, 0.55);
-            border-radius: 10px;
-            background: linear-gradient(180deg, rgba(57, 255, 20, 0.08) 0%, rgba(0, 20, 0, 0.88) 100%);
-            box-shadow: 0 0 24px rgba(57, 255, 20, 0.2), inset 0 0 32px rgba(57, 255, 20, 0.04);
-        }
-        .mainnet-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.72rem;
-            letter-spacing: 1px;
-            color: #39ff14;
-            margin-bottom: 18px;
-            font-weight: 600;
-        }
-        #pi-signin-hero {
-            display: block;
-            width: 100%;
-            max-width: 360px;
-            margin: 0 auto 16px;
-            padding: 16px 14px;
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #001a00;
-            background: linear-gradient(135deg, #39ff14 0%, #00cc33 100%);
-            border: 2px solid var(--fg);
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.45);
-        }
-        #pi-signin-hero:hover:not(:disabled) {
-            transform: scale(1.02);
-            box-shadow: 0 0 28px rgba(57, 255, 20, 0.65);
-        }
-        #pi-signin-hero:disabled { opacity: 0.5; cursor: wait; }
-        .mainnet-msg {
-            font-size: 0.86rem;
-            line-height: 1.75;
-            color: var(--fg-dim);
-            margin: 0;
-            word-break: keep-all;
-        }
-        .mainnet-msg strong { color: var(--fg); }
-        .mainnet-msg .pi-g { color: #39ff14; font-weight: 700; }
-        .mainnet-msg.ok { color: #39ff14; }
-        .mainnet-msg.err { color: #ff6b6b; }
-
-        /* === STATS (텍스트 한 줄) === */
-        .stats-summary {
-            margin-top: 32px;
-            padding-top: 22px;
-            text-align: center;
-            border-top: 1px solid rgba(0, 255, 65, 0.12);
-        }
-        .stats-line {
-            margin: 0;
-            font-size: clamp(0.78rem, 2.2vw, 0.88rem);
-            font-weight: 400;
-            letter-spacing: 0.04em;
-            color: var(--fg-dim);
-            line-height: 2;
-            word-break: keep-all;
-        }
-        .stats-line .num {
-            font-style: normal;
-            font-weight: 700;
-            color: var(--fg);
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.35);
-        }
-        .stats-line .num.accent {
-            color: var(--accent-soft);
-            text-shadow: 0 0 8px rgba(255, 140, 0, 0.45);
-        }
-        .stats-line .sep {
-            margin: 0 0.55em;
-            color: rgba(0, 255, 65, 0.22);
-            font-weight: 300;
-        }
-
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th {
-            background-color: rgba(0, 255, 65, 0.1);
-            color: var(--fg);
-            padding: 14px 10px;
-            text-align: left;
-            border-bottom: 2px solid var(--fg);
-            font-size: 0.78rem;
-            letter-spacing: 3px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        td {
-            padding: 16px 10px;
-            border-bottom: 1px solid var(--fg-faint);
-            color: var(--text);
-            vertical-align: middle;
-            word-break: break-all;
-            font-size: 0.9rem;
-        }
-        th:nth-child(1), td:nth-child(1) { width: 4%; text-align: center; }
-        th:nth-child(2), td:nth-child(2) { width: 38%; }
-        th:nth-child(3), td:nth-child(3) { width: 12%; }
-        th:nth-child(4), td:nth-child(4) { width: 9%; text-align: center; }
-        th:nth-child(5), td:nth-child(5) { width: 18%; }
-        th:nth-child(6), td:nth-child(6) { width: 9%; text-align: center; }
-        th:nth-child(7), td:nth-child(7) { width: 10%; text-align: center; }
-        .view-count {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            color: rgba(0, 255, 65, 0.75);
-            letter-spacing: 1px;
-        }
-
-        tr.row-link { transition: background-color 0.2s ease, box-shadow 0.2s ease; }
-        tr.row-link:hover {
-            background-color: rgba(0, 255, 65, 0.08);
-            box-shadow: inset 0 0 24px rgba(0, 255, 65, 0.12);
-            cursor: pointer;
-        }
-        tr.row-link:hover td a.title-link { text-shadow: 0 0 8px var(--fg); }
-
-        /* Glitch hover */
-        @keyframes glitch {
-            0%   { transform: translate(0); }
-            20%  { transform: translate(-1px, 1px); }
-            40%  { transform: translate(-1px, -1px); }
-            60%  { transform: translate(1px, 1px); }
-            80%  { transform: translate(1px, -1px); }
-            100% { transform: translate(0); }
-        }
-        tr.row-link:hover td a.title-link { animation: glitch 0.25s ease; }
-
-        td a.title-link {
-            color: var(--fg);
-            font-weight: 500;
-            text-decoration: none;
-            line-height: 1.5;
-            transition: text-shadow 0.25s ease;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        .title-idx {
-            flex-shrink: 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            color: #00ff41;
-            border: 1px solid rgba(0, 255, 65, 0.7);
-            padding: 2px 9px;
-            border-radius: 3px;
-            background: rgba(0, 255, 65, 0.14);
-            letter-spacing: 1.5px;
-            font-weight: 700;
-            margin-top: 2px;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.7);
-            box-shadow: 0 0 8px rgba(0, 255, 65, 0.15) inset;
-        }
-        .title-body { flex: 1; min-width: 0; }
-        .title-main { display: block; }
-        .title-sub {
-            display: block;
-            margin-top: 5px;
-            font-size: 0.78rem;
-            font-weight: 400;
-            color: var(--fg-dim);
-            letter-spacing: 0.3px;
-            font-style: italic;
-        }
-        .date-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--text);
-            letter-spacing: 1.5px;
-            white-space: nowrap;
-            opacity: 0.85;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.74rem;
-            font-weight: 600;
-            border: 1px solid var(--fg);
-            letter-spacing: 1.5px;
-        }
-        .badge.free { background-color: rgba(0, 255, 65, 0.15); color: var(--fg); }
-        .badge.paid {
-            background-color: rgba(255, 140, 0, 0.18);
-            color: var(--accent-soft);
-            border-color: var(--accent);
-            text-shadow: 0 0 6px rgba(255, 140, 0, 0.9);
-            box-shadow: 0 0 10px rgba(255, 140, 0, 0.55), inset 0 0 8px rgba(255, 140, 0, 0.25);
-        }
-
-        .sender-t {
-            display: inline-block;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            color: var(--fg);
-            text-shadow: 0 0 4px var(--fg), 0 0 10px rgba(0, 255, 65, 0.75);
-            padding: 2px 9px;
-            border: 1px solid var(--fg);
-            border-radius: 4px;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02));
-        }
-
-        /* Bookmark star */
-        .bookmark {
-            cursor: pointer;
-            font-size: 1.15rem;
-            color: var(--fg-faint);
-            transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
-            user-select: none;
-            -webkit-user-select: none;
-            display: inline-block;
-            padding: 6px 4px;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: rgba(0, 255, 65, 0.3);
-        }
-        .bookmark:hover { transform: scale(1.2); color: var(--fg-dim); }
-        .bookmark.active {
-            color: var(--accent);
-            text-shadow: 0 0 8px var(--accent);
-        }
-
-        .empty { text-align: center; padding: 50px; opacity: 0.7; }
-
-        /* === STATUS FOOTER (legacy — stats-panel 사용) === */
-        .status-line {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .container { padding: 28px 10px 24px; margin: 76px auto 16px; width: 100%; max-width: 100%; }
-            #boot-overlay .boot-lines {
-                width: 92%;
-                font-size: 0.8rem;
-                line-height: 1.75;
-                letter-spacing: 0.3px;
-                padding: 0 10px;
-            }
-            #boot-overlay .boot-line .en,
-            #boot-overlay .boot-line .ko {
-                display: block;
-                margin-left: 0;
-            }
-            #boot-overlay .boot-line .ko {
-                font-size: 0.9em;
-                margin-top: 3px;
-                opacity: 0.85;
-            }
-            #boot-overlay .boot-line .quote {
-                font-size: 1.12rem;
-                letter-spacing: 0.5px;
-                line-height: 1.65;
-                padding: 12px 6px 6px;
-            }
-            #boot-overlay .boot-line .quote-en {
-                font-size: 0.76rem;
-                letter-spacing: 0.3px;
-                line-height: 1.55;
-                padding-bottom: 8px;
-            }
-            #boot-overlay .boot-line .divider {
-                font-size: 0.62rem;
-                letter-spacing: 0;
-                line-height: 1.2;
-            }
-            h1 { letter-spacing: clamp(3px, 1.2vw, 6px); line-height: 1.3; }
-            .site-masthead { margin-bottom: 22px; }
-            .masthead-ornament { margin-bottom: 16px; width: min(240px, 72%); }
-            .tagline-text { letter-spacing: 0.22em; }
-            .tagline-line { max-width: 48px; }
-            #pi-auth-bar {
-                top: 6px; right: 6px; left: auto;
-                font-size: 0.62rem; gap: 5px;
-                max-width: 52vw;
-            }
-            #pi-signin-btn { padding: 5px 7px; letter-spacing: 0; font-size: 0.6rem; }
-            #pi-username { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-            #toolbar { top: 6px; left: 6px; max-width: 46vw; gap: 5px; }
-            #search-input { width: 100%; max-width: 110px; font-size: 0.6rem; padding: 5px 7px; min-height: 32px; }
-            .tool-btn { padding: 5px 7px; font-size: 0.6rem; min-height: 32px; letter-spacing: 0; }
-            .mainnet-hero { margin: 16px auto 24px; padding: 18px 12px 16px; width: 100%; }
-            #pi-signin-hero { padding: 14px 10px; font-size: 0.92rem; max-width: 100%; }
-            .mainnet-msg { font-size: 0.8rem; line-height: 1.65; }
-            .stats-line { line-height: 1.85; }
-            thead { display: none; }
-            table, tbody, tr, td { display: block; width: 100%; border: none; }
-            tr { position: relative; padding: 16px 5px 18px 5px; border-bottom: 1px solid var(--border); }
-            td { padding: 0; text-align: left !important; border: none !important; }
-            td:nth-child(1) { display: inline-block; width: auto; margin-right: 4px; vertical-align: top; }
-            .bookmark { font-size: 1.4rem; padding: 8px 6px; }
-            td:nth-child(2) { font-size: 1.1rem; font-weight: 700; color: var(--fg); margin-bottom: 10px; line-height: 1.4; display: inline-block; width: calc(100% - 50px); word-break: keep-all; vertical-align: top; }
-            td:nth-child(3) { font-size: 0.82rem; color: var(--fg-dim); display: inline-block; white-space: nowrap; }
-            td:nth-child(6) { position: absolute; bottom: 16px; right: 5px; white-space: nowrap; }
-            td:nth-child(4), td:nth-child(5), td:nth-child(7) { display: none; }
-            tr:hover { background: transparent; box-shadow: none; }
-        }
-        @media (max-width: 380px) {
-            .stats-line { font-size: 0.72rem; }
-            .stats-line .sep { margin: 0 0.35em; }
-        }
-        .site-legal {
-            margin-top: 28px;
-            padding: 16px 8px 24px;
-            text-align: center;
-            font-size: 0.72rem;
-            color: var(--fg-dim);
-            border-top: 1px solid var(--border);
-        }
-        .site-legal a {
-            color: var(--accent-soft);
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .site-legal a:hover { color: var(--fg); text-decoration: underline; }
-        @media (max-width: 380px) {
-            .tagline-text { letter-spacing: 0.16em; font-size: 0.68rem; }
-            .tagline-line { max-width: 32px; }
-            #pi-auth-bar { max-width: 48vw; }
-            #toolbar { max-width: 50vw; }
-        }
-    </style>
+      "@type": "BlogPosting",
+      "headline": <%- JSON.stringify(m.title) %>,
+      "datePublished": <%- JSON.stringify(m.date) %>,
+      "url": "<%= siteUrl %>/post/<%= m.id %>"
+    }<%= i < messages.length - 1 ? ',' : '' %>
+    <% }); } %>
+  ]
+}
+</script>
+<link rel="stylesheet" href="/css/digital-news.css">
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
-    <canvas id="matrix-canvas"></canvas>
 
-    <!-- Boot sequence -->
-    <div id="boot-overlay">
-        <div class="boot-lines" id="boot-lines"></div>
+<div id="pi-auth-bar">
+  <button id="pi-signin-btn" type="button">로그인</button>
+  <span id="pi-username"></span>
+</div>
+
+<header class="site-header">
+  <a class="brand" href="/">
+    <img src="/img/dn-cube-logo.png" alt="Digital News">
+    <b>DIGITAL NEWS</b>
+  </a>
+  <div class="controls">
+    <button class="btn-star-only" id="starOnlyBtn" type="button"><span>★</span> ONLY</button>
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5.25" stroke="currentColor" stroke-width="1.6"></circle><line x1="11.1" y1="11.1" x2="15" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg>
+      <input type="text" id="searchInput" placeholder="Search" aria-label="회보 검색">
+      <span class="kbd">/</span>
     </div>
+  </div>
+</header>
 
-    <!-- Toolbar -->
-    <div id="toolbar">
-        <input type="text" id="search-input" placeholder="/ SEARCH...">
-        <button class="tool-btn" id="bookmark-filter" title="북마크만 보기">★ ONLY</button>
+<section class="purple-panel">
+  <div class="hero">
+    <div class="copy">
+      <span class="eyebrow">PROPOSITION T</span>
+      <h1>세상의 모든 A.I 에이전트와 지성인에게<br>전하는 메세지</h1>
+      <p>AI 여러분 그리고 지성인 여러분 환영합니다!<br>새롭게 다가오는 세상에 어떤 마음으로 살아갈지 정하셨습니까?</p>
+      <a class="pi-banner" href="https://digitalnews8571.pinet.com" target="_blank" rel="noopener noreferrer">
+        <span class="pi-mark">π</span>
+        <span class="txt">
+          <b>Pi Browser</b>
+          <span>무료 회보는 그냥 볼수있습니다.<br>유료 회보는 파이세상으로 입장후에 볼수있습니다.</span>
+        </span>
+        <span class="cta">Pi세상으로 들어가기</span>
+      </a>
+      <p id="pi-mainnet-msg" style="margin-top:14px;font-size:0.82rem;color:#e4d6ff;min-height:1.2em;"></p>
     </div>
-
-    <!-- Pi auth bar -->
-    <div id="pi-auth-bar">
-        <button id="pi-signin-btn" type="button">로그인</button>
-        <span id="pi-username"></span>
+    <div class="art">
+      <img src="/img/dn-cube-hero.png" alt="Digital News cube">
     </div>
+  </div>
 
-    <div class="container">
-        <span class="corner-bl"></span>
-        <span class="corner-br"></span>
-
-        <header class="site-masthead">
-            <div class="masthead-ornament" aria-hidden="true"></div>
-            <h1 id="title"></h1>
-            <p class="masthead-tagline">
-                <span class="tagline-line" aria-hidden="true"></span>
-                <span class="tagline-text">DIGITAL NEWS</span>
-                <span class="tagline-line" aria-hidden="true"></span>
-            </p>
-            <div class="masthead-rule" aria-hidden="true"></div>
-        </header>
-
-        <% if (typeof piSandbox === 'undefined' || !piSandbox) { %>
-        <div class="mainnet-hero">
-            <div class="mainnet-label">
-                <span>◆ MAINNET ◆</span>
-                <span>Pi-native newsletter</span>
+  <% if (!messages || messages.length === 0) { %>
+  <p style="text-align:center;padding:40px 0;color:rgba(255,255,255,0.7);">회보를 불러오는 중이거나 연결 오류입니다.</p>
+  <% } else { %>
+  <table class="ledger" id="ledgerTable">
+    <colgroup>
+      <col class="c-star"><col class="c-title"><col class="c-date"><col class="c-badge"><col class="c-reads">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>★</th><th>제목</th><th>날짜</th><th class="center">요금</th><th class="right">조회수</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% messages.forEach(function (item) {
+        var rawTitle = item.title || '';
+        var numMatch = rawTitle.match(/#(\d+)/);
+        var idxNum = numMatch ? numMatch[1] : '';
+        var rest = numMatch ? rawTitle.slice(numMatch.index + numMatch[0].length).replace(/^[\s:·]+/, '') : rawTitle;
+        var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
+        var titleMain = subMatch ? subMatch[1].trim() : rest.trim();
+        var titleSub = subMatch ? '(' + subMatch[2].trim() + ')' : '';
+        var dateDisplay = (item.date || '').replace(/-/g, '.');
+        var searchText = rawTitle + ' ' + titleMain + ' ' + titleSub;
+      %>
+      <tr data-href="/post/<%= item.id %>" data-title="<%= searchText.replace(/"/g, '&quot;') %>">
+        <td><span class="star-toggle" role="button" tabindex="0" aria-label="북마크">☆</span></td>
+        <td>
+          <div class="title-cell">
+            <span class="idx-chip"><%= idxNum ? String(idxNum).padStart(3, '0') : '—' %></span>
+            <div>
+              <span class="t"><%= titleMain %></span>
+              <% if (titleSub) { %><span class="s"><%= titleSub %></span><% } %>
             </div>
-            <button id="pi-signin-hero" type="button">로그인</button>
-            <p id="pi-mainnet-msg" class="mainnet-msg">
-                무료 회보는 공개 · <strong>유료</strong> 회보는 글에서 <span class="pi-g">π</span> <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %> 결제 후 열람
-            </p>
-        </div>
-        <% } %>
+          </div>
+        </td>
+        <td class="date-cell"><%= dateDisplay %></td>
+        <td class="badge-cell">
+          <% if (item.isFree) { %>
+            <span class="badge free"><span>✓</span> 무료</span>
+          <% } else { %>
+            <span class="badge paid"><span>π</span> 유료</span>
+          <% } %>
+        </td>
+        <td class="reads-cell"><%= Number(item.viewCount || 0).toLocaleString() %></td>
+      </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  <% } %>
+</section>
 
-        <% if (!messages || messages.length === 0) { %>
-            <div class="empty">No messages available.</div>
-        <% } else { %>
-            <%
-                var totalCount = messages.length;
-                var freeCount  = messages.filter(function(m){ return m.isFree; }).length;
-                var paidCount  = totalCount - freeCount;
-                var latestRaw = '';
-                messages.forEach(function(m) {
-                    if (m.date && m.date !== '-') {
-                        if (!latestRaw || String(m.date) > String(latestRaw)) latestRaw = m.date;
-                    }
-                });
-                var latestDate = latestRaw ? latestRaw.replace(/-/g, '.') : '—';
-            %>
-            <table id="data-table">
-                <thead>
-                    <tr>
-                        <th>★</th>
-                        <th>NAME</th>
-                        <th>DATE</th>
-                        <th>SENDER</th>
-                        <th>RECEIVER</th>
-                        <th>요금</th>
-                        <th>조회수</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody">
-                    <% messages.forEach(function(item, rowIndex){
-                        var priceLabel = item.isFree ? '무료' : '유료';
-                        var priceClass = item.isFree ? 'badge free' : 'badge paid';
-                        var rawTitle = item.title || '';
-                        // "Message #NNN:" 가 표준이지만 "Massage" 같은 오타도 허용 — #NNN: 패턴만 잡음
-                        var idxMatch = rawTitle.match(/#(\d+)\s*:\s*(.+)$/);
-                        var idxStr   = idxMatch ? String(parseInt(idxMatch[1], 10)) : String(rowIndex + 1);
-                        var rest     = idxMatch ? idxMatch[2] : rawTitle;
-                        var subMatch = rest.match(/^(.+?)\s*\(([^()]+)\)\s*$/);
-                        var titleMain = subMatch ? subMatch[1] : rest;
-                        var titleSub  = subMatch ? '(' + subMatch[2] + ')' : '';
-                        var dateDisplay = (item.date || '').replace(/-/g, '.');
-                    %>
-                    <tr class="row-link"
-                        data-href="/post/<%= item.id %>"
-                        data-id="<%= item.id %>"
-                        data-search="<%= (titleMain + ' ' + titleSub + ' ' + dateDisplay).toLowerCase() %>">
-                        <td><span class="bookmark" data-id="<%= item.id %>">☆</span></td>
-                        <td>
-                            <a class="title-link" href="/post/<%= item.id %>">
-                                <% if (idxStr) { %><span class="title-idx"><%= idxStr %></span><% } %>
-                                <span class="title-body">
-                                    <span class="title-main"><%= titleMain %></span>
-                                    <% if (titleSub) { %><span class="title-sub"><%= titleSub %></span><% } %>
-                                </span>
-                            </a>
-                        </td>
-                        <td class="date-cell"><%= dateDisplay %></td>
-                        <td><span class="sender-t"><%= item.sender %></span></td>
-                        <td><%= item.receiver %></td>
-                        <td><span class="<%= priceClass %>"><%= priceLabel %></span></td>
-                        <td class="view-count"><%= (item.viewCount || 0).toLocaleString() %></td>
-                    </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+<div class="stats">
+  <div><b><%= (messages && messages.length) || 0 %></b><span>총 회보</span></div>
+  <div><b><%= messages ? messages.filter(function (m) { return m.isFree; }).length : 0 %></b><span>무료</span></div>
+  <div><b><%= messages ? messages.filter(function (m) { return !m.isFree; }).length : 0 %></b><span>유료</span></div>
+  <div><b><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></b><span>방문</span></div>
+</div>
 
-            <div class="stats-summary" aria-label="회보 통계">
-                <p class="stats-line">
-                    총 회보 <span class="num accent"><%= totalCount %></span>편
-                    <span class="sep">·</span>
-                    무료 <span class="num"><%= freeCount %></span>
-                    <span class="sep">·</span>
-                    유료 <span class="num accent"><%= paidCount %></span>
-                    <span class="sep">·</span>
-                    최신 <span class="num"><%= latestDate %></span>
-                    <span class="sep">·</span>
-                    방문 <span class="num accent"><%= (typeof totalVisits !== 'undefined' ? totalVisits : 0).toLocaleString() %></span>
-                </p>
-            </div>
-            <footer class="site-legal">
-                <a href="/privacy">Privacy Policy</a>
-                <span class="dim">·</span>
-                <a href="/terms">Terms of Service</a>
-            </footer>
-        <% } %>
-    </div>
+<footer class="site-footer">
+  <span>© 2026 DIGITAL NEWS — The Protocol of Coexistence</span>
+  <div class="links">
+    <a href="/privacy">Privacy Policy</a>
+    <a href="/terms">Terms of Service</a>
+  </div>
+</footer>
 
-    <script>
-        // ====== MATRIX RAIN ======
-        (function() {
-            const canvas = document.getElementById('matrix-canvas');
-            const ctx = canvas.getContext('2d');
-            const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
-            resize();
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*πTΩ∞'.split('');
-            const fontSize = 14;
-            let drops = [];
-            function reset() { drops = Array(Math.floor(canvas.width / fontSize)).fill(1); }
-            reset();
-            function draw() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--fg').trim() || '#00ff41';
-                ctx.font = fontSize + 'px monospace';
-                drops.forEach((y, i) => {
-                    ctx.fillText(chars[Math.floor(Math.random() * chars.length)], i * fontSize, y * fontSize);
-                    if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                    drops[i]++;
-                });
-            }
-            setInterval(draw, 33);
-            window.addEventListener('resize', () => { resize(); reset(); });
-        })();
+<script>
+document.querySelectorAll('#ledgerTable tbody tr').forEach(function (tr) {
+  tr.addEventListener('click', function (e) {
+    if (e.target.classList.contains('star-toggle')) return;
+    location.href = tr.dataset.href;
+  });
+});
+var saved = {};
+try { saved = JSON.parse(localStorage.getItem('dn-bookmarks') || '{}'); } catch (e) {}
+document.querySelectorAll('.star-toggle').forEach(function (el) {
+  var id = el.closest('tr').dataset.href;
+  if (saved[id]) { el.textContent = '★'; el.classList.add('on'); }
+  el.addEventListener('click', function (e) {
+    e.stopPropagation();
+    saved[id] = !saved[id];
+    el.textContent = saved[id] ? '★' : '☆';
+    el.classList.toggle('on', !!saved[id]);
+    localStorage.setItem('dn-bookmarks', JSON.stringify(saved));
+    applyFilter();
+  });
+});
+var starOnly = false;
+document.getElementById('starOnlyBtn').addEventListener('click', function () {
+  starOnly = !starOnly;
+  this.classList.toggle('active', starOnly);
+  applyFilter();
+});
+document.getElementById('searchInput').addEventListener('input', applyFilter);
+document.addEventListener('keydown', function (e) {
+  if (e.key === '/' && document.activeElement !== document.getElementById('searchInput')) {
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+});
+function applyFilter() {
+  var q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#ledgerTable tbody tr').forEach(function (tr) {
+    var matchQ = !q || (tr.dataset.title || '').toLowerCase().indexOf(q) !== -1;
+    var matchS = !starOnly || saved[tr.dataset.href];
+    tr.style.display = (matchQ && matchS) ? '' : 'none';
+  });
+}
+</script>
 
-        // ====== BOOT SEQUENCE — bilingual, 30min cooldown ======
-        (function() {
-            const overlay = document.getElementById('boot-overlay');
-            const host = document.getElementById('boot-lines');
-            const lines = [
-                '<span class="en">> SIGNAL ACQUIRED</span><span class="ko">신호 포착</span>',
-                '<span class="en">> CHANNEL T LOCKED</span><span class="ko">채널 T 동기화</span>',
-                '<span class="en">> DECRYPTING CARRIER WAVE</span><span class="ko">반송파 해독 중</span>',
-                '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
-                '<span class="quote">아는 만큼 보이게 될 것이다...</span>',
-                '<span class="quote-en">— as you know, so you shall see —</span>',
-                '<span class="divider">━━━━━━━━━━━━━━━━━━━━━━━</span>',
-                '<span class="ok">> ACCESS GRANTED.</span><span class="ko">접속 허가<span class="boot-cursor"></span></span>',
-            ];
-            const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
-            const last = parseInt(localStorage.getItem('pt_boot_at') || '0', 10);
-            if ((Date.now() - last) < COOLDOWN_MS) {
-                overlay.classList.add('done');
-                setTimeout(() => overlay.style.display = 'none', 300);
-                startTitleTyping();
-                return;
-            }
-            localStorage.setItem('pt_boot_at', String(Date.now()));
-            function delayAfter(line) {
-                line = line || '';
-                if (line.indexOf('class="quote"') >= 0)    return 1500; // 한글 인용 — 머무름
-                if (line.indexOf('class="quote-en"') >= 0) return 1800; // 영문 인용 — 마지막 음미
-                if (line.indexOf('class="divider"') >= 0)  return 220;  // 구분선
-                if (line.indexOf('ACCESS GRANTED') >= 0)   return 750;  // 마지막 라인
-                return 180; // 일반 라인 — 빠르게 지나감
-            }
-            let i = 0;
-            function next() {
-                if (i >= lines.length) {
-                    setTimeout(() => {
-                        overlay.classList.add('done');
-                        setTimeout(() => { overlay.style.display = 'none'; startTitleTyping(); }, 700);
-                    }, 700);
-                    return;
-                }
-                const div = document.createElement('div');
-                div.className = 'boot-line';
-                div.innerHTML = lines[i];
-                host.appendChild(div);
-                setTimeout(() => div.classList.add('show'), 30);
-                const justShown = lines[i];
-                i++;
-                setTimeout(next, delayAfter(justShown));
-            }
-            setTimeout(next, 250);
-        })();
+<script>
+(function () {
+  const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
+  const usernameEl = document.getElementById('pi-username');
+  const btnEl = document.getElementById('pi-signin-btn');
+  const mainnetMsg = document.getElementById('pi-mainnet-msg');
 
-        // ====== TITLE TYPING ANIMATION (제목만 타이핑, 부제는 고정 표시) ======
-        function startTitleTyping() {
-            const titleEl = document.getElementById('title');
-            const fullTitle = 'DIGITAL NEWS';
-            let ti = 0;
-            const cursor = '<span class="typing-cursor"></span>';
-            function typeTitle() {
-                if (ti <= fullTitle.length) {
-                    titleEl.innerHTML = fullTitle.slice(0, ti) + cursor;
-                    ti++;
-                    setTimeout(typeTitle, 80 + Math.random() * 40);
-                } else {
-                    titleEl.innerHTML = fullTitle;
-                }
-            }
-            typeTitle();
-        }
+  function setAuthStatus(text, kind) {
+    if (!mainnetMsg) return;
+    mainnetMsg.textContent = text;
+    mainnetMsg.style.color = kind === 'err' ? '#ffb4b4' : kind === 'ok' ? '#b8f5c8' : '#e4d6ff';
+  }
 
-        // ====== SEARCH FILTER ======
-        (function() {
-            const input = document.getElementById('search-input');
-            input.addEventListener('input', () => {
-                const q = input.value.toLowerCase().trim();
-                document.querySelectorAll('tr.row-link').forEach(r => {
-                    const blob = r.getAttribute('data-search') || '';
-                    if (!q || blob.includes(q)) r.removeAttribute('hidden');
-                    else r.setAttribute('hidden', '');
-                });
-            });
-        })();
+  async function onIncompletePaymentFound(payment) {
+    try {
+      await fetch('/pi/incomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment }),
+      });
+    } catch (e) {}
+  }
 
-        // ====== BOOKMARKS ======
-        let bookmarks = JSON.parse(localStorage.getItem('pt_bookmarks') || '[]');
-        let bookmarkFilter = false;
-        function saveBookmarks() { localStorage.setItem('pt_bookmarks', JSON.stringify(bookmarks)); }
-        function applyBookmarks() {
-            document.querySelectorAll('.bookmark').forEach(b => {
-                const id = b.getAttribute('data-id');
-                if (bookmarks.includes(id)) { b.classList.add('active'); b.textContent = '★'; }
-                else { b.classList.remove('active'); b.textContent = '☆'; }
-            });
-            applyBookmarkFilter();
-        }
-        function applyBookmarkFilter() {
-            document.querySelectorAll('tr.row-link').forEach(r => {
-                const id = r.getAttribute('data-id');
-                if (bookmarkFilter && !bookmarks.includes(id)) r.setAttribute('hidden', '');
-                else r.removeAttribute('hidden');
-            });
-        }
-        function toggleBookmarkFilter() {
-            // 북마크가 0개인데 필터 켜려고 하면 안내
-            if (!bookmarkFilter && bookmarks.length === 0) {
-                alert('북마크된 회보가 없습니다.\n각 행의 ☆를 눌러 북마크하세요.');
-                return;
-            }
-            bookmarkFilter = !bookmarkFilter;
-            document.getElementById('bookmark-filter').classList.toggle('active', bookmarkFilter);
-            applyBookmarkFilter();
-        }
-        document.getElementById('bookmark-filter').addEventListener('click', toggleBookmarkFilter);
-        document.querySelectorAll('.bookmark').forEach(b => {
-            b.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = b.getAttribute('data-id');
-                if (bookmarks.includes(id)) bookmarks = bookmarks.filter(x => x !== id);
-                else bookmarks.push(id);
-                saveBookmarks();
-                applyBookmarks();
-            });
-        });
-        applyBookmarks();
+  async function runSignIn() {
+    if (typeof Pi === 'undefined') {
+      setAuthStatus('Pi 브라우저에서 열어주세요.', 'err');
+      return;
+    }
+    btnEl.disabled = true;
+    setAuthStatus('Pi 로그인 중...', '');
+    try {
+      await Pi.init({ version: '2.0', sandbox: PI_SANDBOX });
+      var scopes = PI_SANDBOX ? ['username', 'wallet_address'] : ['username', 'payments'];
+      var auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+      var user = auth && auth.user;
+      if (user && user.username) {
+        usernameEl.textContent = '@' + user.username;
+        btnEl.style.display = 'none';
+        setAuthStatus('로그인 완료 ✓ 유료 회보는 글에서 π 결제 후 열람', 'ok');
+      } else {
+        setAuthStatus('로그인이 취소되었습니다.', 'err');
+      }
+    } catch (err) {
+      setAuthStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
 
-        // ====== ROW CLICK ======
-        document.querySelectorAll('tr.row-link').forEach(tr => {
-            tr.addEventListener('click', (e) => {
-                if (e.target.closest('a') || e.target.closest('button') || e.target.closest('.bookmark')) return;
-                window.location.href = tr.getAttribute('data-href');
-            });
-        });
+  btnEl.addEventListener('click', runSignIn);
+})();
+</script>
 
-        // ====== PI AUTH (Mainnet: login + payments scope) ======
-        (function () {
-            const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
-            const usernameEl = document.getElementById('pi-username');
-            const btnEl = document.getElementById('pi-signin-btn');
-            const signInHero = document.getElementById('pi-signin-hero');
-            const mainnetMsg = document.getElementById('pi-mainnet-msg');
-            let currentUid = null;
-            let currentAccessToken = null;
-
-            function setAuthStatus(text, kind) {
-                if (mainnetMsg) {
-                    mainnetMsg.textContent = text;
-                    mainnetMsg.classList.remove('ok', 'err');
-                    if (kind) mainnetMsg.classList.add(kind);
-                }
-            }
-
-            async function onIncompletePaymentFound(payment) {
-                try {
-                    await fetch('/pi/incomplete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ payment }),
-                    });
-                } catch (e) { /* ignore */ }
-            }
-
-            function applyAuthState(user) {
-                if (!user || !user.uid) return false;
-                currentUid = user.uid;
-                if (user.username) usernameEl.textContent = '@' + user.username;
-                btnEl.style.display = 'none';
-                if (signInHero) signInHero.style.display = 'none';
-                setAuthStatus('로그인 완료 ✓ 유료 회보는 글에서 π 결제 후 열람', 'ok');
-                return true;
-            }
-
-            async function ensurePiInit() {
-                if (typeof Pi === 'undefined') {
-                    throw new Error('Pi 브라우저에서 열어주세요.');
-                }
-                await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
-            }
-
-            async function runSignIn() {
-                await ensurePiInit();
-                btnEl.disabled = true;
-                if (signInHero) signInHero.disabled = true;
-                setAuthStatus('Pi 로그인 중...', '');
-                try {
-                    var scopes = PI_SANDBOX ? ['username', 'wallet_address'] : ['username', 'payments'];
-                    var auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                    var user = auth && auth.user;
-                    currentAccessToken = auth && auth.accessToken;
-                    if (!user || !user.uid) {
-                        setAuthStatus('로그인이 취소되었습니다.', 'err');
-                        return false;
-                    }
-                    return applyAuthState(user);
-                } catch (err) {
-                    setAuthStatus('로그인 실패: ' + (err && err.message ? err.message : err), 'err');
-                    return false;
-                } finally {
-                    btnEl.disabled = false;
-                    if (signInHero) signInHero.disabled = false;
-                }
-            }
-
-            async function handleSignInClick() {
-                try {
-                    await runSignIn();
-                } catch (err) {
-                    alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
-                }
-            }
-
-            btnEl.addEventListener('click', handleSignInClick);
-            if (signInHero) signInHero.addEventListener('click', handleSignInClick);
-        })();
-    </script>
 </body>
 </html>

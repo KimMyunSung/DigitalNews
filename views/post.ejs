@@ -1,995 +1,303 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= post.title || 'DIGITAL NEWS' %> — DIGITAL NEWS</title>
-    <meta name="description" content="<%= post.description %>">
-    <link rel="canonical" href="<%= siteUrl %>/post/<%= post.id %>">
-    <% if (post.isLocked) { %>
-    <!-- 유료 회보 — 검색엔진 인덱싱·캐싱 차단 -->
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
-    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
-    <% } %>
-
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="<%= post.title %>">
-    <meta property="og:description" content="<%= post.description %>">
-    <meta property="og:url" content="<%= siteUrl %>/post/<%= post.id %>">
-    <meta property="og:site_name" content="DIGITAL NEWS">
-    <% if (post.date && post.date !== '-') { %>
-    <meta property="article:published_time" content="<%= post.date %>">
-    <% } %>
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="<%= post.title %>">
-    <meta name="twitter:description" content="<%= post.description %>">
-
-    <% if (!post.isLocked) { %>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": <%- JSON.stringify(post.title || '') %>,
-      "description": <%- JSON.stringify(post.description || '') %>,
-      "datePublished": <%- JSON.stringify(post.date || '') %>,
-      "author": { "@type": "Person", "name": <%- JSON.stringify(post.sender || 'T') %> },
-      "mainEntityOfPage": { "@type": "WebPage", "@id": "<%= siteUrl %>/post/<%= post.id %>" }
-    }
-    </script>
-    <% } %>
-
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;500;700&display=swap" rel="stylesheet">
-
-    <!-- Pi Network SDK -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-    <style>
-        :root {
-            --fg: #00ff41;
-            --fg-dim: rgba(0, 255, 65, 0.65);
-            --fg-faint: rgba(0, 255, 65, 0.35);
-            --accent: #ff8c00;
-            --accent-soft: #ffb366;
-            --accent-faint: rgba(255, 140, 0, 0.55);
-            --text: #e0ffe6;
-            --json-string: #c9b87a;
-            --json-key: #7ad9ff;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: #000;
-            color: #00ff41;
-            font-family: 'Fira Code', 'Noto Sans KR', monospace;
-            line-height: 1.85;
-            overflow-x: hidden;
-        }
-
-        #matrix-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: -1;
-            opacity: 0.4;
-        }
-
-        .container {
-            width: 95%;
-            max-width: 880px;
-            margin: 40px auto;
-            background: rgba(0, 10, 0, 0.9);
-            border: 1px solid rgba(0, 255, 65, 0.5);
-            padding: 50px 48px;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
-            backdrop-filter: blur(10px);
-        }
-
-        /* === 페이지 제목 (회보 타이틀) === */
-        h1.post-title {
-            font-size: 1.9rem;
-            line-height: 1.45;
-            color: #00ff41;
-            text-align: center;
-            text-transform: uppercase;
-            word-break: keep-all;
-            padding: 28px 10px;
-            margin-bottom: 32px;
-            border-top: 2px solid #00ff41;
-            border-bottom: 2px solid #00ff41;
-            text-shadow: 0 0 12px rgba(0, 255, 65, 0.45);
-            letter-spacing: 1px;
-        }
-        h1.post-title .title-main { display: block; }
-        h1.post-title .title-sub {
-            display: block;
-            margin-top: 12px;
-            font-size: 1.45rem;
-            color: var(--accent-soft);
-            text-transform: none;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-            text-shadow: 0 0 8px var(--accent-faint);
-        }
-
-        /* === 메타데이터 (인라인 — 원래 스타일) === */
-        .meta-data {
-            font-size: 0.82rem;
-            color: rgba(0, 255, 65, 0.85);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: center;
-            gap: 28px;
-            margin-bottom: 50px;
-            padding-bottom: 22px;
-            border-bottom: 1px dashed rgba(0, 255, 65, 0.35);
-        }
-        .meta-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            line-height: 1;
-        }
-        .label { color: #00ff41; font-weight: 600; }
-
-        /* 메인 페이지와 동일한 발광 T 엠블럼 */
-        .sender-t {
-            display: inline-block;
-            font-family: 'Fira Code', monospace;
-            font-weight: 700;
-            font-size: 1.05rem;
-            letter-spacing: 1px;
-            color: #00ff41;
-            text-shadow:
-                0 0 4px #00ff41,
-                0 0 10px rgba(0, 255, 65, 0.75),
-                0 0 18px rgba(0, 255, 65, 0.45);
-            padding: 1px 9px;
-            border: 1px solid rgba(0, 255, 65, 0.6);
-            border-radius: 4px;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02));
-            margin-left: 2px;
-        }
-
-        /* === 본문 컨테이너 === */
-        .content {
-            color: #e0ffe6;
-            font-size: 1.08rem;
-        }
-
-        /* --- 본문 헤더(h1~h4) 위계 — 모두 녹색 --- */
-        .content h1 {
-            font-size: 1.55rem;
-            color: #00ff41;
-            margin: 56px 0 18px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-shadow: 0 0 7px rgba(0, 255, 65, 0.45);
-        }
-        .content h2 {
-            font-size: 1.32rem;
-            color: #00ff41;
-            margin: 48px 0 16px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
-        }
-        .content h3 { font-size: 1.15rem; color: rgba(0, 255, 65, 0.92); margin: 36px 0 14px; font-weight: 600; }
-        .content h4 { font-size: 1.02rem; color: rgba(0, 255, 65, 0.8); margin: 28px 0 12px; font-weight: 600; }
-
-        /* 괄호 안 글자(번역/부제) — 오렌지로 시각 분리 */
-        .content .parens {
-            color: var(--accent);
-            text-shadow: 0 0 4px var(--accent-faint);
-            font-weight: 500;
-        }
-        .content h1 .parens,
-        .content h2 .parens,
-        .content blockquote .parens {
-            text-shadow: 0 0 6px var(--accent-faint);
-        }
-
-        /* 섹션 번호 — 녹색 (헤더 텍스트는 오렌지 유지, 숫자만 녹색으로 시각 분리) */
-        .content h1 .auto-num,
-        .content h2 .auto-num {
-            color: #00ff41;
-            text-shadow: 0 0 6px rgba(0, 255, 65, 0.55);
-            margin-right: 8px;
-            font-weight: 700;
-        }
-
-        /* --- 본문 단락 --- */
-        .content p {
-            margin-bottom: 20px;
-            line-height: 1.7;
-            word-break: keep-all;
-        }
-        /* 헤더(번호 절) 다음 첫 단락만 들여쓰기 */
-        .content h1 + p,
-        .content h2 + p,
-        .content h3 + p,
-        .content h4 + p {
-            text-indent: 1em;
-        }
-        .content p strong, .content strong { color: #00ff41; }
-        .content em { color: rgba(0, 255, 65, 0.85); font-style: italic; }
-
-        /* --- 리스트 (간격 적절히) --- */
-        .content ol, .content ul {
-            margin: 18px 0 28px;
-            padding-left: 28px;
-        }
-        .content ol li, .content ul li {
-            margin-bottom: 14px;
-            line-height: 1.85;
-            padding-left: 6px;
-        }
-        .content ol li::marker, .content ul li::marker { color: #00ff41; }
-
-        /* --- 인용구 (📡 Message #XXX: 영문제목 (한글제목)) : 회보 라벨로 강조 --- */
-        .content blockquote {
-            margin: 36px 0 28px;
-            padding: 22px 26px;
-            background: rgba(255, 140, 0, 0.05);
-            border-left: 4px solid var(--accent);
-            border-right: 1px solid rgba(255, 140, 0, 0.18);
-        }
-        .content blockquote p {
-            margin: 0;
-            font-size: 1.18rem;
-            color: #00ff41;
-            line-height: 1.55;
-            word-break: keep-all;
-            text-shadow: 0 0 6px rgba(0, 255, 65, 0.45);
-        }
-        .content blockquote strong { color: #00ff41; }
-
-        /* --- 수평선 (섹션 구분선) — 오렌지 --- */
-        .content hr {
-            border: none;
-            border-top: 1px solid rgba(255, 140, 0, 0.45);
-            margin: 40px 0;
-            box-shadow: 0 0 6px rgba(255, 140, 0, 0.25);
-        }
-
-        /* --- 인라인 코드 --- */
-        .content code {
-            background: rgba(0, 50, 0, 0.6);
-            color: #00ff41;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.92em;
-        }
-
-        /* === 기계어 (JSON) 블록 — 은은한 syntax highlighting === */
-        .content pre {
-            position: relative;
-            background: rgba(0, 18, 4, 0.88);
-            border: 1px solid rgba(0, 255, 65, 0.55);
-            padding: 38px 26px 24px;
-            margin: 32px 0;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            font-size: 0.88rem;
-            color: rgba(0, 255, 65, 0.55);
-            line-height: 1.6;
-            box-shadow: 0 0 16px rgba(0, 255, 65, 0.08), inset 0 0 18px rgba(0, 255, 65, 0.03);
-        }
-        .content pre::before {
-            content: "▼ MACHINE CODE / 기계어";
-            position: absolute;
-            top: 0; left: 0;
-            background: #00ff41;
-            color: #000;
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            padding: 4px 12px;
-        }
-        .content pre code {
-            background: transparent;
-            color: inherit;
-            padding: 0;
-            font-size: inherit;
-        }
-        /* JSON syntax — 키 청록, 값 크림, 숫자/불린 오렌지 */
-        .content pre .json-key     { color: var(--json-key); font-weight: 500; }
-        .content pre .json-string  { color: var(--json-string); }
-        .content pre .json-number  { color: var(--accent-soft); }
-        .content pre .json-keyword { color: var(--accent-soft); font-style: italic; }
-        .content pre .json-punct   { color: rgba(0, 255, 65, 0.4); }
-
-        /* === 뒤로가기 버튼 === */
-        .btn-back {
-            display: inline-block;
-            margin-top: 48px;
-            padding: 12px 26px;
-            background: #00ff41;
-            color: #000;
-            text-decoration: none;
-            font-weight: 700;
-            letter-spacing: 1px;
-            transition: 0.3s;
-        }
-        .btn-back:hover { background: #fff; box-shadow: 0 0 20px #fff; }
-
-        .site-legal {
-            margin-top: 24px;
-            padding: 14px 0 8px;
-            text-align: center;
-            font-size: 0.72rem;
-            color: rgba(0, 255, 65, 0.45);
-            border-top: 1px solid rgba(0, 255, 65, 0.15);
-        }
-        .site-legal a {
-            color: rgba(0, 255, 65, 0.7);
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        .site-legal a:hover { color: #00ff41; text-decoration: underline; }
-
-        /* === Pi Auth Bar === */
-        #pi-auth-bar {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            z-index: 1000;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.82rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        #pi-signin-btn {
-            background: rgba(0, 10, 0, 0.85);
-            color: #00ff41;
-            border: 1px solid #00ff41;
-            padding: 8px 14px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: inherit;
-            letter-spacing: 1px;
-            transition: 0.3s;
-        }
-        #pi-signin-btn:hover {
-            background: #00ff41;
-            color: #000;
-            box-shadow: 0 0 12px #00ff41;
-        }
-        #pi-username {
-            color: #00ff41;
-            text-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
-        }
-
-        /* === Locked / Paywall === */
-        .paywall {
-            margin: 40px 0;
-            padding: 8px 4px 12px;
-            background: transparent;
-            border: none;
-            text-align: center;
-            color: #00ff41;
-        }
-        .paywall h2 {
-            font-size: 1.3rem;
-            margin-bottom: 16px;
-            letter-spacing: 1px;
-            color: #00ff41;
-            text-shadow: 0 0 10px rgba(0, 255, 65, 0.6);
-        }
-        .paywall .paywall-h2-link {
-            color: inherit;
-            text-decoration: none;
-            transition: text-shadow 0.25s ease;
-        }
-        .paywall .paywall-h2-link:hover {
-            text-shadow: 0 0 14px #00ff41, 0 0 24px rgba(0, 255, 65, 0.6);
-        }
-        .paywall .pi-home-cta {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 420px;
-            margin: 0 auto 22px;
-            padding: 16px 18px;
-            text-decoration: none;
-            color: #001a00;
-            background: linear-gradient(135deg, #39ff14 0%, #00cc33 55%, #ffb366 100%);
-            border: 2px solid #00ff41;
-            border-radius: 10px;
-            box-shadow: 0 0 22px rgba(57, 255, 20, 0.35), inset 0 0 20px rgba(255, 255, 255, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            touch-action: manipulation;
-        }
-        .paywall .pi-home-cta:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 0 32px rgba(57, 255, 20, 0.55), 0 0 18px rgba(255, 140, 0, 0.35);
-        }
-        .paywall .pi-home-cta:active { transform: scale(0.98); }
-        .paywall .pi-home-cta-icon {
-            flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #001a00;
-            background: rgba(255, 255, 255, 0.35);
-            border-radius: 50%;
-            border: 1px solid rgba(0, 0, 0, 0.15);
-        }
-        .paywall .pi-home-cta-text {
-            flex: 1;
-            min-width: 0;
-            text-align: left;
-            line-height: 1.35;
-        }
-        .paywall .pi-home-cta-ko {
-            display: block;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            color: #001a00;
-        }
-        .paywall .pi-home-cta-en {
-            display: block;
-            font-size: 0.68rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            opacity: 0.75;
-            margin-top: 2px;
-        }
-        .paywall .pi-home-cta-arrow {
-            flex-shrink: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            opacity: 0.85;
-        }
-        .paywall p { margin: 10px 0; color: #e0ffe6; line-height: 1.7; font-size: 0.95rem; }
-        .paywall .price-block { margin: 22px 0; }
-        .paywall .price {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #00ff41;
-            letter-spacing: 2px;
-        }
-        .paywall .price-sub {
-            font-size: 1.5rem;
-            color: #00ff41;
-            letter-spacing: 2px;
-            margin-top: 6px;
-            font-weight: 700;
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
-        }
-        .paywall .pay-row {
-            display: inline-flex;
-            align-items: center;
-            gap: 14px;
-            margin-top: 4px;
-        }
-        .paywall .pay-ko {
-            font-size: 0.92rem;
-            color: rgba(0, 255, 65, 0.85);
-            letter-spacing: 1px;
-        }
-        .paywall .note {
-            font-size: 0.88rem;
-            color: rgba(224, 255, 230, 0.82);
-            margin-top: 22px;
-            line-height: 1.8;
-            max-width: 36em;
-            margin-left: auto;
-            margin-right: auto;
-            letter-spacing: 0.02em;
-        }
-        .paywall .note .brand {
-            color: #00ff41;
-            font-weight: 600;
-            text-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
-        }
-        /* Pi 진단 박스 — 결제 막힌 이유를 명확히 표시 */
-        .pi-diag {
-            margin: 0 0 22px;
-            padding: 12px 16px;
-            border-radius: 4px;
-            font-family: 'Fira Code', monospace;
-            font-size: 0.82rem;
-            text-align: left;
-            line-height: 1.6;
-            letter-spacing: 0.3px;
-        }
-        .pi-diag.warn  { background: rgba(255, 140, 0, 0.12); border: 1px solid #ff8c00; color: #ffd699; }
-        .pi-diag.error { background: rgba(255, 60, 60, 0.15); border: 1px solid #ff5050; color: #ffb3b3; }
-        .pi-diag.ok    { background: rgba(0, 255, 65, 0.10); border: 1px solid #00ff41; color: #b3ffc6; }
-        .pi-diag .pi-diag-title { font-weight: 700; margin-bottom: 4px; }
-        .paywall .note strong { color: #00ff41; }
-        /* π 기호 — 기본 오렌지 (.pi-green 으로 오버라이드 가능) */
-        .pi-symbol {
-            color: var(--accent);
-            font-weight: 700;
-            text-shadow: 0 0 6px var(--accent-faint);
-        }
-        /* GCV 라인의 π — 녹색 강조 */
-        .pi-symbol.pi-green {
-            color: #00ff41;
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-        }
-        /* 녹색 버튼 위에서는 진한 오렌지로 (대비 확보) */
-        #pi-pay-btn .pi-symbol {
-            color: #b34d00;
-            text-shadow: none;
-            font-size: 1.4rem;
-        }
-        #pi-pay-btn {
-            display: inline-block;
-            margin-top: 18px;
-            padding: 16px 34px;
-            background: #00ff41;
-            color: #000;
-            border: none;
-            font-family: 'Fira Code', monospace;
-            font-weight: 700;
-            font-size: 1.15rem;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        #pi-pay-btn:hover { background: #fff; box-shadow: 0 0 20px #fff; }
-        #pi-pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* === 📱 모바일 === */
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 24px 12px; margin: 60px auto 10px; width: 100%; max-width: 100%; }
-            .lang-toggle {
-                top: 10px;
-                left: 10px;
-                padding: 5px 9px;
-                font-size: 0.7rem;
-                letter-spacing: 1px;
-            }
-            h1.post-title {
-                font-size: 1.2rem;
-                padding: 18px 6px;
-                margin-bottom: 22px;
-                letter-spacing: 0.5px;
-            }
-            h1.post-title .title-sub { font-size: 1.05rem; margin-top: 8px; }
-            .meta-data {
-                flex-direction: column;
-                gap: 8px;
-                padding-bottom: 14px;
-                margin-bottom: 28px;
-                font-size: 0.78rem;
-            }
-            .content { font-size: 0.98rem; }
-            .content h1 { font-size: 1.2rem; margin-top: 36px; }
-            .content h2 { font-size: 1.08rem; margin-top: 32px; }
-            .content h3 { font-size: 1rem; margin-top: 24px; }
-            .content p { line-height: 1.65; margin-bottom: 16px; }
-            .content blockquote { padding: 16px 18px; margin: 26px 0 22px; }
-            .content blockquote p { font-size: 1rem; }
-            .content pre {
-                padding: 32px 16px 18px;
-                font-size: 0.78rem;
-                margin: 22px 0;
-            }
-            .content pre::before { font-size: 0.66rem; padding: 3px 10px; }
-            .content ol, .content ul { padding-left: 22px; }
-            .content ol li, .content ul li { margin-bottom: 12px; }
-            .paywall { padding: 28px 14px; margin: 24px 0; }
-            .paywall .pi-home-cta {
-                max-width: 100%;
-                padding: 14px 12px;
-                gap: 10px;
-            }
-            .paywall .pi-home-cta-ko { font-size: 0.88rem; }
-            .paywall .pi-home-cta-en { font-size: 0.62rem; }
-            .paywall .pi-home-cta-icon { width: 32px; height: 32px; font-size: 1.15rem; }
-            .btn-back {
-                display: block;
-                text-align: center;
-                margin-top: 30px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= post.title || 'DIGITAL NEWS' %> — DIGITAL NEWS</title>
+<meta name="description" content="<%= post.description %>">
+<link rel="canonical" href="<%= siteUrl %>/post/<%= post.id %>">
+<% if (post.isLocked) { %>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<% } %>
+<meta property="og:type" content="article">
+<meta property="og:title" content="<%= post.title %>">
+<meta property="og:description" content="<%= post.description %>">
+<meta property="og:url" content="<%= siteUrl %>/post/<%= post.id %>">
+<% if (!post.isLocked) { %>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": <%- JSON.stringify(post.title || '') %>,
+  "description": <%- JSON.stringify(post.description || '') %>,
+  "datePublished": <%- JSON.stringify(post.date || '') %>,
+  "author": { "@type": "Person", "name": <%- JSON.stringify(post.sender || 'T') %> },
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "<%= siteUrl %>/post/<%= post.id %>" }
+}
+</script>
+<% } %>
+<link rel="stylesheet" href="/css/digital-news.css">
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
-    <canvas id="matrix-canvas"></canvas>
 
-    <!-- Pi Auth Bar -->
-    <div id="pi-auth-bar">
-        <button id="pi-signin-btn" type="button">로그인</button>
-        <span id="pi-username"></span>
+<div id="pi-auth-bar">
+  <button id="pi-signin-btn" type="button">로그인</button>
+  <span id="pi-username"></span>
+</div>
+
+<%
+  var rawTitle = post.title || 'MESSAGE_READING...';
+  var titleMatch = rawTitle.match(/^(.*?)\s*\(([^()]+)\)\s*(.*)$/);
+  var titleMain = titleMatch ? (titleMatch[1] + (titleMatch[3] ? ' ' + titleMatch[3] : '')).trim() : rawTitle;
+  var titleSub = titleMatch ? titleMatch[2].trim() : '';
+%>
+
+<div class="post-wrap">
+  <h1 class="post-title">
+    <span class="title-main"><%= titleMain %></span>
+    <% if (titleSub) { %><span class="sub">(<%= titleSub %>)</span><% } %>
+  </h1>
+
+  <div class="meta-chips on-light">
+    <span class="meta-chip"><span class="label">Date</span><span class="value"><%= post.date || '-' %></span></span>
+    <span class="meta-chip"><span class="label">From</span><span class="value"><%= post.sender || 'T' %></span></span>
+    <span class="meta-chip"><span class="label">To</span><span class="value"><%= post.receiver || 'ALL_AI' %></span></span>
+    <% if (post.isFree) { %>
+      <span class="badge free"><span>✓</span> 무료</span>
+    <% } else { %>
+      <span class="badge paid"><span>π</span> 유료</span>
+    <% } %>
+  </div>
+
+  <% if (post.isLocked) { %>
+  <div class="pi-box" id="paywall">
+    <div id="pi-diag" class="pi-diag" style="display:none;"></div>
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
+    <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
+    <a class="pi-gold-link" href="https://digitalnews8571.pinet.com/" target="_blank" rel="noopener noreferrer">
+      <span class="pi">π</span>
+      <span class="mid">
+        <span class="main">Pi 세상으로 들어가기</span>
+        <span class="sub">getting into the Pi Ecosystem</span>
+      </span>
+      <span class="arrow">→</span>
+    </a>
+    <div class="pay-area">
+      <button id="pi-pay-btn" class="btn-pay" type="button" disabled><span>π</span> 결제하기</button>
+      <div class="pay-price">
+        <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %>
+        <span class="pi">π</span>
+        <span class="note">결제후 바로 열람이 가능합니다.</span>
+      </div>
+      <p class="pay-note">
+        Find the <span class="hl">Digital News</span> app in the Pi Ecosystem — the message will unlock for you.<br>
+        Pi 생태계에서 <span class="hl">디지털뉴스</span> 앱을 찾아오시면 메시지가 열립니다.
+      </p>
     </div>
+  </div>
+  <% } else { %>
+  <div class="content"><%- post.content %></div>
+  <% } %>
 
-    <div class="container">
-        <%
-            var rawTitle = post.title || 'MESSAGE_READING...';
-            var titleMatch = rawTitle.match(/^(.*?)\s*\(([^()]+)\)\s*(.*)$/);
-            var titleMain = titleMatch ? (titleMatch[1] + (titleMatch[3] ? ' ' + titleMatch[3] : '')).trim() : rawTitle;
-            var titleSub = titleMatch ? titleMatch[2].trim() : '';
-        %>
-        <h1 class="post-title" id="post-title-h1"
-            data-title-main="<%= titleMain %>"
-            data-title-sub="<%= titleSub %>">
-            <span class="title-main" id="title-main"><%= titleMain %></span>
-            <% if (titleSub) { %><span class="title-sub" id="title-sub">(<%= titleSub %>)</span><% } %>
-        </h1>
-        
-        <div class="meta-data">
-            <div class="meta-item"><span class="label">[DATE]</span> <%= post.date || post.timestamp || '-' %></div>
-            <div class="meta-item"><span class="label">[FROM]</span> <span class="sender-t"><%= post.sender || 'T' %></span></div>
-            <div class="meta-item"><span class="label">[TO]</span> <%= post.receiver || 'ALL_AI' %></div>
-        </div>
+  <a href="/" class="back-link">← 목록으로 돌아가기</a>
+  <footer class="site-legal">
+    <a href="/privacy">Privacy Policy</a>
+    <span>·</span>
+    <a href="/terms">Terms of Service</a>
+  </footer>
+</div>
 
-        <% if (post.isLocked) { %>
-            <div class="paywall" id="paywall">
-                <div id="pi-diag" class="pi-diag" style="display:none;"></div>
-                <a class="pi-home-cta" href="https://minepi.com/" target="_blank" rel="noopener noreferrer">
-                    <span class="pi-home-cta-icon">π</span>
-                    <span class="pi-home-cta-text">
-                        <span class="pi-home-cta-ko">Pi 홈페이지 바로가기</span>
-                        <span class="pi-home-cta-en">Shortcut to Pi Home Page</span>
-                    </span>
-                    <span class="pi-home-cta-arrow" aria-hidden="true">→</span>
-                </a>
-                <p>This message lives inside the <strong>Pi Ecosystem</strong>.</p>
-                <p>이 회보는 <strong>Pi 생태계</strong>에 있습니다. 함께 와서 보세요.</p>
-                <div class="price-block">
-                    <div class="price-sub"><%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %> <span class="pi-symbol pi-green">π</span></div>
-                </div>
-                <button id="pi-pay-btn" type="button" disabled><span class="pi-symbol">π</span>결제하기</button>
-                <p class="note">
-                    Find the <span class="brand">디지털뉴스</span> app in the Pi Ecosystem — the message will unlock for you.<br>
-                    AI agents and bright minds — all welcome.<br><br>
-                    Pi 생태계에서 <span class="brand">디지털뉴스</span> 앱을 찾아오시면 메시지가 열립니다.<br>
-                    AI 에이전트와 스마트한 사람들 — 모두 환영합니다.
-                </p>
-            </div>
-        <% } else { %>
-            <div class="content">
-                <%- post.content %>
-            </div>
-        <% } %>
+<% if (!post.isLocked) { %>
+<script>
+(function() {
+  const content = document.querySelector('.content');
+  if (!content) return;
+  const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
 
-        <a href="/" class="btn-back">< RETURN_TO_SYSTEM</a>
-        <footer class="site-legal">
-            <a href="/privacy">Privacy Policy</a>
-            <span>·</span>
-            <a href="/terms">Terms of Service</a>
-        </footer>
-    </div>
+  (function injectTitleBlock() {
+    if (!POST_TITLE) return;
+    const existing = Array.from(content.querySelectorAll('blockquote'));
+    const titleKey = POST_TITLE.replace(/[()·•🚀]/g, '').trim().slice(0, 14);
+    if (existing.some(bq => bq.textContent.replace(/\s+/g, ' ').includes(titleKey))) return;
+    const bq = document.createElement('blockquote');
+    const p = document.createElement('p');
+    p.innerHTML = '<strong>🚀 ' + POST_TITLE.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</strong>';
+    bq.appendChild(p);
+    const firstPre = content.querySelector('pre');
+    if (firstPre && firstPre.parentNode === content) firstPre.after(bq);
+    else content.prepend(bq);
+  })();
 
-    <script>
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*'.split('');
-        const fontSize = 14;
-        const columns = canvas.width / fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
+  (function colorParens() {
+    content.querySelectorAll('h1, h2, blockquote p, blockquote strong').forEach(el => {
+      el.childNodes.forEach(node => {
+        if (node.nodeType !== Node.TEXT_NODE) return;
+        const raw = node.nodeValue;
+        if (!/\([^()]+\)/.test(raw)) return;
+        const tmp = document.createElement('span');
+        tmp.innerHTML = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/(\([^()]+\))/g, '<span class="parens">$1</span>');
+        const frag = document.createDocumentFragment();
+        while (tmp.firstChild) frag.appendChild(tmp.firstChild);
+        node.parentNode.replaceChild(frag, node);
+      });
+    });
+  })();
 
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = fontSize + 'px monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = chars[Math.floor(Math.random() * chars.length)];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
+  (function highlightJSON() {
+    content.querySelectorAll('pre').forEach(pre => {
+      const codeEl = pre.querySelector('code') || pre;
+      const raw = codeEl.textContent;
+      if (!/^\s*[\{\[]/.test(raw)) return;
+      let out = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      out = out.replace(/("(?:\\.|[^"\\])*")(\s*:)/g, '<span class="json-key">$1</span>$2');
+      out = out.replace(/([:\[,]\s*)("(?:\\.|[^"\\])*")/g, '$1<span class="json-string">$2</span>');
+      out = out.replace(/([:\[,]\s*)(-?\d+\.?\d*)/g, '$1<span class="json-number">$2</span>');
+      out = out.replace(/([:\[,]\s*)(true|false|null)\b/g, '$1<span class="json-keyword">$2</span>');
+      codeEl.innerHTML = out;
+    });
+  })();
+})();
+</script>
+<% } %>
+
+<script>
+(function () {
+  const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
+  const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %>;
+  const PAY_BTN_HTML = '<span>π</span> 결제하기';
+  const POST_ID = <%- JSON.stringify(post.id || '') %>;
+  const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
+  const IS_LOCKED = <%= post.isLocked ? 'true' : 'false' %>;
+
+  const usernameEl = document.getElementById('pi-username');
+  const signinBtn = document.getElementById('pi-signin-btn');
+  const payBtn = document.getElementById('pi-pay-btn');
+  let currentUid = null;
+  let piInitialized = false;
+  let authPromise = null;
+
+  function showAuthenticated(user) {
+    if (user && user.username) {
+      usernameEl.textContent = '@' + user.username;
+      signinBtn.style.display = 'none';
+      currentUid = user.uid;
+      if (IS_LOCKED) {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.get('pi_uid')) {
+          url.searchParams.set('pi_uid', user.uid);
+          window.location.replace(url.toString());
         }
-        setInterval(drawMatrix, 33);
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    </script>
+      }
+    }
+  }
 
-    <!-- 본문 처리: 제목 자동 주입·자동 번호·괄호 오렌지·JSON 하이라이트 -->
-    <script>
-        (function() {
-            const content = document.querySelector('.content');
-            if (!content) return;
+  function onIncompletePaymentFound(payment) {
+    if (payment && payment.identifier && payment.transaction && payment.transaction.txid) {
+      fetch('/pi/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid }),
+      }).catch(console.error);
+    }
+  }
 
-            const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
+  async function ensureInit() {
+    if (piInitialized) return;
+    await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
+    piInitialized = true;
+  }
 
-            // ===== 1) 제목 블록 자동 주입 =====
-            // 기계어(<pre>) 다음 위치에 제목 인용구가 없으면 자동으로 넣음.
-            (function injectTitleBlock() {
-                if (!POST_TITLE) return;
-                // 기존 블록쿼트에 이미 제목이 들어있는지 확인
-                const existing = Array.from(content.querySelectorAll('blockquote'));
-                const titleKey = POST_TITLE.replace(/[()·•🚀]/g, '').trim().slice(0, 14);
-                const alreadyHas = existing.some(bq => bq.textContent.replace(/\s+/g, ' ').includes(titleKey));
-                if (alreadyHas) return;
+  async function authenticate(scopes) {
+    await ensureInit();
+    if (!authPromise) authPromise = Pi.authenticate(scopes || ['username'], onIncompletePaymentFound);
+    const auth = await authPromise;
+    showAuthenticated(auth && auth.user);
+    return auth;
+  }
 
-                const bq = document.createElement('blockquote');
-                const p = document.createElement('p');
-                p.innerHTML = '<strong>🚀 ' + POST_TITLE.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</strong>';
-                bq.appendChild(p);
-                // 첫 <pre> 다음에 삽입, <pre>가 없으면 content 맨 앞
-                const firstPre = content.querySelector('pre');
-                if (firstPre && firstPre.parentNode === content) {
-                    firstPre.after(bq);
-                } else {
-                    content.prepend(bq);
-                }
-            })();
+  function showDiag(level, html) {
+    const d = document.getElementById('pi-diag');
+    if (!d) return;
+    d.className = 'pi-diag ' + level;
+    d.innerHTML = html;
+    d.style.display = 'block';
+  }
 
-            // ===== 2) 헤더 번호 자동 부여 제거 — 오너님이 노션에 직접 1, 2, 3 쓰심 =====
-            // (중복 방지: 기존엔 자동 부여 로직이 사용자 번호와 중복되어 "1. 1." 처럼 표시됐음)
+  async function checkServerConfig() {
+    if (!IS_LOCKED) return true;
+    try {
+      const r = await fetch('/pi/status');
+      const s = await r.json();
+      if (!s.configured) {
+        showDiag('error', '<div class="pi-diag-title">⚠ 서버에 PI_API_KEY 미설정</div>Render 환경변수에 <strong>PI_API_KEY</strong> 추가 후 재배포 필요.');
+        if (payBtn) { payBtn.disabled = true; payBtn.title = '서버 PI_API_KEY 미설정'; }
+        return false;
+      }
+      return true;
+    } catch (err) { return true; }
+  }
 
-            // ===== 3) 괄호 내부 텍스트를 오렌지로 래핑 (h1/h2/blockquote 한정) =====
-            (function colorParens() {
-                const targets = content.querySelectorAll('h1, h2, blockquote p, blockquote strong');
-                targets.forEach(el => {
-                    // 자식 텍스트 노드만 안전하게 변환 (이미 래핑된 부분은 패스)
-                    el.childNodes.forEach(node => {
-                        if (node.nodeType !== Node.TEXT_NODE) return;
-                        const raw = node.nodeValue;
-                        if (!/\([^()]+\)/.test(raw)) return;
-                        const tmp = document.createElement('span');
-                        tmp.innerHTML = raw
-                            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-                            .replace(/(\([^()]+\))/g, '<span class="parens">$1</span>');
-                        // 자식들을 원위치에 삽입
-                        const frag = document.createDocumentFragment();
-                        while (tmp.firstChild) frag.appendChild(tmp.firstChild);
-                        node.parentNode.replaceChild(frag, node);
-                    });
-                });
-            })();
+  async function autoAuth() {
+    const configOk = await checkServerConfig();
+    if (!configOk) return;
+    if (typeof Pi === 'undefined') {
+      if (IS_LOCKED) showDiag('warn', '<div class="pi-diag-title">⚠ Pi 브라우저에서 열어주세요</div>일반 브라우저에서는 결제가 작동하지 않습니다.');
+      if (payBtn) { payBtn.disabled = true; payBtn.title = 'Pi 브라우저 필요'; }
+      return;
+    }
+    try {
+      await authenticate(['username']);
+      if (payBtn && IS_LOCKED) payBtn.disabled = false;
+    } catch (err) {
+      if (IS_LOCKED) showDiag('warn', '<div class="pi-diag-title">Pi 로그인 필요</div>결제 전에 「로그인」 버튼을 눌러주세요.');
+    }
+  }
 
-            // ===== 4) JSON 코드 블록 syntax highlighting =====
-            (function highlightJSON() {
-                content.querySelectorAll('pre').forEach(pre => {
-                    const codeEl = pre.querySelector('code') || pre;
-                    const raw = codeEl.textContent;
-                    if (!/^\s*[\{\[]/.test(raw)) return; // JSON 형태가 아니면 패스
-                    // HTML 이스케이프
-                    let out = raw
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-                    // 1. 키: "..." 다음 콜론
-                    out = out.replace(/("(?:\\.|[^"\\])*")(\s*:)/g, '<span class="json-key">$1</span>$2');
-                    // 2. 값 문자열: 콜론 또는 [ , 다음의 "..."
-                    out = out.replace(/([:\[,]\s*)("(?:\\.|[^"\\])*")/g, '$1<span class="json-string">$2</span>');
-                    // 3. 숫자
-                    out = out.replace(/([:\[,]\s*)(-?\d+\.?\d*)/g, '$1<span class="json-number">$2</span>');
-                    // 4. boolean/null
-                    out = out.replace(/([:\[,]\s*)(true|false|null)\b/g, '$1<span class="json-keyword">$2</span>');
-                    codeEl.innerHTML = out;
-                });
-            })();
-        })();
-    </script>
+  signinBtn.addEventListener('click', async () => {
+    try {
+      if (typeof Pi === 'undefined') { alert('Pi 브라우저에서 열어주세요.'); return; }
+      authPromise = null;
+      await authenticate(['username']);
+    } catch (err) {
+      alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
+    }
+  });
 
-    <!-- Pi Authentication + Payment -->
-    <script>
-        (function () {
-            const PI_SANDBOX = <%= typeof piSandbox !== 'undefined' ? piSandbox : true %>;
-            const PI_PAYMENT_AMOUNT = <%= typeof piPaymentAmount !== 'undefined' ? piPaymentAmount : 0.1 %>;
-            const PAY_BTN_HTML = '<span class="pi-symbol">π</span>결제하기';
-            const POST_ID    = <%- JSON.stringify(post.id || '') %>;
-            const POST_TITLE = <%- JSON.stringify(post.title || '') %>;
-            const IS_LOCKED  = <%= post.isLocked ? 'true' : 'false' %>;
+  if (payBtn && IS_LOCKED) {
+    payBtn.addEventListener('click', async () => {
+      if (typeof Pi === 'undefined') { alert('Pi 브라우저에서 열어주세요.'); return; }
+      try {
+        payBtn.disabled = true;
+        payBtn.textContent = '⌛ 결제 진행 중...';
+        authPromise = null;
+        await authenticate(['username', 'payments']);
+        await Pi.createPayment(
+          { amount: PI_PAYMENT_AMOUNT, memo: '디지털뉴스 — ' + POST_TITLE, metadata: { postId: POST_ID } },
+          {
+            onReadyForServerApproval: async (paymentId) => {
+              const r = await fetch('/pi/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId }) });
+              if (!r.ok) throw new Error('approve 실패: ' + r.status);
+            },
+            onReadyForServerCompletion: async (paymentId, txid) => {
+              const r = await fetch('/pi/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId, txid }) });
+              if (!r.ok) throw new Error('complete 실패: ' + r.status);
+              showDiag('ok', '<div class="pi-diag-title">✓ 결제 완료 — 새로고침 중...</div>');
+              const url = new URL(window.location.href);
+              if (currentUid) url.searchParams.set('pi_uid', currentUid);
+              setTimeout(() => window.location.replace(url.toString()), 800);
+            },
+            onCancel: () => { payBtn.disabled = false; payBtn.innerHTML = PAY_BTN_HTML; },
+            onError: (error) => {
+              alert('결제 오류: ' + (error && error.message ? error.message : error));
+              payBtn.disabled = false;
+              payBtn.innerHTML = PAY_BTN_HTML;
+            },
+          }
+        );
+      } catch (err) {
+        alert('결제 실패: ' + (err && err.message ? err.message : err));
+        payBtn.disabled = false;
+        payBtn.innerHTML = PAY_BTN_HTML;
+      }
+    });
+  }
 
-            const usernameEl = document.getElementById('pi-username');
-            const signinBtn  = document.getElementById('pi-signin-btn');
-            const payBtn     = document.getElementById('pi-pay-btn');
+  if (document.readyState === 'complete') autoAuth();
+  else window.addEventListener('load', autoAuth);
+})();
+</script>
 
-            let currentUid = null;
-            let piInitialized = false;
-            let authPromise = null;
-
-            function showAuthenticated(user) {
-                if (user && user.username) {
-                    usernameEl.textContent = '@' + user.username;
-                    signinBtn.style.display = 'none';
-                    currentUid = user.uid;
-                    // 결제 잠금 해제용 — URL에 pi_uid 없으면 추가하고 리로드
-                    if (IS_LOCKED) {
-                        const url = new URL(window.location.href);
-                        if (!url.searchParams.get('pi_uid')) {
-                            url.searchParams.set('pi_uid', user.uid);
-                            window.location.replace(url.toString());
-                        }
-                    }
-                }
-            }
-
-            function onIncompletePaymentFound(payment) {
-                // 미완료 결제 발견 시 자동 완료 시도
-                console.log('Incomplete payment:', payment);
-                if (payment && payment.identifier && payment.transaction && payment.transaction.txid) {
-                    fetch('/pi/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid }),
-                    }).catch(console.error);
-                }
-            }
-
-            async function ensureInit() {
-                if (piInitialized) return;
-                await Promise.resolve(Pi.init({ version: '2.0', sandbox: PI_SANDBOX }));
-                piInitialized = true;
-            }
-
-            async function authenticate(scopes) {
-                await ensureInit();
-                if (!authPromise) {
-                    authPromise = Pi.authenticate(scopes || ['username'], onIncompletePaymentFound);
-                }
-                const auth = await authPromise;
-                showAuthenticated(auth && auth.user);
-                return auth;
-            }
-
-            function showDiag(level, html) {
-                const d = document.getElementById('pi-diag');
-                if (!d) return;
-                d.className = 'pi-diag ' + level;
-                d.innerHTML = html;
-                d.style.display = 'block';
-            }
-
-            async function checkServerConfig() {
-                if (!IS_LOCKED) return true;
-                try {
-                    const r = await fetch('/pi/status');
-                    const s = await r.json();
-                    if (!s.configured) {
-                        showDiag('error',
-                            '<div class="pi-diag-title">⚠ 서버에 PI_API_KEY 미설정</div>' +
-                            '결제가 작동하지 않습니다. Render 환경변수에 ' +
-                            '<strong>PI_API_KEY</strong> 추가 후 재배포 필요.'
-                        );
-                        if (payBtn) {
-                            payBtn.disabled = true;
-                            payBtn.title = '서버 PI_API_KEY 미설정';
-                        }
-                        return false;
-                    }
-                    return true;
-                } catch (err) {
-                    console.error('서버 상태 확인 실패:', err);
-                    return true; // 일단 진행
-                }
-            }
-
-            async function autoAuth() {
-                const configOk = await checkServerConfig();
-                if (!configOk) return;
-
-                if (typeof Pi === 'undefined') {
-                    showDiag('warn',
-                        '<div class="pi-diag-title">⚠ Pi 브라우저에서 열어주세요</div>' +
-                        '일반 브라우저에서는 결제 버튼이 작동하지 않습니다. ' +
-                        'Pi 브라우저로 이 URL을 열어주세요.'
-                    );
-                    if (payBtn) {
-                        payBtn.disabled = true;
-                        payBtn.title = 'Pi 브라우저 필요';
-                    }
-                    return;
-                }
-                try {
-                    await authenticate(['username']);
-                    if (payBtn && IS_LOCKED) payBtn.disabled = false;
-                } catch (err) {
-                    console.error('Pi auto-auth 실패:', err);
-                    showDiag('warn',
-                        '<div class="pi-diag-title">Pi 로그인 필요</div>' +
-                        '결제 전에 우측 상단 「로그인」 버튼을 눌러 로그인하세요.<br>' +
-                        '<small style="opacity:0.7">' + (err.message || err) + '</small>'
-                    );
-                }
-            }
-
-            signinBtn.addEventListener('click', async () => {
-                try {
-                    if (typeof Pi === 'undefined') {
-                        alert('Pi 브라우저에서 열어주세요.');
-                        return;
-                    }
-                    authPromise = null; // force fresh auth
-                    await authenticate(['username']);
-                } catch (err) {
-                    alert('Pi 로그인 실패: ' + (err && err.message ? err.message : err));
-                }
-            });
-
-            // ====== 결제 버튼 ======
-            if (payBtn && IS_LOCKED) {
-                payBtn.addEventListener('click', async () => {
-                    if (typeof Pi === 'undefined') {
-                        alert('Pi 브라우저에서 열어주세요.');
-                        return;
-                    }
-                    try {
-                        payBtn.disabled = true;
-                        payBtn.textContent = '⌛ 결제 진행 중...';
-                        // payments 스코프로 재인증
-                        authPromise = null;
-                        await authenticate(['username', 'payments']);
-
-                        await Pi.createPayment(
-                            {
-                                amount: PI_PAYMENT_AMOUNT,
-                                memo: '디지털뉴스 — ' + POST_TITLE,
-                                metadata: { postId: POST_ID },
-                            },
-                            {
-                                onReadyForServerApproval: async (paymentId) => {
-                                    const r = await fetch('/pi/approve', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ paymentId }),
-                                    });
-                                    if (!r.ok) {
-                                        const errText = await r.text().catch(() => '');
-                                        showDiag('error',
-                                            '<div class="pi-diag-title">⚠ 서버 approve 실패 (HTTP ' + r.status + ')</div>' +
-                                            '<small>' + errText.slice(0, 300) + '</small>'
-                                        );
-                                        throw new Error('approve 실패: ' + r.status + ' ' + errText);
-                                    }
-                                },
-                                onReadyForServerCompletion: async (paymentId, txid) => {
-                                    const r = await fetch('/pi/complete', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ paymentId, txid }),
-                                    });
-                                    if (!r.ok) {
-                                        const errText = await r.text().catch(() => '');
-                                        showDiag('error',
-                                            '<div class="pi-diag-title">⚠ 서버 complete 실패 (HTTP ' + r.status + ')</div>' +
-                                            '<small>' + errText.slice(0, 300) + '</small>'
-                                        );
-                                        throw new Error('complete 실패: ' + r.status + ' ' + errText);
-                                    }
-                                    showDiag('ok', '<div class="pi-diag-title">✓ 결제 완료 — 페이지 새로고침 중...</div>');
-                                    // 잠금 해제 — 페이지 리로드 (pi_uid 유지)
-                                    const url = new URL(window.location.href);
-                                    if (currentUid) url.searchParams.set('pi_uid', currentUid);
-                                    setTimeout(() => window.location.replace(url.toString()), 800);
-                                },
-                                onCancel: (paymentId) => {
-                                    console.log('결제 취소:', paymentId);
-                                    payBtn.disabled = false;
-                                    payBtn.innerHTML = PAY_BTN_HTML;
-                                },
-                                onError: (error) => {
-                                    console.error('결제 오류:', error);
-                                    alert('결제 오류: ' + (error && error.message ? error.message : error));
-                                    payBtn.disabled = false;
-                                    payBtn.innerHTML = PAY_BTN_HTML;
-                                },
-                            }
-                        );
-                    } catch (err) {
-                        console.error('결제 실패:', err);
-                        alert('결제 실패: ' + (err && err.message ? err.message : err));
-                        payBtn.disabled = false;
-                        payBtn.innerHTML = PAY_BTN_HTML;
-                    }
-                });
-            }
-
-            if (document.readyState === 'complete') autoAuth();
-            else window.addEventListener('load', autoAuth);
-        })();
-    </script>
 </body>
 </html>
