@@ -40,7 +40,13 @@ a:hover { color: var(--purple); }
   font-family: var(--font-display); font-size: 1.8rem; font-weight: 900;
   letter-spacing: -0.02em; white-space: nowrap; color: var(--purple); line-height: 1;
 }
-.site-header .controls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.site-header .controls { margin-left: auto; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pi-username { font-size: 0.78rem; font-weight: 600; color: var(--purple-darker); white-space: nowrap; }
+.site-header .pi-username:not(:empty) + .btn-primary,
+.site-header #pi-signin-btn[style*="display: none"] { display: none; }
+
+/* 읽기 페이지 본문 영역 */
+.post-page { background: #fff; min-height: calc(100vh - 72px); }
 
 .btn-star-only {
   display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
@@ -228,16 +234,17 @@ a:hover { color: var(--purple); }
 .post-body { color: #2a1554; font-size: 1.08rem; }
 .post-body p { line-height: 1.8; margin: 0 0 20px; }
 
-/* Pi 페이월 (유료 페이지) */
+/* Pi 페이월 (유료 페이지) — 보라 박스는 Pi 생태계 안내만 */
 .pi-box {
   position: relative; background: #37167b; border: 1px solid rgba(183,148,246,0.3);
-  padding: 40px 26px 26px; margin: 32px 0;
+  padding: 40px 26px 28px; margin: 32px 0 0;
   font-size: 0.88rem; color: #d9c9ff; line-height: 1.7;
-  box-shadow: 0 20px 44px rgba(22,12,43,0.28);
+  box-shadow: 0 12px 32px rgba(22,12,43,0.18);
+  border-radius: 16px;
 }
 .pi-box .dots { position: absolute; top: 14px; left: 16px; display: flex; gap: 6px; }
 .pi-box .dots span { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.22); }
-.pi-box p { margin: 10px 0; font-size: 0.95rem; line-height: 1.7; text-align: center; font-family: var(--font-body); }
+.pi-box p { margin: 10px 0; font-size: 0.95rem; line-height: 1.7; text-align: center; font-family: var(--font-body); color: #e8dcff; }
 
 .pi-gold-link {
   display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -254,7 +261,10 @@ a:hover { color: var(--purple); }
 .pi-gold-link .mid { flex: 1; text-align: left; line-height: 1.35; }
 .pi-gold-link .arrow { font-size: 1.2rem; font-weight: 700; opacity: 0.85; }
 
-.pay-area { margin: 40px 0; padding: 8px 4px 12px; text-align: center; color: var(--purple); }
+.pay-area {
+  margin: 28px 0 0; padding: 8px 4px 12px; text-align: center;
+  color: var(--purple); background: #fff;
+}
 .btn-pay {
   font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.5px;
   border: none; border-radius: 999px; cursor: pointer;
@@ -279,19 +289,7 @@ a:hover { color: var(--purple); }
 }
 .back-link:hover { background: var(--purple-darker); }
 
-#pi-auth-bar {
-  position: fixed; top: 12px; right: 16px; z-index: 100;
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(255,255,255,0.95); border: 1px solid var(--line);
-  border-radius: 999px; padding: 6px 12px; box-shadow: 0 4px 16px rgba(21,17,43,0.08);
-}
-#pi-signin-btn {
-  border: none; cursor: pointer; padding: 7px 14px; border-radius: 999px;
-  font-size: 0.78rem; font-weight: 700; font-family: var(--font-body);
-  color: #fff; background: var(--purple);
-}
-#pi-signin-btn:hover { background: var(--purple-deep); }
-#pi-username { font-size: 0.78rem; font-weight: 600; color: var(--purple-darker); }
+/* pi-auth-bar 제거 — 헤더 Log in 사용 */
 
 .content { color: #2a1554; font-size: 1.08rem; }
 .content h1, .content h2, .content h3, .content h4 { color: #5216af; font-family: var(--font-display); margin: 2em 0 0.8em; }
@@ -337,6 +335,5 @@ a:hover { color: var(--purple); }
   .purple-panel { padding: 24px 16px 20px; }
   .hero .art { width: 160px; margin: 0 auto; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
-  #pi-auth-bar { top: auto; bottom: 12px; right: 12px; left: 12px; justify-content: center; }
 }
 
