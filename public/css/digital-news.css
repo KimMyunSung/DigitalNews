@@ -3,7 +3,7 @@
    단일 CSS: 토큰 + 헤더 + 히어로 + 테이블 + 읽기 화면
    ============================================================ */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&family=Nunito:wght@800;900&family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
 :root {
   --purple: #7132f5;
@@ -16,7 +16,7 @@
   --gold: #ffd98a;
   --surface-soft: #faf8ff;
   --surface-input: #f1ebff;
-  --font-display: 'Nunito', sans-serif;
+  --font-display: 'Outfit', 'Nunito', sans-serif;
   --font-body: 'Pretendard', 'Noto Sans KR', sans-serif;
   --font-mono: 'Fira Code', monospace;
 }
@@ -36,9 +36,16 @@ a:hover { color: var(--purple); }
 }
 .site-header .brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; cursor: pointer; }
 .site-header .brand img { width: 50px; height: 42px; border-radius: 10px; }
-.site-header .brand b {
-  font-family: var(--font-display); font-size: 1.8rem; font-weight: 900;
-  letter-spacing: -0.02em; white-space: nowrap; color: var(--purple); line-height: 1;
+.site-header .brand .brand-wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  color: var(--purple);
+  line-height: 1;
+  text-transform: uppercase;
+  -webkit-font-smoothing: antialiased;
 }
 .site-header .controls {
   margin-left: auto;
@@ -355,7 +362,7 @@ a:hover { color: var(--purple); }
 
 @media (max-width: 768px) {
   .site-header { padding: 12px 16px; gap: 12px; flex-wrap: wrap; }
-  .site-header .brand b { font-size: 1.2rem; }
+  .site-header .brand .brand-wordmark { font-size: 1.35rem; letter-spacing: 0.04em; }
   .site-header .controls { flex-wrap: wrap; width: 100%; justify-content: flex-end; gap: 10px; }
   .search-wrap { flex: 1 1 100%; width: 100%; max-width: none; order: 3; }
   .auth-wrap { order: 2; margin-left: auto; }
