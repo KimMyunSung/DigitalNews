@@ -412,7 +412,7 @@ a:hover { color: var(--purple); }
 }
 .pay-price .pi { color: var(--orange); }
 .pay-price .note { color: rgba(18,11,36,0.65); font-size: 0.88rem; font-weight: 400; letter-spacing: normal; }
-.pay-note { font-size: 0.88rem; color: rgba(18,11,36,0.65); margin: 22px auto 0; line-height: 1.8; max-width: 36em; }
+.pay-note { font-size: 0.88rem; color: rgba(18,11,36,0.65); margin: 22px auto 0; line-height: 1.8; max-width: 36em; text-wrap: balance; }
 .pay-note .hl { color: var(--orange); font-weight: 600; }
 
 .back-link {
