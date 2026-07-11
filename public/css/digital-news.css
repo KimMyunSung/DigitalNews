@@ -131,13 +131,14 @@ a:hover { color: var(--purple); }
   padding: 0;
 }
 .hero {
-  /* Same column grid as .ledger (★/제목/날짜/요금/조회수) */
-  display: grid;
-  grid-template-columns: var(--col-star) var(--col-title) var(--col-date) var(--col-badge) var(--col-reads);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 24px;
   margin-bottom: 32px;
 }
-.hero .copy { grid-column: 2 / 4; min-width: 280px; padding: 0 var(--cell-px); }
+.hero .copy { flex: 1 1 420px; min-width: 280px; padding: 0 var(--cell-px); }
 .hero .eyebrow {
   display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 2.5px;
   color: #eddfff; background: rgba(255,255,255,0.14); border-radius: 999px;
@@ -150,13 +151,11 @@ a:hover { color: var(--purple); }
 .hero p { font-size: 0.97rem; color: #e4d6ff; line-height: 1.7; margin: 0 0 26px; max-width: 480px; }
 .hero .art {
   --cube-size: 142px;
-  grid-column: 4 / 6;
-  justify-self: end;
+  margin-left: auto;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 11px;
-  width: calc(var(--col-badge) + var(--col-reads) + 10rem);
-  max-width: 430px;
   padding: 0 var(--cell-px);
 }
 .hero .art img {
@@ -176,9 +175,9 @@ a:hover { color: var(--purple); }
 .hero .hero-wordmark {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(1.55rem, 2.45vw, 2.05rem);
+  font-size: clamp(1.9rem, 3.1vw, 2.55rem);
   line-height: 1;
-  letter-spacing: 0.085em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   white-space: nowrap;
   background: linear-gradient(180deg, #fff8e6 0%, #f2d078 42%, #e8b84a 78%, #d4a038 100%);
@@ -471,10 +470,9 @@ a:hover { color: var(--purple); }
   .auth-wrap { order: 2; margin-left: auto; }
   .btn-star-only { order: 1; }
   .purple-panel { padding: 24px 16px 20px; }
-  .hero { grid-template-columns: 1fr; row-gap: 18px; column-gap: 0; }
-  .hero .copy { grid-column: 1; }
-  .hero .art { grid-column: 1; width: 100%; max-width: none; flex-direction: row; justify-content: center; justify-self: center; --cube-size: 120px; gap: 10px; }
-  .hero .hero-wordmark { font-size: clamp(1.35rem, 5.5vw, 1.75rem); letter-spacing: 0.07em; }
+  .hero { flex-direction: column; align-items: stretch; row-gap: 18px; }
+  .hero .art { margin-left: 0; width: 100%; justify-content: center; --cube-size: 120px; gap: 10px; }
+  .hero .hero-wordmark { font-size: clamp(1.5rem, 6vw, 1.95rem); letter-spacing: 0.06em; }
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
   .legal-doc { padding: 28px 22px; }
   .legal-wrap { padding: 20px 16px 40px; }
