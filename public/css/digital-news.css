@@ -471,8 +471,37 @@ a:hover { color: var(--purple); }
   .btn-star-only { order: 1; }
   .purple-panel { padding: 24px 16px 20px; }
   .hero { flex-direction: column; align-items: stretch; row-gap: 18px; }
+  .hero h1, .hero p { word-break: keep-all; overflow-wrap: break-word; }
   .hero .art { margin-left: 0; width: 100%; justify-content: center; --cube-size: 120px; gap: 10px; }
   .hero .hero-wordmark { font-size: clamp(1.5rem, 6vw, 1.95rem); letter-spacing: 0.06em; }
+
+  /* Pi 배너: 버튼이 본문을 짓누르지 않게 세로 스택 */
+  .pi-banner { flex-wrap: wrap; gap: 14px; padding: 16px 18px; }
+  .pi-banner .pi-mark { width: 44px; height: 44px; font-size: 1.3rem; border-radius: 12px; }
+  .pi-banner .txt { flex: 1 1 0; min-width: 0; }
+  .pi-banner .txt b { word-break: keep-all; }
+  .pi-banner .txt span { word-break: keep-all; overflow-wrap: break-word; }
+  .pi-banner .cta { flex: 1 1 100%; text-align: center; }
+
+  /* 회보 목록: 표 → 카드 배치 (고정 콜럼 폭이 좁은 화면을 뭉갬) */
+  .ledger colgroup { display: none; }
+  .ledger thead { display: none; }
+  .ledger, .ledger tbody, .ledger tr, .ledger td { display: block; width: 100%; }
+  .ledger { table-layout: auto; }
+  .ledger tr { position: relative; padding: 16px 4px 16px 38px; border-bottom: 1px solid rgba(255,255,255,0.18); }
+  .ledger td { padding: 0; border-bottom: none; }
+  .ledger td:first-child { position: absolute; left: 0; top: 16px; width: auto; }
+  .star-toggle { width: auto; font-size: 1.25rem; padding: 2px; }
+  .title-cell { gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+  .title-cell .t { font-size: 1.02rem; word-break: keep-all; overflow-wrap: break-word; }
+  .title-cell .s { font-size: 0.8rem; }
+  .idx-chip { width: 34px; height: 34px; border-radius: 10px; font-size: 0.8rem; }
+  .date-cell { display: inline-block; width: auto; font-size: 0.84rem; margin-right: 12px; vertical-align: middle; }
+  .badge-cell { display: inline-block; width: auto; text-align: left; vertical-align: middle; }
+  .badge { padding: 3px 11px; font-size: 0.74rem; }
+  .reads-cell { position: absolute; right: 4px; bottom: 16px; width: auto; font-size: 0.92rem; }
+  .reads-cell::after { content: " 회"; font-size: 0.72rem; font-weight: 400; color: rgba(255,255,255,0.6); }
+
   .post-wrap { padding: 32px 20px; margin: 24px auto; }
   .legal-doc { padding: 28px 22px; }
   .legal-wrap { padding: 20px 16px 40px; }
