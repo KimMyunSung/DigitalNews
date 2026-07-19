@@ -1,0 +1,15 @@
+name: Keep Render services awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping mainnet
+        run: curl -s -o /dev/null -w "mainnet %{http_code}\n" --max-time 90 https://digitalnews.onrender.com/ || true
+      - name: Ping testnet
+        run: curl -s -o /dev/null -w "testnet %{http_code}\n" --max-time 90 https://digital-news-zpcr.onrender.com/ || true
