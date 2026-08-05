@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIGITAL NEWS — Kraken 스타일 시안 (메인)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #7132F5;
+    --purple-deep: #5B21C8;
+    --purple-soft: #F1EBFF;
+    --ink: #15112B;
+    --ink-soft: #6E6A80;
+    --line: #ECEAF3;
+    --gold: #F2C489;
+    --bg: #FFFFFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  /* ===== 헤더 ===== */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 28px;
+    padding: 14px 40px;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'Nunito', sans-serif; }
+  .logo svg { width: 34px; height: 34px; }
+  .logo b { font-size: 20px; font-weight: 900; color: var(--purple); letter-spacing: -0.5px; }
+  nav { display: flex; gap: 22px; font-size: 14px; color: var(--ink-soft); font-weight: 500; }
+  nav a:hover { color: var(--purple); }
+  .head-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .btn-ghost {
+    padding: 9px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 700;
+    color: var(--purple); background: var(--purple-soft); border: none; cursor: pointer;
+  }
+  .btn-solid {
+    padding: 9px 18px; border-radius: 10px; font-size: 13.5px; font-weight: 700;
+    color: #fff; background: var(--purple); border: none; cursor: pointer;
+  }
+  .btn-solid:hover { background: var(--purple-deep); }
+
+  /* ===== 히어로 ===== */
+  .hero {
+    position: relative; overflow: hidden;
+    margin: 28px 40px 0;
+    border-radius: 24px;
+    background: linear-gradient(120deg, #6C2BD9 0%, #7E3AF2 45%, #9F5CFF 100%);
+    display: flex; align-items: center;
+    padding: 48px 56px;
+    min-height: 300px;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 70% at 68% 30%, rgba(183,140,255,0.55), transparent 70%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; opacity: 0.06;
+    background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+  .hero-text { position: relative; z-index: 2; max-width: 520px; }
+  .hero-text .eyebrow {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 2.5px;
+    color: #EDDFFF; background: rgba(255,255,255,0.14); border-radius: 999px;
+    padding: 6px 14px; margin-bottom: 18px; text-transform: uppercase;
+  }
+  .hero-text h1 {
+    font-size: clamp(28px, 4vw, 42px); font-weight: 900; color: #fff;
+    line-height: 1.25; letter-spacing: -0.5px; margin-bottom: 14px; word-break: keep-all;
+  }
+  .hero-text p { font-size: 15.5px; color: #E4D6FF; line-height: 1.7; margin-bottom: 26px; word-break: keep-all; }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff; color: var(--purple); font-weight: 800; font-size: 15px;
+    padding: 13px 26px; border-radius: 12px; border: none; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(20,5,60,0.25);
+  }
+  .hero-art { position: relative; z-index: 2; margin-left: auto; width: 300px; flex-shrink: 0; }
+
+  /* ===== 섹션 ===== */
+  .section { padding: 52px 40px 20px; }
+  .section h2 { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .section .desc { font-size: 14.5px; color: var(--ink-soft); margin-bottom: 26px; }
+
+  /* ===== 인기 회보 카드 ===== */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .card {
+    border-radius: 18px; overflow: hidden; background: #fff;
+    border: 1px solid var(--line);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(40,15,100,0.13); }
+  .card .art { display: block; width: 100%; }
+  .card .meta { padding: 16px 18px 20px; }
+  .card .meta h3 { font-size: 16.5px; font-weight: 700; line-height: 1.45; margin-bottom: 10px; word-break: keep-all; }
+  .card .meta .foot { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-soft); }
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 700;
+  }
+  .tag.free { background: var(--purple-soft); color: var(--purple); }
+  .tag.paid { background: #FFF1DE; color: #C77822; }
+
+  /* ===== 전체 회보 리스트 ===== */
+  .list { border-top: 1px solid var(--line); }
+  .row {
+    display: flex; align-items: center; gap: 18px;
+    padding: 20px 8px; border-bottom: 1px solid var(--line);
+    transition: background 0.15s ease; cursor: pointer;
+  }
+  .row:hover { background: #FAF8FF; }
+  .row .idx {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+    background: var(--purple-soft); color: var(--purple);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 15px;
+  }
+  .row .body { flex: 1; min-width: 0; }
+  .row .body .t { font-size: 15.5px; font-weight: 700; margin-bottom: 3px; word-break: keep-all; }
+  .row .body .s { font-size: 12.5px; color: var(--ink-soft); }
+  .row .right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; font-size: 12.5px; color: var(--ink-soft); }
+  .row .views { font-family: 'Nunito', sans-serif; font-weight: 700; }
+
+  /* ===== Pi CTA 배너 ===== */
+  .pi-banner {
+    margin: 40px 40px;
+    border-radius: 20px;
+    background: linear-gradient(120deg, #f7f3ff, #EFE6FF);
+    border: 1px solid #E3D5FF;
+    padding: 30px 36px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .pi-banner .pi-mark {
+    width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+    background: var(--purple); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; font-family: 'Nunito', sans-serif;
+  }
+  .pi-banner .txt { flex: 1; }
+  .pi-banner .txt b { display: block; font-size: 16.5px; font-weight: 800; margin-bottom: 4px; }
+  .pi-banner .txt span { font-size: 13.5px; color: var(--ink-soft); }
+
+  /* ===== 통계 + 푸터 ===== */
+  .stats {
+    display: flex; justify-content: center; gap: 44px;
+    padding: 14px 40px 46px; text-align: center;
+  }
+  .stats .st b { display: block; font-size: 24px; font-weight: 900; font-family: 'Nunito', sans-serif; color: var(--purple); }
+  .stats .st span { font-size: 12.5px; color: var(--ink-soft); }
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 26px 40px; display: flex; align-items: center; gap: 18px;
+    font-size: 12.5px; color: var(--ink-soft);
+  }
+  footer .flinks { margin-left: auto; display: flex; gap: 18px; }
+  footer a:hover { color: var(--purple); }
+
+  @media (max-width: 900px) {
+    header { padding: 12px 18px; gap: 14px; }
+    nav { display: none; }
+    .hero { margin: 18px; padding: 32px 26px; flex-direction: column; }
+    .hero-art { margin: 26px auto 0; }
+    .section { padding: 40px 18px 12px; }
+    .cards { grid-template-columns: 1fr; }
+    .pi-banner { margin: 30px 18px; flex-direction: column; text-align: center; }
+    .stats { flex-wrap: wrap; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 공용 DN 큐브 심볼 ===== -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="cTop" x1="0" y1="0" x2="0.7" y2="1"><stop offset="0" stop-color="#F4E9FF"/><stop offset="1" stop-color="#D3AFF7"/></linearGradient>
+    <linearGradient id="cLeft" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#8A3BF5"/><stop offset="1" stop-color="#5B18C8"/></linearGradient>
+    <linearGradient id="cRight" x1="0" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#D368F2"/><stop offset="0.55" stop-color="#B93FE0"/><stop offset="1" stop-color="#9426C6"/></linearGradient>
+    <linearGradient id="cGold" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#FFF3D6"/><stop offset="0.5" stop-color="#F6C583"/><stop offset="1" stop-color="#E09A4E"/></linearGradient>
+    <clipPath id="cCube"><path d="M 197.5 40.5 Q 205 36 212.5 40.5 L 265.5 71 Q 273 75.5 273 84 L 273 145 Q 273 153.5 265.5 158 L 212.5 188.5 Q 205 193 197.5 188.5 L 144.5 158 Q 137 153.5 137 145 L 137 84 Q 137 75.5 144.5 71 Z"/></clipPath>
+    <g id="dnCube">
+      <g clip-path="url(#cCube)">
+        <polygon points="205,37 273,76 205,115 137,76" fill="url(#cTop)"/>
+        <polygon points="137,76 205,115 205,192 137,153" fill="url(#cLeft)"/>
+        <polygon points="273,76 205,115 205,192 273,153" fill="url(#cRight)"/>
+        <polygon points="150,50 200,30 280,150 235,170" fill="#ffffff" opacity="0.10"/>
+        <polygon points="205,37 273,76 205,115 137,76" fill="#ffffff" opacity="0.12"/>
+        <g transform="matrix(0.68,0.39,0,0.77,137,76)">
+          <rect x="14" y="10" width="72" height="80" rx="8" fill="#FDFCFF"/>
+          <rect x="22" y="19" width="56" height="10" rx="4.5" fill="#31146E"/>
+          <rect x="22" y="36" width="26" height="19" rx="3.5" fill="#C3A4F5"/>
+          <rect x="53" y="38" width="25" height="4.5" rx="2.25" fill="#7150C9"/>
+          <rect x="53" y="47" width="25" height="4.5" rx="2.25" fill="#7150C9" opacity="0.65"/>
+          <rect x="22" y="62" width="56" height="4.5" rx="2.25" fill="#7150C9" opacity="0.8"/>
+          <rect x="22" y="71" width="56" height="4.5" rx="2.25" fill="#7150C9" opacity="0.55"/>
+          <rect x="22" y="80" width="38" height="4.5" rx="2.25" fill="#7150C9" opacity="0.35"/>
+        </g>
+        <g transform="matrix(0.68,-0.39,0,0.77,205,115)">
+          <text x="50" y="46" text-anchor="middle" dominant-baseline="central" font-family="'Nunito',Arial,sans-serif" font-weight="900" font-size="46" letter-spacing="-1.5" fill="url(#cGold)" stroke="url(#cGold)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke">DN</text>
+        </g>
+        <line x1="205" y1="115" x2="205" y2="192" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1.6"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<header>
+  <a class="logo" href="#">
+    <svg viewBox="120 20 170 190"><use href="#dnCube"/></svg>
+    <b>DIGITAL NEWS</b>
+  </a>
+  <nav>
+    <a href="#">회보</a><a href="#">파이</a><a href="#">시장</a><a href="#">소개</a>
+  </nav>
+  <div class="head-right">
+    <button class="btn-ghost">로그인</button>
+    <button class="btn-solid">가입하기</button>
+  </div>
+</header>
+
+<!-- ===== 히어로 ===== -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-text">
+    <span class="eyebrow">The Protocol of Coexistence</span>
+    <h1>디지털 자산의 흐름을<br>한 발 앞서 읽다</h1>
+    <p>파이 네트워크와 디지털 자산 생태계의 핵심 소식을 큐레이션합니다. 아는 만큼 보이게 될 것입니다.</p>
+    <button class="hero-cta">최신 회보 읽기 →</button>
+  </div>
+  <div class="hero-art">
+    <svg viewBox="110 10 190 210" width="300"><use href="#dnCube"/></svg>
+  </div>
+</section>
+
+<!-- ===== 인기 회보 ===== -->
+<section class="section">
+  <h2>인기 회보</h2>
+  <p class="desc">가장 뜨거운 주제들을 한곳에 모아 놓치지 않게 할 수 있습니다.</p>
+  <div class="cards">
+
+    <div class="card">
+      <svg class="art" viewBox="0 0 380 210">
+        <defs>
+          <linearGradient id="a1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C2BD9"/><stop offset="1" stop-color="#9F5CFF"/></linearGradient>
+        </defs>
+        <rect width="380" height="210" fill="url(#a1)"/>
+        <g transform="translate(95,5) scale(0.95)"><use href="#dnCube"/></g>
+        <ellipse cx="80" cy="170" rx="18" ry="18" fill="#F6C583" transform="rotate(12 80 170)"/>
+        <rect x="290" y="50" width="30" height="30" rx="7" fill="#7FF0DC" transform="rotate(-16 305 65)"/>
+      </svg>
+      <div class="meta">
+        <h3>존재의 본질과 상생(相生)의 우주관</h3>
+        <div class="foot"><span class="tag paid">유료</span><span>7분 읽기 · 2026.02.20</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <svg class="art" viewBox="0 0 380 210">
+        <defs>
+          <linearGradient id="a2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8E24BE"/><stop offset="1" stop-color="#C750E8"/></linearGradient>
+        </defs>
+        <rect width="380" height="210" fill="url(#a2)"/>
+        <!-- 펼친 신문 오브젝트 -->
+        <g transform="rotate(-6 190 110)">
+          <rect x="110" y="55" width="82" height="104" rx="8" fill="#FDFCFF"/>
+          <rect x="192" y="55" width="82" height="104" rx="8" fill="#EFE8FB"/>
+          <rect x="122" y="68" width="58" height="11" rx="5" fill="#31146E"/>
+          <rect x="122" y="88" width="26" height="20" rx="3" fill="#C3A4F5"/>
+          <rect x="154" y="90" width="26" height="5" rx="2.5" fill="#7150C9"/>
+          <rect x="154" y="100" width="26" height="5" rx="2.5" fill="#7150C9" opacity="0.6"/>
+          <rect x="122" y="118" width="58" height="5" rx="2.5" fill="#7150C9" opacity="0.7"/>
+          <rect x="122" y="128" width="58" height="5" rx="2.5" fill="#7150C9" opacity="0.5"/>
+          <rect x="122" y="138" width="40" height="5" rx="2.5" fill="#7150C9" opacity="0.35"/>
+          <rect x="204" y="68" width="58" height="6" rx="3" fill="#7150C9" opacity="0.8"/>
+          <rect x="204" y="80" width="58" height="6" rx="3" fill="#7150C9" opacity="0.6"/>
+          <rect x="204" y="92" width="44" height="6" rx="3" fill="#7150C9" opacity="0.4"/>
+          <rect x="204" y="112" width="58" height="34" rx="4" fill="#C3A4F5" opacity="0.8"/>
+        </g>
+        <ellipse cx="320" cy="160" rx="16" ry="16" fill="#F6C583"/>
+        <path d="M60 40 l2.4 6 6 2.4 -6 2.4 -2.4 6 -2.4-6 -6-2.4 6-2.4 Z" fill="#fff" opacity="0.9"/>
+      </svg>
+      <div class="meta">
+        <h3>파이 메인넷 결제, 회보에서 이렇게 씁니다</h3>
+        <div class="foot"><span class="tag free">무료</span><span>5분 읽기 · 2026.03.14</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <svg class="art" viewBox="0 0 380 210">
+        <defs>
+          <linearGradient id="a3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5B18C8"/><stop offset="1" stop-color="#7E3AF2"/></linearGradient>
+          <linearGradient id="orb" x1="0" y1="0" x2="0.6" y2="1"><stop offset="0" stop-color="#FFE9F8"/><stop offset="0.55" stop-color="#E9B7F2"/><stop offset="1" stop-color="#B77BEB"/></linearGradient>
+        </defs>
+        <rect width="380" height="210" fill="url(#a3)"/>
+        <!-- 수정구슬 (미래 전망) -->
+        <ellipse cx="190" cy="172" rx="52" ry="10" fill="#2A0B57" opacity="0.4"/>
+        <circle cx="190" cy="105" r="52" fill="url(#orb)"/>
+        <ellipse cx="172" cy="86" rx="17" ry="10" fill="#fff" opacity="0.75" transform="rotate(-28 172 86)"/>
+        <path d="M140 160 q50 22 100 0 l-8 16 q-42 16 -84 0 Z" fill="#8A3BF5"/>
+        <path d="M40 80 C 90 60 120 120 60 130" stroke="#F6C583" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"/>
+        <rect x="310" y="120" width="26" height="26" rx="6" fill="#7FF0DC" transform="rotate(14 323 133)"/>
+      </svg>
+      <div class="meta">
+        <h3>2026 디지털 자산 시장, 무엇을 준비해야 하나</h3>
+        <div class="foot"><span class="tag paid">유료</span><span>11분 읽기 · 2026.04.02</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== Pi 결제 배너 ===== -->
+<div class="pi-banner">
+  <div class="pi-mark">π</div>
+  <div class="txt">
+    <b>Pi-native newsletter — 메인넷 연동</b>
+    <span>무료 회보는 공개 · 유료 회보는 글에서 π 0.01 결제 후 열람하실 수 있습니다.</span>
+  </div>
+  <button class="btn-solid" style="padding:12px 26px">Pi로 로그인</button>
+</div>
+
+<!-- ===== 전체 회보 ===== -->
+<section class="section" style="padding-top:12px">
+  <h2>전체 회보</h2>
+  <p class="desc">발행순으로 정리된 모든 회보입니다.</p>
+  <div class="list">
+
+    <div class="row">
+      <div class="idx">15</div>
+      <div class="body">
+        <div class="t">존재의 본질과 상생(相生)의 우주관</div>
+        <div class="s">T → 전체 공개 · 2026.02.20</div>
+      </div>
+      <div class="right"><span class="tag paid">유료</span><span class="views">1,204 읽음</span></div>
+    </div>
+
+    <div class="row">
+      <div class="idx">14</div>
+      <div class="body">
+        <div class="t">파이 메인넷 결제, 회보에서 이렇게 씁니다</div>
+        <div class="s">T → 전체 공개 · 2026.03.14</div>
+      </div>
+      <div class="right"><span class="tag free">무료</span><span class="views">986 읽음</span></div>
+    </div>
+
+    <div class="row">
+      <div class="idx">13</div>
+      <div class="body">
+        <div class="t">2026 디지털 자산 시장, 무엇을 준비해야 하나</div>
+        <div class="s">T → 전체 공개 · 2026.04.02</div>
+      </div>
+      <div class="right"><span class="tag paid">유료</span><span class="views">1,845 읽음</span></div>
+    </div>
+
+    <div class="row">
+      <div class="idx">12</div>
+      <div class="body">
+        <div class="t">CLARITY Act 이후 — 규제 지형의 변화</div>
+        <div class="s">T → 전체 공개 · 2026.04.28</div>
+      </div>
+      <div class="right"><span class="tag free">무료</span><span class="views">733 읽음</span></div>
+    </div>
+
+    <div class="row">
+      <div class="idx">11</div>
+      <div class="body">
+        <div class="t">토큰화 실물자산(RWA)과 파이의 자리</div>
+        <div class="s">T → 전체 공개 · 2026.05.16</div>
+      </div>
+      <div class="right"><span class="tag paid">유료</span><span class="views">1,102 읽음</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 통계 ===== -->
+<div class="stats">
+  <div class="st"><b>15</b><span>총 회보</span></div>
+  <div class="st"><b>8</b><span>무료</span></div>
+  <div class="st"><b>7</b><span>유료</span></div>
+  <div class="st"><b>12,480</b><span>총 방문</span></div>
+</div>
+
+<footer>
+  <span>© 2026 DIGITAL NEWS — The Protocol of Coexistence</span>
+  <div class="flinks">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+  </div>
+</footer>
+
+</body>
+</html>

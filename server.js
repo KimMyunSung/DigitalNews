@@ -48,7 +48,7 @@ app.get('/validation-key.txt', (req, res) => {
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const databaseId = process.env.NOTION_DATABASE_ID;
-const SITE_URL = (process.env.SITE_URL || 'https://digital-news.onrender.com').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || 'https://digitalnews.onrender.com').replace(/\/$/, '');
 
 // ====== Pi Network 결제 인프라 ======
 const PI_API_KEY = process.env.PI_API_KEY;
@@ -137,11 +137,26 @@ async function queryAllPages() {
 }
 
 async function queryAll() {
-    // 회보 메시지와 통계 페이지("총방문자수")를 분리해서 반환
+    // 회보 메시지와 통계 페이지("총방문자수", "총조회수")를 분리해서 반환
     const all = await queryAllPages();
+    const statsPage = all.find((p) => p.title === STATS_PAGE_TITLE) || null;
+    const viewsPage = all.find((p) => p.title === '총조회수' || p.title === '총 조회수') || null;
+
+    // 정상 회보 번호(#000 등)가 포함된 게시글만 회보 목록으로 필터 (유령 테스트글 및 통계 행 모두 제외)
+    const validMessages = all.filter((p) => {
+        if (p.title === STATS_PAGE_TITLE || p.title === '총조회수' || p.title === '총 조회수') return false;
+        return /#\d+/.test(p.title || '');
+    });
+    const messages = sortMessagesByNumberAsc(validMessages);
+
+    // 총조회수 계산: 노션 DB에 "총조회수" 페이지가 있으면 해당 값 사용, 없으면 각 글의 조회수 총합
+    const sumViews = messages.reduce((sum, m) => sum + (m.viewCount || 0), 0);
+    const totalViews = (viewsPage && viewsPage.viewCount > 0) ? viewsPage.viewCount : sumViews;
+
     return {
-        messages: sortMessagesByNumberAsc(all.filter((p) => p.title !== STATS_PAGE_TITLE)),
-        statsPage: all.find((p) => p.title === STATS_PAGE_TITLE) || null,
+        messages,
+        statsPage,
+        totalViews,
     };
 }
 
@@ -183,12 +198,13 @@ function buildDescription(htmlContent, fallback) {
 
 app.get('/', async (req, res) => {
     try {
-        const { messages, statsPage } = await queryAll();
+        const { messages, statsPage, totalViews } = await queryAll();
         const totalVisits = (statsPage?.viewCount || 0) + 1; // 이번 방문 포함해서 표시
         if (statsPage) incrementViewsAsync(statsPage.id);
         res.render('index', {
             messages,
             totalVisits,
+            totalViews,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,
@@ -199,6 +215,7 @@ app.get('/', async (req, res) => {
         res.status(500).render('index', {
             messages: [],
             totalVisits: 0,
+            totalViews: 0,
             siteUrl: SITE_URL,
             siteDescription: SITE_DESCRIPTION,
             piSandbox: PI_SANDBOX,

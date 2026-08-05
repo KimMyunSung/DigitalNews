@@ -269,7 +269,7 @@ a:hover { color: var(--purple); }
 .on-light .badge.paid { color: #c77822; }
 
 /* ===== 통계 + 푸터 ===== */
-.stats { display: flex; justify-content: center; gap: 44px; padding: 14px 40px 46px; text-align: center; flex-wrap: wrap; }
+.stats { display: flex; justify-content: center; gap: clamp(16px, 4vw, 44px); padding: 14px 16px 46px; text-align: center; flex-wrap: wrap; }
 .stats b { display: block; font-size: 1.5rem; font-weight: 700; color: var(--purple); }
 .stats span { font-size: 0.78rem; color: var(--ink-dim); }
 .site-footer {
