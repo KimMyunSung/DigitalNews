@@ -103,11 +103,14 @@ function getCachedView(pageId, originalCount) {
 }
 
 function incrementView(pageId, originalCount) {
-    if (!pageId) return originalCount;
-    let current = getCachedView(pageId, originalCount);
+    const cacheKey = pageId || 'local_fallback_counter';
+    let current = getCachedView(cacheKey, originalCount);
     current += 1;
-    viewCache.set(pageId, current);
-    pendingIncrements.set(pageId, (pendingIncrements.get(pageId) || 0) + 1);
+    viewCache.set(cacheKey, current);
+    
+    if (pageId) {
+        pendingIncrements.set(pageId, (pendingIncrements.get(pageId) || 0) + 1);
+    }
     return current;
 }
 
@@ -179,7 +182,7 @@ async function queryAllPages() {
 async function queryAll() {
     // 회보 메시지와 통계 페이지("총방문자수")를 분리해서 반환
     const all = await queryAllPages();
-    const statsPage = all.find((p) => p.title === STATS_PAGE_TITLE) || null;
+    const statsPage = all.find((p) => p.title === STATS_PAGE_TITLE || p.title === '총조회수' || p.title === '총 조회수' || p.title === '총방문수') || null;
 
     // 정상 회보 번호(#000 등)가 포함된 게시글만 회보 목록으로 필터 (유령 테스트글 및 통계 행 모두 제외)
     const validMessages = all.filter((p) => {
@@ -221,6 +224,9 @@ app.get('/', async (req, res) => {
         let totalVisits = 0;
         if (statsPage) {
             totalVisits = incrementView(statsPage.id, statsPage.viewCount);
+        } else {
+            // Notion에 통계 페이지가 없을 경우를 대비한 로컬 폴백
+            totalVisits = incrementView(null, 0);
         }
         res.render('index', {
             messages,
