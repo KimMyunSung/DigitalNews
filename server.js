@@ -91,6 +91,45 @@ const SITE_DESCRIPTION =
 
 const STATS_PAGE_TITLE = '총방문자수';
 
+// ====== 방문자/조회수 캐시 큐 ======
+const viewCache = new Map();
+const pendingIncrements = new Map();
+
+function getCachedView(pageId, originalCount) {
+    if (!viewCache.has(pageId) || originalCount > viewCache.get(pageId)) {
+        viewCache.set(pageId, originalCount);
+    }
+    return viewCache.get(pageId);
+}
+
+function incrementView(pageId, originalCount) {
+    if (!pageId) return originalCount;
+    let current = getCachedView(pageId, originalCount);
+    current += 1;
+    viewCache.set(pageId, current);
+    pendingIncrements.set(pageId, (pendingIncrements.get(pageId) || 0) + 1);
+    return current;
+}
+
+setInterval(async () => {
+    if (pendingIncrements.size === 0) return;
+    for (const [pageId, count] of pendingIncrements.entries()) {
+        if (count === 0) continue;
+        pendingIncrements.set(pageId, 0);
+        try {
+            const page = await notion.pages.retrieve({ page_id: pageId });
+            const current = page.properties?.['조회수']?.number || 0;
+            await notion.pages.update({
+                page_id: pageId,
+                properties: { '조회수': { number: current + count } },
+            });
+        } catch (err) {
+            console.warn('조회수 증가 실패 (' + pageId + '):', err.message);
+            pendingIncrements.set(pageId, (pendingIncrements.get(pageId) || 0) + count);
+        }
+    }
+}, 5000);
+
 function extractPages(response) {
     return response.results.map((page) => {
         const props = page.properties || {};
@@ -105,7 +144,8 @@ function extractPages(response) {
         // '요금' multi_select: '무료' → isFree=true, '유료' → isFree=false
         const yoGeum = props['요금']?.multi_select?.map((o) => o.name) || [];
         const isFree = yoGeum.includes('무료');
-        const viewCount = props['조회수']?.number || 0;
+        const rawViewCount = props['조회수']?.number || 0;
+        const viewCount = getCachedView(page.id, rawViewCount);
         return { id: page.id, title, date, receiver, sender, isFree, viewCount };
     });
 }
@@ -160,22 +200,7 @@ async function queryAllMessages() {
     return messages;
 }
 
-// Notion 페이지의 '조회수' Number 속성을 +1 (비동기, 응답 블로킹하지 않음)
-function incrementViewsAsync(pageId) {
-    if (!pageId) return;
-    setImmediate(async () => {
-        try {
-            const page = await notion.pages.retrieve({ page_id: pageId });
-            const current = page.properties?.['조회수']?.number || 0;
-            await notion.pages.update({
-                page_id: pageId,
-                properties: { '조회수': { number: current + 1 } },
-            });
-        } catch (err) {
-            console.warn('조회수 증가 실패 (' + pageId + '):', err.message);
-        }
-    });
-}
+// (기존의 비동기 단일 증가 함수는 캐시 시스템으로 대체되었습니다)
 
 function stripHtml(html) {
     return html
@@ -193,8 +218,10 @@ function buildDescription(htmlContent, fallback) {
 app.get('/', async (req, res) => {
     try {
         const { messages, statsPage } = await queryAll();
-        const totalVisits = (statsPage?.viewCount || 0) + 1; // 이번 방문 포함해서 표시
-        if (statsPage) incrementViewsAsync(statsPage.id);
+        let totalVisits = 0;
+        if (statsPage) {
+            totalVisits = incrementView(statsPage.id, statsPage.viewCount);
+        }
         res.render('index', {
             messages,
             totalVisits,
@@ -445,8 +472,8 @@ app.get('/post/:id', async (req, res) => {
     const pageId = req.params.id;
     const piUid = (req.query.pi_uid || '').toString().slice(0, 80);
     try {
-        // 회보 조회수 증가 (비동기, 응답 안 막음)
-        incrementViewsAsync(pageId);
+        // 회보 조회수 증가
+        incrementView(pageId, viewCache.get(pageId) || 0);
         const page = await notion.pages.retrieve({ page_id: pageId });
         const props = page.properties || {};
         const titleKey = Object.keys(props).find((key) => props[key].type === 'title');
